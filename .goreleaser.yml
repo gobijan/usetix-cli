@@ -1,0 +1,67 @@
+version: 2
+
+project_name: usetix
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - main: ./cmd/usetix
+    binary: usetix
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  footer: |
+    ## Install
+
+    ```sh
+    go install github.com/gobijan/usetix-cli/cmd/usetix@{{ .Tag }}
+    ```
+
+    Or download the binary for your platform above and put it on your PATH.
+
+# Homebrew tap — enable once the gobijan/homebrew-tap repository exists and
+# a HOMEBREW_TAP_GITHUB_TOKEN secret (PAT with repo scope on the tap) is set:
+#
+# brews:
+#   - repository:
+#       owner: gobijan
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     homepage: https://www.usetix.io
+#     description: Command-line client for the Usetix Admin API
+#     license: MIT
+#     test: |
+#       system "#{bin}/usetix version"

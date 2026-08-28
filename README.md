@@ -1,17 +1,26 @@
 # Usetix CLI
 
-A fast, scriptable command-line client for the existing Usetix JSON API.
+A fast, scriptable command-line client for the [Usetix](https://www.usetix.io)
+JSON API.
 
 The CLI uses [Cobra](https://github.com/spf13/cobra) for its command surface,
 [Basecamp's shared CLI toolkit](https://github.com/basecamp/cli) for profiles,
 credentials, structured output, and surface snapshots, and
 [Lip Gloss](https://github.com/charmbracelet/lipgloss) for terminal presentation.
 It stays a thin client: authorization, validation, and business rules remain in
-the Usetix Rails application.
+the Usetix application.
 
-The repository is private while the first usable release is being developed.
+## Install
 
-## Install for development
+Download the binary for your platform from the
+[latest release](https://github.com/gobijan/usetix-cli/releases/latest) and put
+it on your `PATH`, or install with Go:
+
+```sh
+go install github.com/gobijan/usetix-cli/cmd/usetix@latest
+```
+
+From a checkout:
 
 ```sh
 go install ./cmd/usetix
@@ -145,3 +154,23 @@ intentional CLI change:
 ```sh
 go test ./internal/cli -run TestSurface -update-surface
 ```
+
+## Releasing
+
+Releases are built by [GoReleaser](https://goreleaser.com) via GitHub Actions.
+Tag a version and push it; the workflow tests, builds binaries for macOS,
+Linux, and Windows (amd64 and arm64), and publishes a GitHub Release with
+checksums:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+To enable the Homebrew tap, create the `gobijan/homebrew-tap` repository, add
+a `HOMEBREW_TAP_GITHUB_TOKEN` secret, and uncomment the `brews` section in
+`.goreleaser.yml`.
+
+## License
+
+[MIT](LICENSE)
