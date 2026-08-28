@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -50,6 +53,112 @@ func TestListEvents(t *testing.T) {
 	}
 }
 
+func TestCheckUsesHead(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodHead {
+			t.Fatalf("method = %q, want HEAD", request.Method)
+		}
+		writer.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.Check(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRequestSendsJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPatch {
+			t.Fatalf("method = %q, want PATCH", request.Method)
+		}
+		if request.Header.Get("Content-Type") != "application/json" {
+			t.Fatalf("content type = %q", request.Header.Get("Content-Type"))
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"updated":true}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Request(context.Background(), http.MethodPatch, "/admin/events/summer", map[string]any{"listed": true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Data.(map[string]any)["updated"] != true {
+		t.Fatalf("response = %#v", response)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", response.StatusCode)
+	}
+}
+
+func TestRequestPreservesLargeIntegerIDs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"id":9223372036854775807}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Request(context.Background(), http.MethodGet, "/admin/events/example", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := response.Data.(map[string]any)["id"]; got != json.Number("9223372036854775807") {
+		t.Fatalf("id = %#v", got)
+	}
+}
+
+func TestRequestCapturesResponseMetadata(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Location", "/admin/events/summer")
+		writer.Header().Set("ETag", `"event-1"`)
+		writer.Header().Set("Link", `</admin/events?cursor=next>; rel="next"`)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusCreated)
+		_, _ = writer.Write([]byte(`{"slug":"summer"}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Request(context.Background(), http.MethodPost, "/admin/events", map[string]any{"title": "Summer"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusCreated || response.Location != "/admin/events/summer" || response.ETag != `"event-1"` || response.Link == "" {
+		t.Fatalf("response metadata = %#v", response)
+	}
+}
+
+func TestRequestAcceptsEmptySuccessBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.Request(context.Background(), http.MethodGet, "/admin/events.json", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestListEventsReturnsAPIError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		http.Error(writer, "unauthorized", http.StatusUnauthorized)
@@ -68,5 +177,37 @@ func TestListEventsReturnsAPIError(t *testing.T) {
 	}
 	if apiError.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want 401", apiError.StatusCode)
+	}
+}
+
+func TestAPIErrorCapturesRetryAfter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Retry-After", "12")
+		http.Error(writer, "slow down", http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ListEvents(context.Background())
+	var apiError *APIError
+	if !errors.As(err, &apiError) {
+		t.Fatalf("error = %T, want *APIError", err)
+	}
+	if apiError.RetryAfter != 12 {
+		t.Fatalf("retry after = %d, want 12", apiError.RetryAfter)
+	}
+}
+
+func TestRequestRejectsAbsolutePath(t *testing.T) {
+	client, err := New("https://app.usetix.io", "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.Request(context.Background(), http.MethodGet, "https://example.com/admin/events", nil)
+	if err == nil || !strings.Contains(err.Error(), "start with /") {
+		t.Fatalf("error = %v", err)
 	}
 }

@@ -1,0 +1,153 @@
+CMD usetix
+CMD usetix api
+CMD usetix auth
+CMD usetix auth login
+CMD usetix auth logout
+CMD usetix auth status
+CMD usetix completion
+CMD usetix events
+CMD usetix events list
+CMD usetix profile
+CMD usetix profile create
+CMD usetix profile delete
+CMD usetix profile list
+CMD usetix profile use
+CMD usetix version
+FLAG usetix --agent type=bool
+FLAG usetix --api-url type=string
+FLAG usetix --count type=bool
+FLAG usetix --ids-only type=bool
+FLAG usetix --json type=bool
+FLAG usetix --profile type=string
+FLAG usetix --quiet type=bool
+FLAG usetix --styled type=bool
+FLAG usetix api --agent type=bool
+FLAG usetix api --api-url type=string
+FLAG usetix api --count type=bool
+FLAG usetix api --data type=string
+FLAG usetix api --ids-only type=bool
+FLAG usetix api --json type=bool
+FLAG usetix api --no-auth type=bool
+FLAG usetix api --profile type=string
+FLAG usetix api --quiet type=bool
+FLAG usetix api --styled type=bool
+FLAG usetix api --yes type=bool
+FLAG usetix auth --agent type=bool
+FLAG usetix auth --api-url type=string
+FLAG usetix auth --count type=bool
+FLAG usetix auth --ids-only type=bool
+FLAG usetix auth --json type=bool
+FLAG usetix auth --profile type=string
+FLAG usetix auth --quiet type=bool
+FLAG usetix auth --styled type=bool
+FLAG usetix auth login --agent type=bool
+FLAG usetix auth login --api-url type=string
+FLAG usetix auth login --count type=bool
+FLAG usetix auth login --ids-only type=bool
+FLAG usetix auth login --json type=bool
+FLAG usetix auth login --profile type=string
+FLAG usetix auth login --quiet type=bool
+FLAG usetix auth login --styled type=bool
+FLAG usetix auth logout --agent type=bool
+FLAG usetix auth logout --api-url type=string
+FLAG usetix auth logout --count type=bool
+FLAG usetix auth logout --ids-only type=bool
+FLAG usetix auth logout --json type=bool
+FLAG usetix auth logout --profile type=string
+FLAG usetix auth logout --quiet type=bool
+FLAG usetix auth logout --styled type=bool
+FLAG usetix auth status --agent type=bool
+FLAG usetix auth status --api-url type=string
+FLAG usetix auth status --count type=bool
+FLAG usetix auth status --ids-only type=bool
+FLAG usetix auth status --json type=bool
+FLAG usetix auth status --profile type=string
+FLAG usetix auth status --quiet type=bool
+FLAG usetix auth status --styled type=bool
+FLAG usetix completion --agent type=bool
+FLAG usetix completion --api-url type=string
+FLAG usetix completion --count type=bool
+FLAG usetix completion --ids-only type=bool
+FLAG usetix completion --json type=bool
+FLAG usetix completion --profile type=string
+FLAG usetix completion --quiet type=bool
+FLAG usetix completion --styled type=bool
+FLAG usetix events --agent type=bool
+FLAG usetix events --api-url type=string
+FLAG usetix events --count type=bool
+FLAG usetix events --ids-only type=bool
+FLAG usetix events --json type=bool
+FLAG usetix events --profile type=string
+FLAG usetix events --quiet type=bool
+FLAG usetix events --styled type=bool
+FLAG usetix events list --agent type=bool
+FLAG usetix events list --api-url type=string
+FLAG usetix events list --count type=bool
+FLAG usetix events list --ids-only type=bool
+FLAG usetix events list --json type=bool
+FLAG usetix events list --profile type=string
+FLAG usetix events list --quiet type=bool
+FLAG usetix events list --styled type=bool
+FLAG usetix profile --agent type=bool
+FLAG usetix profile --api-url type=string
+FLAG usetix profile --count type=bool
+FLAG usetix profile --ids-only type=bool
+FLAG usetix profile --json type=bool
+FLAG usetix profile --profile type=string
+FLAG usetix profile --quiet type=bool
+FLAG usetix profile --styled type=bool
+FLAG usetix profile create --agent type=bool
+FLAG usetix profile create --api-url type=string
+FLAG usetix profile create --count type=bool
+FLAG usetix profile create --ids-only type=bool
+FLAG usetix profile create --json type=bool
+FLAG usetix profile create --profile type=string
+FLAG usetix profile create --quiet type=bool
+FLAG usetix profile create --styled type=bool
+FLAG usetix profile delete --agent type=bool
+FLAG usetix profile delete --api-url type=string
+FLAG usetix profile delete --count type=bool
+FLAG usetix profile delete --ids-only type=bool
+FLAG usetix profile delete --json type=bool
+FLAG usetix profile delete --profile type=string
+FLAG usetix profile delete --quiet type=bool
+FLAG usetix profile delete --styled type=bool
+FLAG usetix profile delete --yes type=bool
+FLAG usetix profile list --agent type=bool
+FLAG usetix profile list --api-url type=string
+FLAG usetix profile list --count type=bool
+FLAG usetix profile list --ids-only type=bool
+FLAG usetix profile list --json type=bool
+FLAG usetix profile list --profile type=string
+FLAG usetix profile list --quiet type=bool
+FLAG usetix profile list --styled type=bool
+FLAG usetix profile use --agent type=bool
+FLAG usetix profile use --api-url type=string
+FLAG usetix profile use --count type=bool
+FLAG usetix profile use --ids-only type=bool
+FLAG usetix profile use --json type=bool
+FLAG usetix profile use --profile type=string
+FLAG usetix profile use --quiet type=bool
+FLAG usetix profile use --styled type=bool
+FLAG usetix version --agent type=bool
+FLAG usetix version --api-url type=string
+FLAG usetix version --count type=bool
+FLAG usetix version --ids-only type=bool
+FLAG usetix version --json type=bool
+FLAG usetix version --profile type=string
+FLAG usetix version --quiet type=bool
+FLAG usetix version --styled type=bool
+SUB usetix api
+SUB usetix auth
+SUB usetix auth login
+SUB usetix auth logout
+SUB usetix auth status
+SUB usetix completion
+SUB usetix events
+SUB usetix events list
+SUB usetix profile
+SUB usetix profile create
+SUB usetix profile delete
+SUB usetix profile list
+SUB usetix profile use
+SUB usetix version
