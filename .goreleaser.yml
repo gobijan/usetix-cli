@@ -4,8 +4,7 @@ project_name: usetix
 
 before:
   hooks:
-    - go mod tidy
-    - go test ./...
+    - make ci
 
 builds:
   - main: ./cmd/usetix

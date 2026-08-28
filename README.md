@@ -31,7 +31,7 @@ it on your `PATH`.
 From a checkout:
 
 ```sh
-go install ./cmd/usetix
+make install
 ```
 
 Production uses `https://app.usetix.io`. Override it with `--api-url` or
@@ -150,30 +150,33 @@ Generate shell completion with `usetix completion bash`, `zsh`, `fish`, or
 ## Development
 
 ```sh
-go test ./...
-go test -race ./...
-go vet ./...
-go build ./cmd/usetix
+make help       # show every supported workflow
+make check      # format, modules, vet, tests, and build
+make ci         # the complete gate, including race tests
+make build      # write bin/usetix
+make install    # install with go install
 ```
 
 The public command/flag contract is stored in `.surface`. Update it only for an
 intentional CLI change:
 
 ```sh
-go test ./internal/cli -run TestSurface -update-surface
+make surface-update
 ```
 
 ## Releasing
 
 Releases are built by [GoReleaser](https://goreleaser.com) via GitHub Actions.
-Tag a version and push it; the workflow tests, builds binaries for macOS,
-Linux, and Windows (amd64 and arm64), and publishes a GitHub Release with
-checksums:
+The release target runs the full local gate, requires a clean `main` that
+exactly matches `origin/main`, creates the version tag, and pushes it:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+make release VERSION=v0.1.4
 ```
+
+The tag workflow repeats the full gate, builds binaries for macOS, Linux, and
+Windows (amd64 and arm64), and publishes a GitHub Release with checksums. Use
+`make release-snapshot` to exercise GoReleaser locally without publishing.
 
 The Homebrew formula in `gobijan/homebrew-tap` is updated automatically; the
 release workflow authenticates with the `HOMEBREW_TAP_DEPLOY_KEY` secret, a

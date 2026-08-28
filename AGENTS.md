@@ -13,10 +13,9 @@ This repository contains the Go command-line client for the Usetix Admin API.
 ## Development
 
 ```sh
-go test ./...
-go test -race ./...
-go vet ./...
-go build ./cmd/usetix
+make check
+make ci
+make build
 ```
 
 The CLI uses Cobra for commands, `github.com/basecamp/cli` for structured
@@ -28,7 +27,7 @@ The command/flag compatibility contract lives in `.surface`. After an
 intentional public surface change, update it with:
 
 ```sh
-go test ./internal/cli -run TestSurface -update-surface
+make surface-update
 ```
 
 Keep `API-COVERAGE.md` aligned with the documented Usetix API. Typed commands
