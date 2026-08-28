@@ -52,16 +52,26 @@ release:
 
     Or download the binary for your platform above and put it on your PATH.
 
-# Homebrew tap — enable once the gobijan/homebrew-tap repository exists and
-# a HOMEBREW_TAP_GITHUB_TOKEN secret (PAT with repo scope on the tap) is set:
-#
-# brews:
-#   - repository:
-#       owner: gobijan
-#       name: homebrew-tap
-#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-#     homepage: https://www.usetix.io
-#     description: Command-line client for the Usetix Admin API
-#     license: MIT
-#     test: |
-#       system "#{bin}/usetix version"
+# The cask is pushed to gobijan/homebrew-tap over SSH with a
+# write-scoped deploy key stored as the HOMEBREW_TAP_DEPLOY_KEY secret.
+homebrew_casks:
+  - repository:
+      git:
+        url: git@github.com:gobijan/homebrew-tap.git
+        private_key: "{{ .Env.HOMEBREW_TAP_DEPLOY_KEY }}"
+    directory: Casks
+    homepage: https://www.usetix.io
+    description: Command-line client for the Usetix Admin API
+    generate_completions_from_executable:
+      args: [completion]
+      shell_parameter_format: cobra
+      shells: [bash, zsh, fish]
+    # The binary is not signed or notarized, so strip the quarantine bit on
+    # install — otherwise Gatekeeper SIGKILLs it on first run. Developer ID
+    # signing + notarization can replace this later.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/usetix"]
+          end

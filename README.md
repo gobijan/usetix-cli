@@ -12,13 +12,21 @@ the Usetix application.
 
 ## Install
 
-Download the binary for your platform from the
-[latest release](https://github.com/gobijan/usetix-cli/releases/latest) and put
-it on your `PATH`, or install with Go:
+With Homebrew:
+
+```sh
+brew install gobijan/tap/usetix
+```
+
+With Go:
 
 ```sh
 go install github.com/gobijan/usetix-cli/cmd/usetix@latest
 ```
+
+Or download the binary for your platform from the
+[latest release](https://github.com/gobijan/usetix-cli/releases/latest) and put
+it on your `PATH`.
 
 From a checkout:
 
@@ -167,9 +175,9 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-To enable the Homebrew tap, create the `gobijan/homebrew-tap` repository, add
-a `HOMEBREW_TAP_GITHUB_TOKEN` secret, and uncomment the `brews` section in
-`.goreleaser.yml`.
+The Homebrew formula in `gobijan/homebrew-tap` is updated automatically; the
+release workflow authenticates with the `HOMEBREW_TAP_DEPLOY_KEY` secret, a
+write-scoped deploy key for the tap repository.
 
 ## License
 
