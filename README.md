@@ -45,9 +45,21 @@ fallback explicitly.
 
 ```sh
 usetix events list
-usetix events list --json
-usetix events list --ids-only
-usetix events list --count
+usetix events show summer-festival
+usetix events create --title "Summer Festival" --venue-id 7 \
+  --starts-at 2026-07-01T18:00:00Z --ends-at 2026-07-01T23:00:00Z \
+  --sales-ends-at 2026-07-01T18:00:00Z
+usetix events update summer-festival --listed=false
+usetix events publish summer-festival
+usetix events unpublish summer-festival
+usetix events delete summer-festival --yes
+
+usetix orders list --period month --event summer-festival
+usetix orders show abcd1234efgh5678
+usetix orders refund abcd1234efgh5678 --amount 5.00 --yes
+usetix orders cancel abcd1234efgh5678 --yes
+usetix orders archive abcd1234efgh5678 --yes
+usetix orders unarchive abcd1234efgh5678
 
 usetix profile create production --api-url https://app.usetix.io
 usetix profile create local --api-url http://localhost:3000
@@ -56,6 +68,7 @@ usetix --profile local auth login
 usetix profile list
 ```
 
+Refunds, cancellations, deletions, and archiving always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -71,9 +84,23 @@ usetix api POST /admin/venues --data '{"name":"Halle 1","city":"Berlin"}'
 usetix api PATCH /admin/events/summer --data @event.json
 printf '%s' '{"listed":false}' | usetix api PATCH /admin/events/summer --data -
 usetix api DELETE /admin/performers/42 --yes
+```
 
-# Unauthenticated public feed
-usetix api GET /events --no-auth
+Non-JSON responses — CSV, XLSX, and PDF exports — download with `--output`:
+
+```sh
+usetix api GET /admin/orders.csv --output orders.csv
+usetix api GET '/admin/events/summer.xlsx' --output attendees.xlsx
+usetix api GET /admin/analytics.csv --output - > analytics.csv
+```
+
+The unauthenticated public events feed lives on your shop host, not on
+`app.usetix.io`. Read `shop_url` from the shop settings, then point the CLI at
+it:
+
+```sh
+usetix api GET /admin/account_settings/shop --quiet   # contains "shop_url"
+usetix api GET /events --no-auth --api-url https://your-subdomain.usetix.io
 ```
 
 `DELETE` always requires `--yes`. See [API-COVERAGE.md](API-COVERAGE.md) for the

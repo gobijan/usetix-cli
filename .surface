@@ -6,7 +6,20 @@ CMD usetix auth logout
 CMD usetix auth status
 CMD usetix completion
 CMD usetix events
+CMD usetix events create
+CMD usetix events delete
 CMD usetix events list
+CMD usetix events publish
+CMD usetix events show
+CMD usetix events unpublish
+CMD usetix events update
+CMD usetix orders
+CMD usetix orders archive
+CMD usetix orders cancel
+CMD usetix orders list
+CMD usetix orders refund
+CMD usetix orders show
+CMD usetix orders unarchive
 CMD usetix profile
 CMD usetix profile create
 CMD usetix profile delete
@@ -28,6 +41,7 @@ FLAG usetix api --data type=string
 FLAG usetix api --ids-only type=bool
 FLAG usetix api --json type=bool
 FLAG usetix api --no-auth type=bool
+FLAG usetix api --output type=string
 FLAG usetix api --profile type=string
 FLAG usetix api --quiet type=bool
 FLAG usetix api --styled type=bool
@@ -80,6 +94,36 @@ FLAG usetix events --json type=bool
 FLAG usetix events --profile type=string
 FLAG usetix events --quiet type=bool
 FLAG usetix events --styled type=bool
+FLAG usetix events create --agent type=bool
+FLAG usetix events create --api-url type=string
+FLAG usetix events create --capacity type=int
+FLAG usetix events create --count type=bool
+FLAG usetix events create --description type=string
+FLAG usetix events create --doors-open-at type=string
+FLAG usetix events create --ends-at type=string
+FLAG usetix events create --ids-only type=bool
+FLAG usetix events create --json type=bool
+FLAG usetix events create --listed type=bool
+FLAG usetix events create --minimum-age type=int
+FLAG usetix events create --profile type=string
+FLAG usetix events create --quiet type=bool
+FLAG usetix events create --sales-ends-at type=string
+FLAG usetix events create --sales-starts-at type=string
+FLAG usetix events create --show-end-time type=bool
+FLAG usetix events create --slug type=string
+FLAG usetix events create --starts-at type=string
+FLAG usetix events create --styled type=bool
+FLAG usetix events create --title type=string
+FLAG usetix events create --venue-id type=int64
+FLAG usetix events delete --agent type=bool
+FLAG usetix events delete --api-url type=string
+FLAG usetix events delete --count type=bool
+FLAG usetix events delete --ids-only type=bool
+FLAG usetix events delete --json type=bool
+FLAG usetix events delete --profile type=string
+FLAG usetix events delete --quiet type=bool
+FLAG usetix events delete --styled type=bool
+FLAG usetix events delete --yes type=bool
 FLAG usetix events list --agent type=bool
 FLAG usetix events list --api-url type=string
 FLAG usetix events list --count type=bool
@@ -88,6 +132,115 @@ FLAG usetix events list --json type=bool
 FLAG usetix events list --profile type=string
 FLAG usetix events list --quiet type=bool
 FLAG usetix events list --styled type=bool
+FLAG usetix events publish --agent type=bool
+FLAG usetix events publish --api-url type=string
+FLAG usetix events publish --count type=bool
+FLAG usetix events publish --ids-only type=bool
+FLAG usetix events publish --json type=bool
+FLAG usetix events publish --profile type=string
+FLAG usetix events publish --quiet type=bool
+FLAG usetix events publish --styled type=bool
+FLAG usetix events show --agent type=bool
+FLAG usetix events show --api-url type=string
+FLAG usetix events show --count type=bool
+FLAG usetix events show --ids-only type=bool
+FLAG usetix events show --json type=bool
+FLAG usetix events show --profile type=string
+FLAG usetix events show --quiet type=bool
+FLAG usetix events show --styled type=bool
+FLAG usetix events unpublish --agent type=bool
+FLAG usetix events unpublish --api-url type=string
+FLAG usetix events unpublish --count type=bool
+FLAG usetix events unpublish --ids-only type=bool
+FLAG usetix events unpublish --json type=bool
+FLAG usetix events unpublish --profile type=string
+FLAG usetix events unpublish --quiet type=bool
+FLAG usetix events unpublish --styled type=bool
+FLAG usetix events update --agent type=bool
+FLAG usetix events update --api-url type=string
+FLAG usetix events update --capacity type=int
+FLAG usetix events update --count type=bool
+FLAG usetix events update --description type=string
+FLAG usetix events update --doors-open-at type=string
+FLAG usetix events update --ends-at type=string
+FLAG usetix events update --ids-only type=bool
+FLAG usetix events update --json type=bool
+FLAG usetix events update --listed type=bool
+FLAG usetix events update --minimum-age type=int
+FLAG usetix events update --profile type=string
+FLAG usetix events update --quiet type=bool
+FLAG usetix events update --sales-ends-at type=string
+FLAG usetix events update --sales-starts-at type=string
+FLAG usetix events update --show-end-time type=bool
+FLAG usetix events update --slug type=string
+FLAG usetix events update --starts-at type=string
+FLAG usetix events update --styled type=bool
+FLAG usetix events update --title type=string
+FLAG usetix events update --venue-id type=int64
+FLAG usetix orders --agent type=bool
+FLAG usetix orders --api-url type=string
+FLAG usetix orders --count type=bool
+FLAG usetix orders --ids-only type=bool
+FLAG usetix orders --json type=bool
+FLAG usetix orders --profile type=string
+FLAG usetix orders --quiet type=bool
+FLAG usetix orders --styled type=bool
+FLAG usetix orders archive --agent type=bool
+FLAG usetix orders archive --api-url type=string
+FLAG usetix orders archive --count type=bool
+FLAG usetix orders archive --ids-only type=bool
+FLAG usetix orders archive --json type=bool
+FLAG usetix orders archive --profile type=string
+FLAG usetix orders archive --quiet type=bool
+FLAG usetix orders archive --styled type=bool
+FLAG usetix orders archive --yes type=bool
+FLAG usetix orders cancel --agent type=bool
+FLAG usetix orders cancel --api-url type=string
+FLAG usetix orders cancel --count type=bool
+FLAG usetix orders cancel --ids-only type=bool
+FLAG usetix orders cancel --json type=bool
+FLAG usetix orders cancel --profile type=string
+FLAG usetix orders cancel --quiet type=bool
+FLAG usetix orders cancel --styled type=bool
+FLAG usetix orders cancel --yes type=bool
+FLAG usetix orders list --agent type=bool
+FLAG usetix orders list --api-url type=string
+FLAG usetix orders list --count type=bool
+FLAG usetix orders list --event type=string
+FLAG usetix orders list --ids-only type=bool
+FLAG usetix orders list --include-archived type=bool
+FLAG usetix orders list --json type=bool
+FLAG usetix orders list --period type=string
+FLAG usetix orders list --profile type=string
+FLAG usetix orders list --query type=string
+FLAG usetix orders list --quiet type=bool
+FLAG usetix orders list --styled type=bool
+FLAG usetix orders refund --agent type=bool
+FLAG usetix orders refund --amount type=string
+FLAG usetix orders refund --api-url type=string
+FLAG usetix orders refund --count type=bool
+FLAG usetix orders refund --ids-only type=bool
+FLAG usetix orders refund --json type=bool
+FLAG usetix orders refund --profile type=string
+FLAG usetix orders refund --quiet type=bool
+FLAG usetix orders refund --styled type=bool
+FLAG usetix orders refund --yes type=bool
+FLAG usetix orders show --agent type=bool
+FLAG usetix orders show --api-url type=string
+FLAG usetix orders show --count type=bool
+FLAG usetix orders show --ids-only type=bool
+FLAG usetix orders show --json type=bool
+FLAG usetix orders show --profile type=string
+FLAG usetix orders show --quiet type=bool
+FLAG usetix orders show --styled type=bool
+FLAG usetix orders unarchive --agent type=bool
+FLAG usetix orders unarchive --api-url type=string
+FLAG usetix orders unarchive --count type=bool
+FLAG usetix orders unarchive --ids-only type=bool
+FLAG usetix orders unarchive --json type=bool
+FLAG usetix orders unarchive --profile type=string
+FLAG usetix orders unarchive --quiet type=bool
+FLAG usetix orders unarchive --styled type=bool
 FLAG usetix profile --agent type=bool
 FLAG usetix profile --api-url type=string
 FLAG usetix profile --count type=bool
@@ -144,7 +297,20 @@ SUB usetix auth logout
 SUB usetix auth status
 SUB usetix completion
 SUB usetix events
+SUB usetix events create
+SUB usetix events delete
 SUB usetix events list
+SUB usetix events publish
+SUB usetix events show
+SUB usetix events unpublish
+SUB usetix events update
+SUB usetix orders
+SUB usetix orders archive
+SUB usetix orders cancel
+SUB usetix orders list
+SUB usetix orders refund
+SUB usetix orders show
+SUB usetix orders unarchive
 SUB usetix profile
 SUB usetix profile create
 SUB usetix profile delete

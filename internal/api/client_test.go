@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestListEvents(t *testing.T) {
@@ -198,6 +199,88 @@ func TestAPIErrorCapturesRetryAfter(t *testing.T) {
 	}
 	if apiError.RetryAfter != 12 {
 		t.Fatalf("retry after = %d, want 12", apiError.RetryAfter)
+	}
+}
+
+func TestAPIErrorFlattensValidationErrors(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		_, _ = writer.Write([]byte(`{"errors":{"title":["can't be blank"],"base":["something failed"]}}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.Request(context.Background(), http.MethodPost, "/admin/events", map[string]any{})
+	var apiError *APIError
+	if !errors.As(err, &apiError) {
+		t.Fatalf("error = %T, want *APIError", err)
+	}
+	if apiError.Error() != "something failed; title: can't be blank" {
+		t.Fatalf("message = %q", apiError.Error())
+	}
+}
+
+func TestRetryAfterParsesHTTPDate(t *testing.T) {
+	if got := retryAfterSeconds("12"); got != 12 {
+		t.Fatalf("seconds = %d, want 12", got)
+	}
+	future := time.Now().Add(90 * time.Second).UTC().Format(http.TimeFormat)
+	if got := retryAfterSeconds(future); got < 80 || got > 91 {
+		t.Fatalf("seconds = %d, want ~90", got)
+	}
+	if got := retryAfterSeconds("not a date"); got != 0 {
+		t.Fatalf("seconds = %d, want 0", got)
+	}
+}
+
+func TestDownloadStreamsRawBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("Accept") != "*/*" {
+			t.Fatalf("accept = %q", request.Header.Get("Accept"))
+		}
+		writer.Header().Set("Content-Type", "text/csv")
+		_, _ = writer.Write([]byte("code,customer\nA1,Jane\n"))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buffer strings.Builder
+	response, written, err := client.Download(context.Background(), http.MethodGet, "/admin/orders.csv", &buffer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if written != int64(buffer.Len()) || buffer.String() != "code,customer\nA1,Jane\n" {
+		t.Fatalf("body = %q, written = %d", buffer.String(), written)
+	}
+	if response.ContentType != "text/csv" {
+		t.Fatalf("content type = %q", response.ContentType)
+	}
+}
+
+func TestResponseOverLimitFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"padding":"`))
+		padding := strings.Repeat("x", maxResponseSize)
+		_, _ = writer.Write([]byte(padding))
+		_, _ = writer.Write([]byte(`"}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "secret", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.Request(context.Background(), http.MethodGet, "/admin/events.json", nil)
+	if err == nil || !strings.Contains(err.Error(), "exceeds the 10 MiB limit") {
+		t.Fatalf("error = %v", err)
 	}
 }
 

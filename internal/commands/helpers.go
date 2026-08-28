@@ -35,6 +35,8 @@ func NormalizeError(err error) error {
 			return &output.Error{Code: "forbidden", Message: message, HTTPStatus: apiError.StatusCode, Cause: err}
 		case http.StatusNotFound:
 			return &output.Error{Code: "not_found", Message: message, HTTPStatus: apiError.StatusCode, Cause: err}
+		case http.StatusUnprocessableEntity:
+			return &output.Error{Code: "validation", Message: message, HTTPStatus: apiError.StatusCode, Cause: err}
 		case http.StatusTooManyRequests:
 			rateLimit := output.ErrRateLimit(apiError.RetryAfter)
 			rateLimit.Cause = err

@@ -58,6 +58,9 @@ func ValidateAPIURL(value string) error {
 	if parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return errors.New("API URL must not include credentials, a query, or a fragment")
 	}
+	if parsed.Path != "" && parsed.Path != "/" {
+		return errors.New("API URL must not include a path")
+	}
 	if parsed.Scheme == "http" && !isLocalhost(parsed.Hostname()) {
 		return errors.New("API URL must use https unless it targets localhost")
 	}

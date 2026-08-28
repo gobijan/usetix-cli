@@ -15,12 +15,37 @@ import (
 	"github.com/gobijan/usetix-cli/internal/terminal"
 )
 
+// eventFlags mirrors the writable attributes of the events API.
+type eventFlags struct {
+	title         string
+	description   string
+	slug          string
+	venueID       int64
+	startsAt      string
+	doorsOpenAt   string
+	endsAt        string
+	showEndTime   bool
+	salesStartsAt string
+	salesEndsAt   string
+	listed        bool
+	minimumAge    int
+	capacity      int
+}
+
 func NewEvents(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "events",
 		Short: "Work with events",
 	}
-	command.AddCommand(newEventsList(runtime))
+	command.AddCommand(
+		newEventsList(runtime),
+		newEventsShow(runtime),
+		newEventsCreate(runtime),
+		newEventsUpdate(runtime),
+		newEventsDelete(runtime),
+		newEventsPublish(runtime),
+		newEventsUnpublish(runtime),
+	)
 	return command
 }
 
@@ -51,6 +76,210 @@ func newEventsList(runtime *appctx.Runtime) *cobra.Command {
 			)
 		},
 	}
+}
+
+func newEventsShow(runtime *appctx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use:   "show SLUG",
+		Short: "Show an event with sales stats and ticket breakdown",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			event, err := client.GetEvent(command.Context(), args[0])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(event, renderEventDetail(event), output.WithSummary(event.Title))
+		},
+	}
+}
+
+func newEventsCreate(runtime *appctx.Runtime) *cobra.Command {
+	flags := &eventFlags{}
+	command := &cobra.Command{
+		Use:   "create",
+		Short: "Create a draft event",
+		Args:  cobra.NoArgs,
+		RunE: func(command *cobra.Command, _ []string) error {
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			attributes := eventAttributes(command, flags)
+			event, location, err := client.CreateEvent(command.Context(), attributes)
+			if err != nil {
+				return NormalizeError(err)
+			}
+			options := []output.ResponseOption{output.WithSummary("Event created")}
+			if location != "" {
+				options = append(options, output.WithMeta("location", location))
+			}
+			return runtime.Output().OK(event, renderEventAction("Created", event), options...)
+		},
+	}
+	addEventFlags(command, flags)
+	_ = command.MarkFlagRequired("title")
+	_ = command.MarkFlagRequired("venue-id")
+	_ = command.MarkFlagRequired("starts-at")
+	_ = command.MarkFlagRequired("ends-at")
+	_ = command.MarkFlagRequired("sales-ends-at")
+	return command
+}
+
+func newEventsUpdate(runtime *appctx.Runtime) *cobra.Command {
+	flags := &eventFlags{}
+	command := &cobra.Command{
+		Use:   "update SLUG",
+		Short: "Update event attributes",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			attributes := eventAttributes(command, flags)
+			if len(attributes) == 0 {
+				return output.ErrUsageHint("no attributes to update", "Pass at least one flag, for example --title")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			event, err := client.UpdateEvent(command.Context(), args[0], attributes)
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(event, renderEventAction("Updated", event), output.WithSummary("Event updated"))
+		},
+	}
+	addEventFlags(command, flags)
+	return command
+}
+
+func newEventsDelete(runtime *appctx.Runtime) *cobra.Command {
+	var yes bool
+	command := &cobra.Command{
+		Use:   "delete SLUG",
+		Short: "Delete an event",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			if !yes {
+				return output.ErrUsageHint("event deletion requires explicit confirmation", "Re-run with --yes")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			if err := client.DeleteEvent(command.Context(), args[0]); err != nil {
+				return NormalizeError(err)
+			}
+			result := map[string]any{"slug": args[0], "deleted": true}
+			return runtime.Output().OK(result, renderSimpleAction("Deleted event "+args[0]), output.WithSummary("Event deleted"))
+		},
+	}
+	command.Flags().BoolVar(&yes, "yes", false, "confirm event deletion")
+	return command
+}
+
+func newEventsPublish(runtime *appctx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use:   "publish SLUG",
+		Short: "Publish an event",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			event, err := client.PublishEvent(command.Context(), args[0])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(event, renderEventAction("Published", event), output.WithSummary("Event published"))
+		},
+	}
+}
+
+func newEventsUnpublish(runtime *appctx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use:   "unpublish SLUG",
+		Short: "Take an event offline",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			event, err := client.UnpublishEvent(command.Context(), args[0])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(event, renderEventAction("Unpublished", event), output.WithSummary("Event unpublished"))
+		},
+	}
+}
+
+func addEventFlags(command *cobra.Command, flags *eventFlags) {
+	set := command.Flags()
+	set.StringVar(&flags.title, "title", "", "event title")
+	set.StringVar(&flags.description, "description", "", "event description (HTML allowed)")
+	set.StringVar(&flags.slug, "slug", "", "URL slug")
+	set.Int64Var(&flags.venueID, "venue-id", 0, "venue ID")
+	set.StringVar(&flags.startsAt, "starts-at", "", "start time (ISO 8601)")
+	set.StringVar(&flags.doorsOpenAt, "doors-open-at", "", "doors-open time (ISO 8601)")
+	set.StringVar(&flags.endsAt, "ends-at", "", "end time (ISO 8601)")
+	set.BoolVar(&flags.showEndTime, "show-end-time", false, "display the end time publicly")
+	set.StringVar(&flags.salesStartsAt, "sales-starts-at", "", "sales start time (ISO 8601)")
+	set.StringVar(&flags.salesEndsAt, "sales-ends-at", "", "sales end time (ISO 8601)")
+	set.BoolVar(&flags.listed, "listed", true, "list the event in the public shop")
+	set.IntVar(&flags.minimumAge, "minimum-age", 0, "minimum attendee age")
+	set.IntVar(&flags.capacity, "capacity", 0, "overall event capacity")
+}
+
+// eventAttributes builds the request payload from flags that were explicitly
+// set, so updates only send what the user asked to change.
+func eventAttributes(command *cobra.Command, flags *eventFlags) map[string]any {
+	attributes := map[string]any{}
+	set := command.Flags()
+	if set.Changed("title") {
+		attributes["title"] = flags.title
+	}
+	if set.Changed("description") {
+		attributes["description"] = flags.description
+	}
+	if set.Changed("slug") {
+		attributes["slug"] = flags.slug
+	}
+	if set.Changed("venue-id") {
+		attributes["venue_id"] = flags.venueID
+	}
+	if set.Changed("starts-at") {
+		attributes["starts_at"] = flags.startsAt
+	}
+	if set.Changed("doors-open-at") {
+		attributes["doors_open_at"] = flags.doorsOpenAt
+	}
+	if set.Changed("ends-at") {
+		attributes["ends_at"] = flags.endsAt
+	}
+	if set.Changed("show-end-time") {
+		attributes["show_end_time"] = flags.showEndTime
+	}
+	if set.Changed("sales-starts-at") {
+		attributes["sales_starts_at"] = flags.salesStartsAt
+	}
+	if set.Changed("sales-ends-at") {
+		attributes["sales_ends_at"] = flags.salesEndsAt
+	}
+	if set.Changed("listed") {
+		attributes["listed"] = flags.listed
+	}
+	if set.Changed("minimum-age") {
+		attributes["minimum_age"] = flags.minimumAge
+	}
+	if set.Changed("capacity") {
+		attributes["capacity"] = flags.capacity
+	}
+	return attributes
 }
 
 func renderEvents(response api.EventsResponse) output.StyledRenderer {
@@ -100,6 +329,85 @@ func renderEvents(response api.EventsResponse) output.StyledRenderer {
 			response.Stats.Revenue.Amount,
 			response.Stats.Revenue.Currency,
 		)
+		return err
+	}
+}
+
+func renderEventDetail(event api.EventDetail) output.StyledRenderer {
+	return func(destination io.Writer) error {
+		title := lipgloss.NewStyle().Bold(true).Render(terminal.SanitizeLine(event.Title))
+		if _, err := fmt.Fprintf(destination, "%s (%s)\n", title, terminal.SanitizeLine(event.Slug)); err != nil {
+			return err
+		}
+		lines := []string{
+			"  Status    " + eventStatus(event.Event),
+			"  Starts    " + eventStart(event.Event),
+		}
+		if event.Venue != nil {
+			lines = append(lines, "  Venue     "+terminal.SanitizeLine(event.Venue.Name)+", "+terminal.SanitizeLine(event.Venue.City))
+		}
+		lines = append(lines,
+			fmt.Sprintf("  Sold      %d tickets in %d orders", event.Stats.SoldCount, event.Stats.TotalOrders),
+			fmt.Sprintf("  Revenue   %s %s", event.Stats.TotalRevenue.Amount, event.Stats.TotalRevenue.Currency),
+		)
+		if event.Stats.RemainingCount != nil {
+			lines = append(lines, fmt.Sprintf("  Remaining %d", *event.Stats.RemainingCount))
+		}
+		for _, line := range lines {
+			if _, err := fmt.Fprintln(destination, line); err != nil {
+				return err
+			}
+		}
+		if len(event.TicketsBreakdown) == 0 {
+			return nil
+		}
+		if _, err := fmt.Fprintln(destination); err != nil {
+			return err
+		}
+		header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
+		view := table.New().
+			Headers("TICKET", "KIND", "SOLD", "PRICE", "REVENUE").
+			Border(lipgloss.HiddenBorder()).
+			BorderTop(false).
+			BorderBottom(false).
+			BorderLeft(false).
+			BorderRight(false).
+			BorderHeader(false).
+			BorderColumn(false).
+			StyleFunc(func(row, _ int) lipgloss.Style {
+				style := lipgloss.NewStyle().PaddingRight(2)
+				if row == table.HeaderRow {
+					return style.Inherit(header)
+				}
+				return style
+			})
+		for _, entry := range event.TicketsBreakdown {
+			view.Row(
+				terminal.SanitizeLine(entry.Title),
+				entry.Kind,
+				fmt.Sprintf("%d", entry.Sold),
+				entry.Price.Amount+" "+entry.Price.Currency,
+				entry.Revenue.Amount+" "+entry.Revenue.Currency,
+			)
+		}
+		_, err := fmt.Fprintln(destination, view.String())
+		return err
+	}
+}
+
+func renderEventAction(action string, event api.Event) output.StyledRenderer {
+	return func(destination io.Writer) error {
+		mark := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Green).Render("✓")
+		_, err := fmt.Fprintf(destination, "%s %s %s (%s) · %s\n",
+			mark, action, terminal.SanitizeLine(event.Title), terminal.SanitizeLine(event.Slug), eventStatus(event))
+		return err
+	}
+}
+
+func renderSimpleAction(message string) output.StyledRenderer {
+	return func(destination io.Writer) error {
+		mark := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Green).Render("✓")
+		_, err := fmt.Fprintf(destination, "%s %s\n", mark, terminal.SanitizeLine(message))
 		return err
 	}
 }

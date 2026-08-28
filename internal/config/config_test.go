@@ -25,7 +25,7 @@ func TestValidateAPIURL(t *testing.T) {
 		}
 	}
 
-	invalid := []string{"http://app.usetix.io", "ftp://app.usetix.io", "https://", "https://user:secret@app.usetix.io", "https://app.usetix.io?token=secret"}
+	invalid := []string{"http://app.usetix.io", "ftp://app.usetix.io", "https://", "https://user:secret@app.usetix.io", "https://app.usetix.io?token=secret", "https://app.usetix.io/subpath"}
 	for _, value := range invalid {
 		if err := ValidateAPIURL(value); err == nil {
 			t.Errorf("ValidateAPIURL(%q) succeeded", value)

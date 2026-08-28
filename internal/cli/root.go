@@ -86,6 +86,7 @@ func NewRoot(version string, dependencies Dependencies) (*cobra.Command, *appctx
 		commands.NewAuth(runtime),
 		commands.NewProfile(runtime),
 		commands.NewEvents(runtime),
+		commands.NewOrders(runtime),
 		commands.NewAPI(runtime),
 		commands.NewVersion(runtime),
 	)

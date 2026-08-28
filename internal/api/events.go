@@ -1,6 +1,14 @@
 package api
 
-import "context"
+import (
+	"context"
+	"net/url"
+)
+
+type Money struct {
+	Amount   string `json:"amount"`
+	Currency string `json:"currency"`
+}
 
 type Event struct {
 	ID            int64          `json:"id"`
@@ -26,16 +34,39 @@ type Venue struct {
 	City string `json:"city"`
 }
 
+type EventStats struct {
+	SoldCount         int      `json:"sold_count"`
+	AdmissionCount    int      `json:"admission_count"`
+	RemainingCount    *int     `json:"remaining_count"`
+	TotalOrders       int      `json:"total_orders"`
+	TotalRevenue      Money    `json:"total_revenue"`
+	RedemptionRate    *float64 `json:"redemption_rate"`
+	CapacityConsumed  *int     `json:"capacity_consumed"`
+	CapacityRemaining *int     `json:"capacity_remaining"`
+}
+
+type TicketBreakdown struct {
+	Title   string `json:"title"`
+	Kind    string `json:"kind"`
+	Sold    int    `json:"sold"`
+	Stock   *int   `json:"stock"`
+	Price   Money  `json:"price"`
+	Revenue Money  `json:"revenue"`
+}
+
+type EventDetail struct {
+	Event
+	Stats            EventStats        `json:"stats"`
+	TicketsBreakdown []TicketBreakdown `json:"tickets_breakdown"`
+}
+
 type EventsResponse struct {
 	UpcomingEvents []Event `json:"upcoming_events"`
 	PastEvents     []Event `json:"past_events"`
 	Stats          struct {
-		UpcomingCount int `json:"upcoming_count"`
-		Revenue       struct {
-			Amount   string `json:"amount"`
-			Currency string `json:"currency"`
-		} `json:"revenue"`
-		TicketsSold int `json:"tickets_sold"`
+		UpcomingCount int   `json:"upcoming_count"`
+		Revenue       Money `json:"revenue"`
+		TicketsSold   int   `json:"tickets_sold"`
 	} `json:"stats"`
 }
 
@@ -43,6 +74,40 @@ func (client *Client) ListEvents(ctx context.Context) (EventsResponse, error) {
 	var response EventsResponse
 	err := client.get(ctx, "/admin/events.json", &response)
 	return response, err
+}
+
+func (client *Client) GetEvent(ctx context.Context, slug string) (EventDetail, error) {
+	var event EventDetail
+	err := client.get(ctx, "/admin/events/"+url.PathEscape(slug)+".json", &event)
+	return event, err
+}
+
+func (client *Client) CreateEvent(ctx context.Context, attributes map[string]any) (Event, string, error) {
+	var event Event
+	response, err := client.post(ctx, "/admin/events.json", attributes, &event)
+	return event, response.Location, err
+}
+
+func (client *Client) UpdateEvent(ctx context.Context, slug string, attributes map[string]any) (Event, error) {
+	var event Event
+	err := client.patch(ctx, "/admin/events/"+url.PathEscape(slug)+".json", attributes, &event)
+	return event, err
+}
+
+func (client *Client) DeleteEvent(ctx context.Context, slug string) error {
+	return client.delete(ctx, "/admin/events/"+url.PathEscape(slug)+".json", nil)
+}
+
+func (client *Client) PublishEvent(ctx context.Context, slug string) (Event, error) {
+	var event Event
+	_, err := client.post(ctx, "/admin/events/"+url.PathEscape(slug)+"/publication.json", nil, &event)
+	return event, err
+}
+
+func (client *Client) UnpublishEvent(ctx context.Context, slug string) (Event, error) {
+	var event Event
+	err := client.delete(ctx, "/admin/events/"+url.PathEscape(slug)+"/publication.json", &event)
+	return event, err
 }
 
 func (response EventsResponse) AllEvents() []Event {

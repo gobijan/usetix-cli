@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -63,22 +64,51 @@ func New(baseURL, token, version string, options ...Option) (*Client, error) {
 type APIError struct {
 	StatusCode int
 	Body       string
+	Errors     map[string][]string
 	RetryAfter int
 }
 
 type APIResponse struct {
-	Data       any
-	StatusCode int
-	Location   string
-	ETag       string
-	Link       string
+	Data        any
+	StatusCode  int
+	Location    string
+	ETag        string
+	Link        string
+	ContentType string
 }
 
 func (err *APIError) Error() string {
+	if message := err.validationMessage(); message != "" {
+		return message
+	}
 	if err.Body == "" {
 		return fmt.Sprintf("Usetix API returned %s", http.StatusText(err.StatusCode))
 	}
 	return fmt.Sprintf("Usetix API returned %s: %s", http.StatusText(err.StatusCode), err.Body)
+}
+
+// validationMessage flattens the server's {"errors": {"field": ["…"]}} map
+// into "field: message" lines so validation failures read naturally.
+func (err *APIError) validationMessage() string {
+	if len(err.Errors) == 0 {
+		return ""
+	}
+	fields := make([]string, 0, len(err.Errors))
+	for field := range err.Errors {
+		fields = append(fields, field)
+	}
+	sort.Strings(fields)
+	lines := make([]string, 0, len(fields))
+	for _, field := range fields {
+		for _, message := range err.Errors[field] {
+			if field == "base" {
+				lines = append(lines, message)
+			} else {
+				lines = append(lines, field+": "+message)
+			}
+		}
+	}
+	return strings.Join(lines, "; ")
 }
 
 func (client *Client) Check(ctx context.Context) error {
@@ -96,29 +126,109 @@ func (client *Client) Request(ctx context.Context, method, path string, body any
 	return response, nil
 }
 
+// Download streams a response body to destination without JSON decoding,
+// for CSV, XLSX, PDF, and other non-JSON exports.
+func (client *Client) Download(ctx context.Context, method, path string, destination io.Writer) (APIResponse, int64, error) {
+	request, err := client.newRequest(ctx, method, path, nil)
+	if err != nil {
+		return APIResponse{}, 0, err
+	}
+	request.Header.Set("Accept", "*/*")
+
+	response, err := client.httpClient.Do(request)
+	if err != nil {
+		return APIResponse{}, 0, fmt.Errorf("request Usetix API: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return APIResponse{}, 0, readAPIError(response)
+	}
+
+	written, err := io.Copy(destination, response.Body)
+	if err != nil {
+		return APIResponse{}, written, fmt.Errorf("download response body: %w", err)
+	}
+	return apiResponseFrom(response), written, nil
+}
+
 func (client *Client) get(ctx context.Context, path string, destination any) error {
 	_, err := client.do(ctx, http.MethodGet, path, nil, destination)
 	return err
 }
 
+func (client *Client) post(ctx context.Context, path string, body, destination any) (APIResponse, error) {
+	return client.do(ctx, http.MethodPost, path, body, destination)
+}
+
+func (client *Client) patch(ctx context.Context, path string, body, destination any) error {
+	_, err := client.do(ctx, http.MethodPatch, path, body, destination)
+	return err
+}
+
+func (client *Client) delete(ctx context.Context, path string, destination any) error {
+	_, err := client.do(ctx, http.MethodDelete, path, nil, destination)
+	return err
+}
+
 func (client *Client) do(ctx context.Context, method, path string, body, destination any) (APIResponse, error) {
-	endpoint, err := client.endpoint(path)
+	request, err := client.newRequest(ctx, method, path, body)
 	if err != nil {
 		return APIResponse{}, err
+	}
+
+	response, err := client.httpClient.Do(request)
+	if err != nil {
+		return APIResponse{}, fmt.Errorf("request Usetix API: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return APIResponse{}, readAPIError(response)
+	}
+
+	result := apiResponseFrom(response)
+	if destination == nil || response.StatusCode == http.StatusNoContent || method == http.MethodHead {
+		return result, nil
+	}
+
+	limited := io.LimitReader(response.Body, maxResponseSize+1)
+	payload, err := io.ReadAll(limited)
+	if err != nil {
+		return APIResponse{}, fmt.Errorf("read Usetix API response: %w", err)
+	}
+	if len(payload) > maxResponseSize {
+		return APIResponse{}, fmt.Errorf("Usetix API response exceeds the %d MiB limit", maxResponseSize>>20)
+	}
+	if len(bytes.TrimSpace(payload)) == 0 {
+		return result, nil
+	}
+	decoder := json.NewDecoder(bytes.NewReader(payload))
+	decoder.UseNumber()
+	if err := decoder.Decode(destination); err != nil && !errors.Is(err, io.EOF) {
+		return APIResponse{}, fmt.Errorf("decode Usetix API response: %w", err)
+	}
+	return result, nil
+}
+
+func (client *Client) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
+	endpoint, err := client.endpoint(path)
+	if err != nil {
+		return nil, err
 	}
 
 	var requestBody io.Reader
 	if body != nil {
 		encoded, err := json.Marshal(body)
 		if err != nil {
-			return APIResponse{}, fmt.Errorf("encode API request: %w", err)
+			return nil, fmt.Errorf("encode API request: %w", err)
 		}
 		requestBody = bytes.NewReader(encoded)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, method, endpoint.String(), requestBody)
 	if err != nil {
-		return APIResponse{}, fmt.Errorf("create API request: %w", err)
+		return nil, fmt.Errorf("create API request: %w", err)
 	}
 	request.Header.Set("Accept", "application/json")
 	if client.token != "" {
@@ -128,38 +238,7 @@ func (client *Client) do(ctx context.Context, method, path string, body, destina
 	if body != nil {
 		request.Header.Set("Content-Type", "application/json")
 	}
-
-	response, err := client.httpClient.Do(request)
-	if err != nil {
-		return APIResponse{}, fmt.Errorf("request Usetix API: %w", err)
-	}
-	defer response.Body.Close()
-	result := APIResponse{
-		StatusCode: response.StatusCode,
-		Location:   response.Header.Get("Location"),
-		ETag:       response.Header.Get("ETag"),
-		Link:       response.Header.Get("Link"),
-	}
-
-	reader := io.LimitReader(response.Body, maxResponseSize)
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		body, _ := io.ReadAll(reader)
-		return APIResponse{}, &APIError{
-			StatusCode: response.StatusCode,
-			Body:       strings.TrimSpace(string(body)),
-			RetryAfter: retryAfterSeconds(response.Header.Get("Retry-After")),
-		}
-	}
-
-	if destination == nil || response.StatusCode == http.StatusNoContent || method == http.MethodHead {
-		return result, nil
-	}
-	decoder := json.NewDecoder(reader)
-	decoder.UseNumber()
-	if err := decoder.Decode(destination); err != nil && !errors.Is(err, io.EOF) {
-		return APIResponse{}, fmt.Errorf("decode Usetix API response: %w", err)
-	}
-	return result, nil
+	return request, nil
 }
 
 func (client *Client) endpoint(path string) (*url.URL, error) {
@@ -176,7 +255,44 @@ func (client *Client) endpoint(path string) (*url.URL, error) {
 	return client.baseURL.ResolveReference(reference), nil
 }
 
+func readAPIError(response *http.Response) *APIError {
+	body, _ := io.ReadAll(io.LimitReader(response.Body, maxResponseSize))
+	apiError := &APIError{
+		StatusCode: response.StatusCode,
+		Body:       strings.TrimSpace(string(body)),
+		RetryAfter: retryAfterSeconds(response.Header.Get("Retry-After")),
+	}
+	var validation struct {
+		Errors map[string][]string `json:"errors"`
+	}
+	if err := json.Unmarshal(body, &validation); err == nil && len(validation.Errors) > 0 {
+		apiError.Errors = validation.Errors
+	}
+	return apiError
+}
+
+func apiResponseFrom(response *http.Response) APIResponse {
+	return APIResponse{
+		StatusCode:  response.StatusCode,
+		Location:    response.Header.Get("Location"),
+		ETag:        response.Header.Get("ETag"),
+		Link:        response.Header.Get("Link"),
+		ContentType: response.Header.Get("Content-Type"),
+	}
+}
+
 func retryAfterSeconds(value string) int {
-	seconds, _ := strconv.Atoi(strings.TrimSpace(value))
-	return seconds
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return 0
+	}
+	if seconds, err := strconv.Atoi(value); err == nil {
+		return seconds
+	}
+	if at, err := http.ParseTime(value); err == nil {
+		if seconds := int(time.Until(at).Seconds()); seconds > 0 {
+			return seconds
+		}
+	}
+	return 0
 }
