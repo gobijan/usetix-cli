@@ -73,9 +73,14 @@ type EventsResponse struct {
 	} `json:"stats"`
 }
 
-func (client *Client) ListEvents(ctx context.Context) (EventsResponse, error) {
+func (client *Client) ListEvents(ctx context.Context, period string) (EventsResponse, error) {
+	path := "/admin/events.json"
+	if period != "" {
+		values := url.Values{"period": []string{period}}
+		path += "?" + values.Encode()
+	}
 	var response EventsResponse
-	err := client.get(ctx, "/admin/events.json", &response)
+	err := client.get(ctx, path, &response)
 	return response, err
 }
 

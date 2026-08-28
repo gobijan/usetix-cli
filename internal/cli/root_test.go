@@ -33,12 +33,16 @@ func TestVersionJSON(t *testing.T) {
 }
 
 func TestEventsListOutputModes(t *testing.T) {
+	var requestedPeriod string
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/admin/events.json" {
 			t.Fatalf("path = %q", request.URL.Path)
 		}
 		if request.Header.Get("Authorization") != "Bearer token-test" {
 			t.Fatal("unexpected authorization header")
+		}
+		if period := request.URL.Query().Get("period"); period != "" {
+			requestedPeriod = period
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = writer.Write([]byte(`{
@@ -50,9 +54,12 @@ func TestEventsListOutputModes(t *testing.T) {
 	defer server.Close()
 
 	environment := map[string]string{"USETIX_TOKEN": "token-test", "USETIX_API_URL": server.URL}
-	stdout, stderr, exitCode := runCLI(t, []string{"--count", "events", "list"}, "", environment, nil)
+	stdout, stderr, exitCode := runCLI(t, []string{"--count", "events", "list", "--period", "all"}, "", environment, nil)
 	if exitCode != 0 || stdout != "2\n" {
 		t.Fatalf("count: exit=%d stdout=%q stderr=%q", exitCode, stdout, stderr)
+	}
+	if requestedPeriod != "all" {
+		t.Fatalf("period = %q", requestedPeriod)
 	}
 	stdout, stderr, exitCode = runCLI(t, []string{"--ids-only", "events", "list"}, "", environment, nil)
 	if exitCode != 0 || stdout != "1\n2\n" {
@@ -224,6 +231,13 @@ func TestOrdersCommands(t *testing.T) {
 		"customer_name":"Jane Doe","customer_email":"jane@example.com","total":{"amount":"42.00","currency":"EUR"},
 		"fees":{"buyer_platform_fee":"0.00","custom":"0.00"},"payment_provider":"stripe","archived":false,
 		"paid_at":"2026-04-22T12:34:50Z","created_at":"2026-04-22T12:34:00Z","item_count":1,"attribution":{}}`
+	secondOrderJSON := strings.NewReplacer(
+		"pub123", "pub456",
+		"7K3Q9D2A", "8WZN28GT",
+		"7K3Q-9D2A", "8WZN-28GT",
+		"Jane Doe", "Sam Doe",
+		"jane@example.com", "sam@example.com",
+	).Replace(orderJSON)
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		lastMethod = request.Method
 		lastPath = request.URL.Path
@@ -233,8 +247,12 @@ func TestOrdersCommands(t *testing.T) {
 		writer.Header().Set("Content-Type", "application/json")
 		switch {
 		case request.URL.Path == "/admin/orders.json":
-			_, _ = writer.Write([]byte(`{"orders":[` + orderJSON + `],"stats":{"order_count":1,"revenue":{"amount":"42.00","currency":"EUR"}}}`))
-		case request.URL.Path == "/admin/orders/pub123.json":
+			if request.URL.Query().Get("page") == "next-cursor" {
+				_, _ = writer.Write([]byte(`{"orders":[` + secondOrderJSON + `],"stats":{"order_count":2,"revenue":{"amount":"84.00","currency":"EUR"}},"pagination":{"total_count":2,"limit":50,"next_page":null}}`))
+			} else {
+				_, _ = writer.Write([]byte(`{"orders":[` + orderJSON + `],"stats":{"order_count":2,"revenue":{"amount":"84.00","currency":"EUR"}},"pagination":{"total_count":2,"limit":50,"next_page":"next-cursor"}}`))
+			}
+		case request.URL.Path == "/admin/orders/pub123.json", request.URL.Path == "/admin/orders/8WZN-28GT.json":
 			detail := orderJSON[:len(orderJSON)-1] + `,"items":[{"public_id":"item1","check_in_code":"9M5V2H8C","display_check_in_code":"9M5V-2H8C","ticket_title":"GA","event_id":1,"event_slug":"summer","redeemed":false,"admission_status":"active"}]}`
 			_, _ = writer.Write([]byte(detail))
 		case request.URL.Path == "/admin/orders/pub123/refund.json",
@@ -249,10 +267,10 @@ func TestOrdersCommands(t *testing.T) {
 	environment := map[string]string{"USETIX_TOKEN": "token-test", "USETIX_API_URL": server.URL}
 
 	stdout, _, exitCode := runCLI(t, []string{"--styled", "orders", "list", "--period", "all", "--event", "summer"}, "", environment, nil)
-	if exitCode != 0 || !strings.Contains(stdout, "Jane Doe") || !strings.Contains(stdout, "42.00 EUR revenue") {
+	if exitCode != 0 || !strings.Contains(stdout, "Jane Doe") || !strings.Contains(stdout, "84.00 EUR revenue") {
 		t.Fatalf("list: exit=%d stdout=%q", exitCode, stdout)
 	}
-	if !strings.Contains(lastQuery, "period=all") || !strings.Contains(lastQuery, "event_slug=summer") {
+	if !strings.Contains(lastQuery, "period=all") || !strings.Contains(lastQuery, "event_slug=summer") || !strings.Contains(lastQuery, "limit=50") {
 		t.Fatalf("list query = %q", lastQuery)
 	}
 
@@ -260,9 +278,17 @@ func TestOrdersCommands(t *testing.T) {
 	if exitCode != 0 || stdout != "pub123\n" {
 		t.Fatalf("ids: exit=%d stdout=%q", exitCode, stdout)
 	}
+	stdout, _, exitCode = runCLI(t, []string{"--ids-only", "orders", "list", "--all"}, "", environment, nil)
+	if exitCode != 0 || stdout != "pub123\npub456\n" {
+		t.Fatalf("all ids: exit=%d stdout=%q", exitCode, stdout)
+	}
+	stdout, _, exitCode = runCLI(t, []string{"--count", "orders", "list"}, "", environment, nil)
+	if exitCode != 0 || stdout != "2\n" {
+		t.Fatalf("count: exit=%d stdout=%q", exitCode, stdout)
+	}
 
-	stdout, _, exitCode = runCLI(t, []string{"--styled", "orders", "show", "pub123"}, "", environment, nil)
-	if exitCode != 0 || !strings.Contains(stdout, "9M5V-2H8C") {
+	stdout, _, exitCode = runCLI(t, []string{"--styled", "orders", "show", "8WZN-28GT"}, "", environment, nil)
+	if exitCode != 0 || !strings.Contains(stdout, "9M5V-2H8C") || lastPath != "/admin/orders/8WZN-28GT.json" {
 		t.Fatalf("show: exit=%d stdout=%q", exitCode, stdout)
 	}
 
@@ -287,6 +313,25 @@ func TestOrdersCommands(t *testing.T) {
 	_, _, exitCode = runCLI(t, []string{"--json", "orders", "unarchive", "pub123"}, "", environment, nil)
 	if exitCode != 0 || lastMethod != http.MethodDelete {
 		t.Fatalf("unarchive: exit=%d method=%s", exitCode, lastMethod)
+	}
+}
+
+func TestOrdersHelpExplainsIdentifiersAndPagination(t *testing.T) {
+	stdout, _, exitCode := runCLI(t, []string{"orders", "show", "--help"}, "", nil, nil)
+	if exitCode != 0 || !strings.Contains(stdout, "order code") || !strings.Contains(stdout, "public ID") || !strings.Contains(stdout, "8WZN-28GT") {
+		t.Fatalf("show help: exit=%d stdout=%q", exitCode, stdout)
+	}
+
+	stdout, _, exitCode = runCLI(t, []string{"orders", "list", "--help"}, "", nil, nil)
+	for _, expected := range []string{"--limit", "--page", "--all", "opaque next-page cursor", "--query"} {
+		if exitCode != 0 || !strings.Contains(stdout, expected) {
+			t.Fatalf("list help missing %q: exit=%d stdout=%q", expected, exitCode, stdout)
+		}
+	}
+
+	stdout, _, exitCode = runCLI(t, []string{"--json", "orders", "show"}, "", nil, nil)
+	if exitCode != 1 || !strings.Contains(stdout, "Use an order code or public ID") {
+		t.Fatalf("missing identifier: exit=%d stdout=%q", exitCode, stdout)
 	}
 }
 

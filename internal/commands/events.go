@@ -36,6 +36,7 @@ func NewEvents(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "events",
 		Short: "Work with events",
+		Long:  "View and manage events. Event commands use the URL slug printed by \"usetix events list\".",
 	}
 	command.AddCommand(
 		newEventsList(runtime),
@@ -50,16 +51,25 @@ func NewEvents(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newEventsList(runtime *appctx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	var period string
+	command := &cobra.Command{
 		Use:   "list",
 		Short: "List upcoming and past events",
-		Args:  cobra.NoArgs,
+		Long: `List all upcoming events plus past events in the selected reporting period.
+
+The default reporting period is the current month. Use --period all to include
+all past events. The API returns upcoming and past events as two complete lists,
+so this command does not use cursor pagination.`,
+		Example: `  usetix events list
+  usetix events list --period all
+  usetix events list --period year --json`,
+		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
 			client, target, err := runtime.APIClient()
 			if err != nil {
 				return err
 			}
-			response, err := client.ListEvents(command.Context())
+			response, err := client.ListEvents(command.Context(), period)
 			if err != nil {
 				return NormalizeError(err)
 			}
@@ -76,13 +86,18 @@ func newEventsList(runtime *appctx.Runtime) *cobra.Command {
 			)
 		},
 	}
+	command.Flags().StringVar(&period, "period", "", "past-event period: today, week, month, year, or all")
+	return command
 }
 
 func newEventsShow(runtime *appctx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show SLUG",
 		Short: "Show an event with sales stats and ticket breakdown",
-		Args:  cobra.ExactArgs(1),
+		Long:  "Show an event by its URL slug, including sales stats and ticket breakdown.",
+		Example: `  usetix events show copy-of-luf-afterparty-by-shake-it-to-the-maxx-i-16
+  usetix events show summer-festival --json`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
 			client, _, err := runtime.APIClient()
 			if err != nil {

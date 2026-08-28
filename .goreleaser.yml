@@ -64,10 +64,10 @@ homebrew_casks:
     directory: Casks
     homepage: https://www.usetix.io
     description: Command-line client for the Usetix Admin API
-    generate_completions_from_executable:
-      args: [completion]
-      shell_parameter_format: cobra
-      shells: [bash, zsh, fish]
+    # Completions are not generated at install time: the quarantined binary
+    # would be SIGKILLed before the postflight strips the flag. Users run
+    # `usetix completion <shell>` instead.
+    #
     # The binary is not signed or notarized, so strip the quarantine bit on
     # install — otherwise Gatekeeper SIGKILLs it on first run. Developer ID
     # signing + notarization can replace this later.

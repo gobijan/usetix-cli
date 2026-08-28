@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type Order struct {
@@ -31,19 +33,19 @@ type OrderFees struct {
 }
 
 type OrderItem struct {
-	PublicID                     string  `json:"public_id"`
-	CheckInCode                  string  `json:"check_in_code"`
-	DisplayCheckInCode           string  `json:"display_check_in_code"`
-	TicketTitle                  string  `json:"ticket_title"`
-	AttendeeName                 *string `json:"attendee_name"`
-	PlaceLabel                   *string `json:"place_label"`
-	EventID                      int64   `json:"event_id"`
-	EventSlug                    string  `json:"event_slug"`
-	Redeemed                     bool    `json:"redeemed"`
-	RedeemedAt                   *string `json:"redeemed_at"`
-	AdmissionStatus              string  `json:"admission_status"`
-	AdmissionCancellationStatus  *string `json:"admission_cancellation_status"`
-	BlockedReason                *string `json:"blocked_reason"`
+	PublicID                    string  `json:"public_id"`
+	CheckInCode                 string  `json:"check_in_code"`
+	DisplayCheckInCode          string  `json:"display_check_in_code"`
+	TicketTitle                 string  `json:"ticket_title"`
+	AttendeeName                *string `json:"attendee_name"`
+	PlaceLabel                  *string `json:"place_label"`
+	EventID                     int64   `json:"event_id"`
+	EventSlug                   string  `json:"event_slug"`
+	Redeemed                    bool    `json:"redeemed"`
+	RedeemedAt                  *string `json:"redeemed_at"`
+	AdmissionStatus             string  `json:"admission_status"`
+	AdmissionCancellationStatus *string `json:"admission_cancellation_status"`
+	BlockedReason               *string `json:"blocked_reason"`
 }
 
 type OrderDetail struct {
@@ -57,6 +59,13 @@ type OrdersResponse struct {
 		OrderCount int   `json:"order_count"`
 		Revenue    Money `json:"revenue"`
 	} `json:"stats"`
+	Pagination OrdersPagination `json:"pagination"`
+}
+
+type OrdersPagination struct {
+	TotalCount int     `json:"total_count"`
+	Limit      int     `json:"limit"`
+	NextPage   *string `json:"next_page"`
 }
 
 type OrdersQuery struct {
@@ -64,6 +73,8 @@ type OrdersQuery struct {
 	EventSlug       string
 	Query           string
 	IncludeArchived bool
+	Limit           int
+	Page            string
 }
 
 func (client *Client) ListOrders(ctx context.Context, query OrdersQuery) (OrdersResponse, error) {
@@ -80,6 +91,12 @@ func (client *Client) ListOrders(ctx context.Context, query OrdersQuery) (Orders
 	if query.IncludeArchived {
 		values.Set("include_archived", "1")
 	}
+	if query.Limit > 0 {
+		values.Set("limit", strconv.Itoa(query.Limit))
+	}
+	if query.Page != "" {
+		values.Set("page", query.Page)
+	}
 	path := "/admin/orders.json"
 	if encoded := values.Encode(); encoded != "" {
 		path += "?" + encoded
@@ -90,39 +107,66 @@ func (client *Client) ListOrders(ctx context.Context, query OrdersQuery) (Orders
 	return response, err
 }
 
-func (client *Client) GetOrder(ctx context.Context, publicID string) (OrderDetail, error) {
+func (client *Client) ListAllOrders(ctx context.Context, query OrdersQuery) (OrdersResponse, error) {
+	response, err := client.ListOrders(ctx, query)
+	if err != nil {
+		return OrdersResponse{}, err
+	}
+
+	seen := map[string]struct{}{}
+	for response.Pagination.NextPage != nil {
+		cursor := *response.Pagination.NextPage
+		if _, exists := seen[cursor]; exists {
+			return OrdersResponse{}, fmt.Errorf("Usetix API returned a repeated orders pagination cursor")
+		}
+		seen[cursor] = struct{}{}
+
+		query.Page = cursor
+		next, err := client.ListOrders(ctx, query)
+		if err != nil {
+			return OrdersResponse{}, err
+		}
+		response.Orders = append(response.Orders, next.Orders...)
+		response.Pagination = next.Pagination
+	}
+
+	response.Pagination.TotalCount = response.Stats.OrderCount
+	return response, nil
+}
+
+func (client *Client) GetOrder(ctx context.Context, identifier string) (OrderDetail, error) {
 	var order OrderDetail
-	err := client.get(ctx, "/admin/orders/"+url.PathEscape(publicID)+".json", &order)
+	err := client.get(ctx, "/admin/orders/"+url.PathEscape(identifier)+".json", &order)
 	return order, err
 }
 
 // RefundOrder issues a partial refund of the given amount, or a full refund
 // when amount is empty. The server rejects full refunds on orders that must
 // go through booking cancellation instead.
-func (client *Client) RefundOrder(ctx context.Context, publicID, amount string) (Order, error) {
+func (client *Client) RefundOrder(ctx context.Context, identifier, amount string) (Order, error) {
 	var body any
 	if amount != "" {
 		body = map[string]any{"amount": amount}
 	}
 	var order Order
-	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(publicID)+"/refund.json", body, &order)
+	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(identifier)+"/refund.json", body, &order)
 	return order, err
 }
 
-func (client *Client) CancelOrder(ctx context.Context, publicID string) (Order, error) {
+func (client *Client) CancelOrder(ctx context.Context, identifier string) (Order, error) {
 	var order Order
-	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(publicID)+"/cancellation.json", nil, &order)
+	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(identifier)+"/cancellation.json", nil, &order)
 	return order, err
 }
 
-func (client *Client) ArchiveOrder(ctx context.Context, publicID string) (Order, error) {
+func (client *Client) ArchiveOrder(ctx context.Context, identifier string) (Order, error) {
 	var order Order
-	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(publicID)+"/archival.json", nil, &order)
+	_, err := client.post(ctx, "/admin/orders/"+url.PathEscape(identifier)+"/archival.json", nil, &order)
 	return order, err
 }
 
-func (client *Client) UnarchiveOrder(ctx context.Context, publicID string) (Order, error) {
+func (client *Client) UnarchiveOrder(ctx context.Context, identifier string) (Order, error) {
 	var order Order
-	err := client.delete(ctx, "/admin/orders/"+url.PathEscape(publicID)+"/archival.json", &order)
+	err := client.delete(ctx, "/admin/orders/"+url.PathEscape(identifier)+"/archival.json", &order)
 	return order, err
 }

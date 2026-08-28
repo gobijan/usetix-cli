@@ -42,7 +42,7 @@ func TestListEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	response, err := client.ListEvents(context.Background())
+	response, err := client.ListEvents(context.Background(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestListEventsReturnsAPIError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = client.ListEvents(context.Background())
+	_, err = client.ListEvents(context.Background(), "")
 	apiError, ok := err.(*APIError)
 	if !ok {
 		t.Fatalf("error = %T, want *APIError", err)
@@ -192,7 +192,7 @@ func TestAPIErrorCapturesRetryAfter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ListEvents(context.Background())
+	_, err = client.ListEvents(context.Background(), "")
 	var apiError *APIError
 	if !errors.As(err, &apiError) {
 		t.Fatalf("error = %T, want *APIError", err)

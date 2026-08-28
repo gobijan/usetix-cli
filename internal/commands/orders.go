@@ -18,6 +18,13 @@ func NewOrders(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "orders",
 		Short: "Work with orders",
+		Long: `View and manage Usetix orders.
+
+Every order command accepts either identifier shown by "usetix orders list":
+  Order code  Human-friendly code, for example 8WZN-28GT
+  Public ID   Stable API identifier, for example sm1KWiRAShvptqKrYzh6AKKJ
+
+Formatting and letter case in an order code are ignored.`,
 	}
 	command.AddCommand(
 		newOrdersList(runtime),
@@ -31,29 +38,54 @@ func NewOrders(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newOrdersList(runtime *appctx.Runtime) *cobra.Command {
-	var query api.OrdersQuery
+	query := api.OrdersQuery{Limit: 50}
+	var all bool
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "List orders with revenue stats",
-		Args:  cobra.NoArgs,
+		Long: `List orders and aggregate revenue for the selected filters.
+
+The command returns the first 50 orders by default. Use --limit to choose a
+page size from 1 to 100, --page with the opaque next-page cursor printed by the
+previous request, or --all to follow every page automatically.
+
+--query searches order codes, public IDs, customer names, email addresses,
+payment IDs, ticket codes, and event slugs prefixed with @.`,
+		Example: `  usetix orders list --period all
+  usetix orders list --query 8WZN-28GT
+  usetix orders list --limit 25 --page NEXT_PAGE
+  usetix orders list --all --json`,
+		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
+			if query.Limit < 1 || query.Limit > 100 {
+				return output.ErrUsage("--limit must be between 1 and 100")
+			}
 			client, target, err := runtime.APIClient()
 			if err != nil {
 				return err
 			}
-			response, err := client.ListOrders(command.Context(), query)
+			var response api.OrdersResponse
+			if all {
+				response, err = client.ListAllOrders(command.Context(), query)
+			} else {
+				response, err = client.ListOrders(command.Context(), query)
+			}
 			if err != nil {
 				return NormalizeError(err)
 			}
+			if runtime.OutputFormat() == output.FormatCount {
+				_, err := fmt.Fprintln(runtime.Stdout, response.Pagination.TotalCount)
+				return err
+			}
 
 			data := any(response)
-			if format := runtime.OutputFormat(); format == output.FormatIDs || format == output.FormatCount {
+			if runtime.OutputFormat() == output.FormatIDs {
 				data = orderIDs(response.Orders)
 			}
 			return runtime.Output().OK(
 				data,
 				renderOrders(response),
-				output.WithSummary(summaryCount(len(response.Orders), "order", "orders")),
+				output.WithSummary(orderListSummary(response)),
 				output.WithNotice(profileNotice(target)),
 			)
 		},
@@ -62,14 +94,23 @@ func newOrdersList(runtime *appctx.Runtime) *cobra.Command {
 	command.Flags().StringVar(&query.EventSlug, "event", "", "filter to a single event slug")
 	command.Flags().StringVar(&query.Query, "query", "", "free-text search across codes, names, and emails")
 	command.Flags().BoolVar(&query.IncludeArchived, "include-archived", false, "include archived orders")
+	command.Flags().IntVar(&query.Limit, "limit", 50, "orders per page (1-100)")
+	command.Flags().StringVar(&query.Page, "page", "", "opaque next-page cursor from the previous response")
+	command.Flags().BoolVar(&all, "all", false, "fetch every remaining page")
 	return command
 }
 
 func newOrdersShow(runtime *appctx.Runtime) *cobra.Command {
 	return &cobra.Command{
-		Use:   "show PUBLIC_ID",
+		Use:   "show IDENTIFIER",
 		Short: "Show an order with its tickets",
-		Args:  cobra.ExactArgs(1),
+		Long: `Show one order, including its customer, payment status, and tickets.
+
+IDENTIFIER may be the human order code (8WZN-28GT) or the stable public ID
+(sm1KWiRAShvptqKrYzh6AKKJ). Both are printed by "usetix orders list".`,
+		Example: `  usetix orders show 8WZN-28GT
+  usetix orders show sm1KWiRAShvptqKrYzh6AKKJ --json`,
+		Args: requireOrderIdentifier("show"),
 		RunE: func(command *cobra.Command, args []string) error {
 			client, _, err := runtime.APIClient()
 			if err != nil {
@@ -88,11 +129,13 @@ func newOrdersRefund(runtime *appctx.Runtime) *cobra.Command {
 	var amount string
 	var yes bool
 	command := &cobra.Command{
-		Use:   "refund PUBLIC_ID",
+		Use:   "refund IDENTIFIER",
 		Short: "Refund an order, fully or partially",
-		Long: "Refund a paid order. Pass --amount for a partial refund; omit it for a full refund.\n" +
+		Long: "Refund a paid order identified by order code or public ID. Pass --amount for a partial refund; omit it for a full refund.\n" +
 			"Orders that qualify for whole-booking cancellation must use: usetix orders cancel",
-		Args: cobra.ExactArgs(1),
+		Example: `  usetix orders refund 8WZN-28GT --amount 5.00 --yes
+  usetix orders refund sm1KWiRAShvptqKrYzh6AKKJ --yes`,
+		Args: requireOrderIdentifier("refund"),
 		RunE: func(command *cobra.Command, args []string) error {
 			if !yes {
 				return output.ErrUsageHint("refunds require explicit confirmation", "Re-run with --yes")
@@ -116,9 +159,11 @@ func newOrdersRefund(runtime *appctx.Runtime) *cobra.Command {
 func newOrdersCancel(runtime *appctx.Runtime) *cobra.Command {
 	var yes bool
 	command := &cobra.Command{
-		Use:   "cancel PUBLIC_ID",
-		Short: "Cancel a booking and refund the full remaining amount",
-		Args:  cobra.ExactArgs(1),
+		Use:     "cancel IDENTIFIER",
+		Short:   "Cancel a booking and refund the full remaining amount",
+		Long:    "Cancel a whole booking identified by order code or public ID and refund its full remaining amount.",
+		Example: `  usetix orders cancel 8WZN-28GT --yes`,
+		Args:    requireOrderIdentifier("cancel"),
 		RunE: func(command *cobra.Command, args []string) error {
 			if !yes {
 				return output.ErrUsageHint("booking cancellation requires explicit confirmation", "Re-run with --yes")
@@ -141,9 +186,11 @@ func newOrdersCancel(runtime *appctx.Runtime) *cobra.Command {
 func newOrdersArchive(runtime *appctx.Runtime) *cobra.Command {
 	var yes bool
 	command := &cobra.Command{
-		Use:   "archive PUBLIC_ID",
-		Short: "Archive an order and release its inventory",
-		Args:  cobra.ExactArgs(1),
+		Use:     "archive IDENTIFIER",
+		Short:   "Archive an order and release its inventory",
+		Long:    "Archive an order identified by order code or public ID and release its inventory.",
+		Example: `  usetix orders archive 8WZN-28GT --yes`,
+		Args:    requireOrderIdentifier("archive"),
 		RunE: func(command *cobra.Command, args []string) error {
 			if !yes {
 				return output.ErrUsageHint("archiving releases the order's inventory and requires confirmation", "Re-run with --yes")
@@ -165,9 +212,11 @@ func newOrdersArchive(runtime *appctx.Runtime) *cobra.Command {
 
 func newOrdersUnarchive(runtime *appctx.Runtime) *cobra.Command {
 	return &cobra.Command{
-		Use:   "unarchive PUBLIC_ID",
-		Short: "Restore an archived order",
-		Args:  cobra.ExactArgs(1),
+		Use:     "unarchive IDENTIFIER",
+		Short:   "Restore an archived order",
+		Long:    "Restore an archived order identified by order code or public ID.",
+		Example: `  usetix orders unarchive 8WZN-28GT`,
+		Args:    requireOrderIdentifier("unarchive"),
 		RunE: func(command *cobra.Command, args []string) error {
 			client, _, err := runtime.APIClient()
 			if err != nil {
@@ -182,8 +231,26 @@ func newOrdersUnarchive(runtime *appctx.Runtime) *cobra.Command {
 	}
 }
 
-// orderIDs projects orders for --ids-only and --count, which extract the
-// conventional "id" key. Orders are addressed by public_id everywhere.
+func requireOrderIdentifier(action string) cobra.PositionalArgs {
+	return func(_ *cobra.Command, args []string) error {
+		if len(args) == 1 {
+			return nil
+		}
+		return output.ErrUsageHint(
+			fmt.Sprintf("orders %s requires exactly one order identifier", action),
+			"Use an order code or public ID. Run: usetix orders "+action+" --help",
+		)
+	}
+}
+
+func orderListSummary(response api.OrdersResponse) string {
+	if len(response.Orders) == response.Pagination.TotalCount {
+		return summaryCount(len(response.Orders), "order", "orders")
+	}
+	return fmt.Sprintf("%d of %d orders", len(response.Orders), response.Pagination.TotalCount)
+}
+
+// orderIDs projects the stable public IDs expected by --ids-only.
 func orderIDs(orders []api.Order) []map[string]any {
 	projection := make([]map[string]any, 0, len(orders))
 	for _, order := range orders {
@@ -229,6 +296,17 @@ func renderOrders(response api.OrdersResponse) output.StyledRenderer {
 			response.Stats.Revenue.Amount,
 			response.Stats.Revenue.Currency,
 		)
+		if err != nil {
+			return err
+		}
+		if response.Pagination.NextPage != nil {
+			_, err = fmt.Fprintf(destination,
+				"Showing %d of %d. Continue with --page %s or use --all.\n",
+				len(response.Orders),
+				response.Pagination.TotalCount,
+				terminal.SanitizeLine(*response.Pagination.NextPage),
+			)
+		}
 		return err
 	}
 }
