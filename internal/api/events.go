@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 )
 
@@ -11,21 +12,23 @@ type Money struct {
 }
 
 type Event struct {
-	ID            int64          `json:"id"`
-	Slug          string         `json:"slug"`
-	Title         string         `json:"title"`
-	Description   string         `json:"description"`
-	StartsAt      *string        `json:"starts_at"`
-	DoorsOpenAt   *string        `json:"doors_open_at"`
-	EndsAt        *string        `json:"ends_at"`
-	ShowEndTime   bool           `json:"show_end_time"`
-	SalesStartsAt *string        `json:"sales_starts_at"`
-	SalesEndsAt   *string        `json:"sales_ends_at"`
-	Published     bool           `json:"published"`
-	Listed        bool           `json:"listed"`
-	Capacity      *int           `json:"capacity"`
-	CheckoutFees  map[string]any `json:"checkout_fees"`
-	Venue         *Venue         `json:"venue"`
+	ID    int64  `json:"id"`
+	Slug  string `json:"slug"`
+	Title string `json:"title"`
+	// Description is raw for compatibility with older Usetix servers that
+	// serialized Action Text as an object instead of the documented string.
+	Description   json.RawMessage `json:"description"`
+	StartsAt      *string         `json:"starts_at"`
+	DoorsOpenAt   *string         `json:"doors_open_at"`
+	EndsAt        *string         `json:"ends_at"`
+	ShowEndTime   bool            `json:"show_end_time"`
+	SalesStartsAt *string         `json:"sales_starts_at"`
+	SalesEndsAt   *string         `json:"sales_ends_at"`
+	Published     bool            `json:"published"`
+	Listed        bool            `json:"listed"`
+	Capacity      *int            `json:"capacity"`
+	CheckoutFees  map[string]any  `json:"checkout_fees"`
+	Venue         *Venue          `json:"venue"`
 }
 
 type Venue struct {

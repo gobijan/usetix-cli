@@ -42,7 +42,7 @@ func TestEventsListOutputModes(t *testing.T) {
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = writer.Write([]byte(`{
-			"upcoming_events":[{"id":1,"slug":"summer","title":"Summer","starts_at":"2026-09-01T18:00:00Z","published":true,"listed":true}],
+			"upcoming_events":[{"id":1,"slug":"summer","title":"Summer","description":{"body":"legacy Action Text payload"},"starts_at":"2026-09-01T18:00:00Z","published":true,"listed":true}],
 			"past_events":[{"id":2,"slug":"spring","title":"Spring","published":false,"listed":false}],
 			"stats":{"upcoming_count":1,"revenue":{"amount":"42.00","currency":"EUR"},"tickets_sold":2}
 		}`))
