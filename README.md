@@ -62,7 +62,7 @@ usetix orders archive abcd1234efgh5678 --yes
 usetix orders unarchive abcd1234efgh5678
 
 usetix profile create production --api-url https://app.usetix.io
-usetix profile create local --api-url http://localhost:3000
+usetix profile create local --api-url https://app.lvh.me
 usetix profile use production
 usetix --profile local auth login
 usetix profile list

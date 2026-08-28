@@ -18,7 +18,7 @@ func TestResolveAPIURLPrecedence(t *testing.T) {
 }
 
 func TestValidateAPIURL(t *testing.T) {
-	valid := []string{"https://app.usetix.io", "http://localhost:3000", "http://127.0.0.1:3000"}
+	valid := []string{"https://app.usetix.io", "http://localhost:3000", "http://127.0.0.1:3000", "http://app.lvh.me:3000", "http://app.localhost:3000"}
 	for _, value := range valid {
 		if err := ValidateAPIURL(value); err != nil {
 			t.Errorf("ValidateAPIURL(%q) = %v", value, err)

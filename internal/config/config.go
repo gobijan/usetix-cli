@@ -68,7 +68,11 @@ func ValidateAPIURL(value string) error {
 }
 
 func isLocalhost(host string) bool {
-	if strings.EqualFold(host, "localhost") {
+	host = strings.ToLower(host)
+	// lvh.me and *.localhost always resolve to 127.0.0.1; the Usetix dev
+	// server runs on app.lvh.me because of subdomain multi-tenancy.
+	if host == "localhost" || host == "lvh.me" ||
+		strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".lvh.me") {
 		return true
 	}
 	address := net.ParseIP(host)
