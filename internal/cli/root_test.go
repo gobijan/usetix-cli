@@ -317,7 +317,20 @@ func TestOrdersCommands(t *testing.T) {
 }
 
 func TestOrdersHelpExplainsIdentifiersAndPagination(t *testing.T) {
-	stdout, _, exitCode := runCLI(t, []string{"orders", "show", "--help"}, "", nil, nil)
+	stdout, _, exitCode := runCLI(t, []string{"orders"}, "", nil, nil)
+	for _, expected := range []string{
+		"Listing and pagination:",
+		"First 50 orders",
+		"--page CURSOR",
+		"--all",
+		"List orders with cursor pagination and revenue stats",
+	} {
+		if exitCode != 0 || !strings.Contains(stdout, expected) {
+			t.Fatalf("orders help missing %q: exit=%d stdout=%q", expected, exitCode, stdout)
+		}
+	}
+
+	stdout, _, exitCode = runCLI(t, []string{"orders", "show", "--help"}, "", nil, nil)
 	if exitCode != 0 || !strings.Contains(stdout, "order code") || !strings.Contains(stdout, "public ID") || !strings.Contains(stdout, "8WZN-28GT") {
 		t.Fatalf("show help: exit=%d stdout=%q", exitCode, stdout)
 	}

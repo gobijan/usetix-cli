@@ -20,11 +20,23 @@ func NewOrders(runtime *appctx.Runtime) *cobra.Command {
 		Short: "Work with orders",
 		Long: `View and manage Usetix orders.
 
-Every order command accepts either identifier shown by "usetix orders list":
+Listing and pagination:
+  usetix orders list                 First 50 orders
+  usetix orders list --limit 25      Choose a page size from 1 to 100
+  usetix orders list --page CURSOR   Continue from the cursor printed below a page
+  usetix orders list --all           Fetch every page automatically
+
+When another page exists, the list output prints the next cursor. Pass it to
+--page to continue, or use --all for the complete filtered result.
+
+Order identifiers accepted by show, refund, cancel, archive, and unarchive:
   Order code  Human-friendly code, for example 8WZN-28GT
   Public ID   Stable API identifier, for example sm1KWiRAShvptqKrYzh6AKKJ
 
 Formatting and letter case in an order code are ignored.`,
+		Example: `  usetix orders list
+  usetix orders list --all
+  usetix orders show 8WZN-28GT`,
 	}
 	command.AddCommand(
 		newOrdersList(runtime),
@@ -42,7 +54,7 @@ func newOrdersList(runtime *appctx.Runtime) *cobra.Command {
 	var all bool
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "List orders with revenue stats",
+		Short: "List orders with cursor pagination and revenue stats",
 		Long: `List orders and aggregate revenue for the selected filters.
 
 The command returns the first 50 orders by default. Use --limit to choose a
