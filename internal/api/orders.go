@@ -104,7 +104,21 @@ func (client *Client) ListOrders(ctx context.Context, query OrdersQuery) (Orders
 
 	var response OrdersResponse
 	err := client.get(ctx, path, &response)
+	if err == nil {
+		response.normalizePagination(query)
+	}
 	return response, err
+}
+
+// normalizePagination keeps the CLI useful during a rolling deployment where
+// the server may still return the former unpaginated orders response.
+func (response *OrdersResponse) normalizePagination(query OrdersQuery) {
+	if response.Pagination.TotalCount == 0 && response.Stats.OrderCount > 0 {
+		response.Pagination.TotalCount = response.Stats.OrderCount
+	}
+	if response.Pagination.Limit == 0 {
+		response.Pagination.Limit = query.Limit
+	}
 }
 
 func (client *Client) ListAllOrders(ctx context.Context, query OrdersQuery) (OrdersResponse, error) {

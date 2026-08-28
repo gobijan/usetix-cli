@@ -54,6 +54,29 @@ func TestListEvents(t *testing.T) {
 	}
 }
 
+func TestListOrdersNormalizesTheFormerUnpaginatedResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/admin/orders.json" || request.URL.Query().Get("limit") != "50" {
+			t.Fatalf("request URL = %q", request.URL.String())
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"orders":[],"stats":{"order_count":12,"revenue":{"amount":"42.00","currency":"EUR"}}}`))
+	}))
+	defer server.Close()
+
+	client, err := New(server.URL, "token", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.ListOrders(context.Background(), OrdersQuery{Limit: 50})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Pagination.TotalCount != 12 || response.Pagination.Limit != 50 || response.Pagination.NextPage != nil {
+		t.Fatalf("pagination = %#v", response.Pagination)
+	}
+}
+
 func TestCheckUsesHead(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodHead {
