@@ -78,6 +78,10 @@ usetix orders cancel abcd1234efgh5678 --yes
 usetix orders archive abcd1234efgh5678 --yes
 usetix orders unarchive abcd1234efgh5678
 
+usetix analytics shares
+usetix analytics share --event summer-festival --expires-in 7
+usetix analytics revoke 42 --yes
+
 usetix profile create production --api-url https://app.usetix.io
 usetix profile create local --api-url https://app.lvh.me
 usetix profile use production
@@ -85,7 +89,7 @@ usetix --profile local auth login
 usetix profile list
 ```
 
-Refunds, cancellations, deletions, and archiving always require `--yes`.
+Refunds, cancellations, deletions, archiving, and analytics-link revocation always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 

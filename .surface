@@ -1,4 +1,8 @@
 CMD usetix
+CMD usetix analytics
+CMD usetix analytics revoke
+CMD usetix analytics share
+CMD usetix analytics shares
 CMD usetix api
 CMD usetix auth
 CMD usetix auth login
@@ -34,6 +38,45 @@ FLAG usetix --json type=bool
 FLAG usetix --profile type=string
 FLAG usetix --quiet type=bool
 FLAG usetix --styled type=bool
+FLAG usetix analytics --agent type=bool
+FLAG usetix analytics --api-url type=string
+FLAG usetix analytics --count type=bool
+FLAG usetix analytics --ids-only type=bool
+FLAG usetix analytics --json type=bool
+FLAG usetix analytics --profile type=string
+FLAG usetix analytics --quiet type=bool
+FLAG usetix analytics --styled type=bool
+FLAG usetix analytics revoke --agent type=bool
+FLAG usetix analytics revoke --api-url type=string
+FLAG usetix analytics revoke --count type=bool
+FLAG usetix analytics revoke --ids-only type=bool
+FLAG usetix analytics revoke --json type=bool
+FLAG usetix analytics revoke --profile type=string
+FLAG usetix analytics revoke --quiet type=bool
+FLAG usetix analytics revoke --styled type=bool
+FLAG usetix analytics revoke --yes type=bool
+FLAG usetix analytics share --agent type=bool
+FLAG usetix analytics share --api-url type=string
+FLAG usetix analytics share --branded type=bool
+FLAG usetix analytics share --count type=bool
+FLAG usetix analytics share --end-on type=string
+FLAG usetix analytics share --event type=string
+FLAG usetix analytics share --expires-in type=int
+FLAG usetix analytics share --ids-only type=bool
+FLAG usetix analytics share --json type=bool
+FLAG usetix analytics share --period type=string
+FLAG usetix analytics share --profile type=string
+FLAG usetix analytics share --quiet type=bool
+FLAG usetix analytics share --start-on type=string
+FLAG usetix analytics share --styled type=bool
+FLAG usetix analytics shares --agent type=bool
+FLAG usetix analytics shares --api-url type=string
+FLAG usetix analytics shares --count type=bool
+FLAG usetix analytics shares --ids-only type=bool
+FLAG usetix analytics shares --json type=bool
+FLAG usetix analytics shares --profile type=string
+FLAG usetix analytics shares --quiet type=bool
+FLAG usetix analytics shares --styled type=bool
 FLAG usetix api --agent type=bool
 FLAG usetix api --api-url type=string
 FLAG usetix api --count type=bool
@@ -294,6 +337,10 @@ FLAG usetix version --json type=bool
 FLAG usetix version --profile type=string
 FLAG usetix version --quiet type=bool
 FLAG usetix version --styled type=bool
+SUB usetix analytics
+SUB usetix analytics revoke
+SUB usetix analytics share
+SUB usetix analytics shares
 SUB usetix api
 SUB usetix auth
 SUB usetix auth login
