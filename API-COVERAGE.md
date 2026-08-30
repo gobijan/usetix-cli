@@ -32,7 +32,8 @@ Typed coverage will grow where it materially improves daily use.
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | CSV/XLSX/PDF exports | — | `api GET ...csv --output FILE` | Direct via `--output` (orders, customers, attendees, analytics) |
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
-| Checkout fees | — | `api ... /admin/account_settings/payments` | Direct |
+| Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
+| Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
 | Memberships | — | `api GET /admin/memberships` | Direct read (active, deactivated, pending invitations); invitation and role mutations are dashboard-only today |
 | Scanner | — | `api ... /scanner/...` | Direct |
 | Public event feed | — | `api GET /events --no-auth --api-url SHOP_URL` | Direct; lives on the shop host (`shop_url` from shop settings), not on `app.usetix.io` |
