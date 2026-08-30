@@ -30,6 +30,7 @@ Typed coverage will grow where it materially improves daily use.
 | Customers | — | `api ... /admin/customers...` | Direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
+| Advertising (limited beta) | — | `api GET /admin/advertising` | Direct for enabled accounts; Meta connection summary and cursor-paginated campaigns |
 | CSV/XLSX/PDF exports | — | `api GET ...csv --output FILE` | Direct via `--output` (orders, customers, attendees, analytics) |
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
