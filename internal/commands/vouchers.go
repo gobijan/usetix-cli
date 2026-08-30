@@ -263,7 +263,7 @@ func newVouchersImport(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "import FILE",
 		Short:   "Preview a voucher CSV and optionally apply it",
-		Long:    "Uploads a CSV for server-side validation. --apply --yes issues every valid row atomically after a clean preview.",
+		Long:    "Uploads a CSV for server-side validation. --apply --yes queues atomic issuance after a clean preview.",
 		Example: "  usetix vouchers import vouchers.csv --json\n  usetix vouchers import vouchers.csv --apply --yes",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {

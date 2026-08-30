@@ -101,6 +101,11 @@ usetix --profile local auth login
 usetix profile list
 ```
 
+`vouchers import --apply --yes` queues the atomic import and returns status
+`applying`. Scripts that must wait can poll
+`usetix api get /admin/voucher_imports/IMPORT_ID` until the status is `applied`
+or `failed`.
+
 `orders show` prints commercial product lines separately from ticket admissions,
 so mixed ticket and voucher orders remain understandable. Order search also
 accepts voucher-purchase IDs and voucher codes.

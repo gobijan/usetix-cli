@@ -117,7 +117,8 @@ func TestVoucherProductsAndAtomicImport(t *testing.T) {
 			writer.WriteHeader(http.StatusCreated)
 			_, _ = writer.Write([]byte(`{"id":"IMPORT1","status":"analyzed","rows_count":1,"valid_rows_count":1,"imported_rows_count":0,"validation_errors":[]}`))
 		case "/admin/voucher_imports/IMPORT1/application.json":
-			_, _ = writer.Write([]byte(`{"id":"IMPORT1","status":"applied","rows_count":1,"valid_rows_count":1,"imported_rows_count":1,"validation_errors":[]}`))
+			writer.WriteHeader(http.StatusAccepted)
+			_, _ = writer.Write([]byte(`{"id":"IMPORT1","status":"applying","rows_count":1,"valid_rows_count":1,"imported_rows_count":0,"validation_errors":[]}`))
 		default:
 			t.Fatalf("unexpected request %s %s", request.Method, request.URL.Path)
 		}
@@ -156,7 +157,7 @@ func TestVoucherProductsAndAtomicImport(t *testing.T) {
 		t.Fatal(err)
 	}
 	stdout, _, exitCode = runCLI(t, []string{"--json", "vouchers", "import", path, "--apply", "--yes"}, "", environment, nil)
-	if exitCode != 0 || !strings.Contains(stdout, `"status": "applied"`) {
+	if exitCode != 0 || !strings.Contains(stdout, `"status": "applying"`) {
 		t.Fatalf("import: exit=%d stdout=%q", exitCode, stdout)
 	}
 	joined := strings.Join(paths, "\n")
