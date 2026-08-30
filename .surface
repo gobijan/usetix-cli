@@ -30,6 +30,22 @@ CMD usetix profile delete
 CMD usetix profile list
 CMD usetix profile use
 CMD usetix version
+CMD usetix vouchers
+CMD usetix vouchers adjust
+CMD usetix vouchers block
+CMD usetix vouchers import
+CMD usetix vouchers issue
+CMD usetix vouchers list
+CMD usetix vouchers products
+CMD usetix vouchers products archive
+CMD usetix vouchers products create
+CMD usetix vouchers products list
+CMD usetix vouchers products remove-image
+CMD usetix vouchers products show
+CMD usetix vouchers products update
+CMD usetix vouchers report
+CMD usetix vouchers show
+CMD usetix vouchers unblock
 FLAG usetix --agent type=bool
 FLAG usetix --api-url type=string
 FLAG usetix --count type=bool
@@ -337,6 +353,172 @@ FLAG usetix version --json type=bool
 FLAG usetix version --profile type=string
 FLAG usetix version --quiet type=bool
 FLAG usetix version --styled type=bool
+FLAG usetix vouchers --agent type=bool
+FLAG usetix vouchers --api-url type=string
+FLAG usetix vouchers --count type=bool
+FLAG usetix vouchers --ids-only type=bool
+FLAG usetix vouchers --json type=bool
+FLAG usetix vouchers --profile type=string
+FLAG usetix vouchers --quiet type=bool
+FLAG usetix vouchers --styled type=bool
+FLAG usetix vouchers adjust --agent type=bool
+FLAG usetix vouchers adjust --amount type=string
+FLAG usetix vouchers adjust --api-url type=string
+FLAG usetix vouchers adjust --count type=bool
+FLAG usetix vouchers adjust --direction type=string
+FLAG usetix vouchers adjust --ids-only type=bool
+FLAG usetix vouchers adjust --json type=bool
+FLAG usetix vouchers adjust --profile type=string
+FLAG usetix vouchers adjust --quiet type=bool
+FLAG usetix vouchers adjust --reason type=string
+FLAG usetix vouchers adjust --styled type=bool
+FLAG usetix vouchers adjust --yes type=bool
+FLAG usetix vouchers block --agent type=bool
+FLAG usetix vouchers block --api-url type=string
+FLAG usetix vouchers block --count type=bool
+FLAG usetix vouchers block --ids-only type=bool
+FLAG usetix vouchers block --json type=bool
+FLAG usetix vouchers block --profile type=string
+FLAG usetix vouchers block --quiet type=bool
+FLAG usetix vouchers block --reason type=string
+FLAG usetix vouchers block --styled type=bool
+FLAG usetix vouchers block --yes type=bool
+FLAG usetix vouchers import --agent type=bool
+FLAG usetix vouchers import --api-url type=string
+FLAG usetix vouchers import --apply type=bool
+FLAG usetix vouchers import --count type=bool
+FLAG usetix vouchers import --ids-only type=bool
+FLAG usetix vouchers import --json type=bool
+FLAG usetix vouchers import --profile type=string
+FLAG usetix vouchers import --quiet type=bool
+FLAG usetix vouchers import --styled type=bool
+FLAG usetix vouchers import --yes type=bool
+FLAG usetix vouchers issue --agent type=bool
+FLAG usetix vouchers issue --amount type=string
+FLAG usetix vouchers issue --api-url type=string
+FLAG usetix vouchers issue --code type=string
+FLAG usetix vouchers issue --count type=bool
+FLAG usetix vouchers issue --expires-at type=string
+FLAG usetix vouchers issue --ids-only type=bool
+FLAG usetix vouchers issue --json type=bool
+FLAG usetix vouchers issue --note type=string
+FLAG usetix vouchers issue --product type=string
+FLAG usetix vouchers issue --profile type=string
+FLAG usetix vouchers issue --quiet type=bool
+FLAG usetix vouchers issue --styled type=bool
+FLAG usetix vouchers list --agent type=bool
+FLAG usetix vouchers list --api-url type=string
+FLAG usetix vouchers list --count type=bool
+FLAG usetix vouchers list --ids-only type=bool
+FLAG usetix vouchers list --json type=bool
+FLAG usetix vouchers list --profile type=string
+FLAG usetix vouchers list --query type=string
+FLAG usetix vouchers list --quiet type=bool
+FLAG usetix vouchers list --status type=string
+FLAG usetix vouchers list --styled type=bool
+FLAG usetix vouchers products --agent type=bool
+FLAG usetix vouchers products --api-url type=string
+FLAG usetix vouchers products --count type=bool
+FLAG usetix vouchers products --ids-only type=bool
+FLAG usetix vouchers products --json type=bool
+FLAG usetix vouchers products --profile type=string
+FLAG usetix vouchers products --quiet type=bool
+FLAG usetix vouchers products --styled type=bool
+FLAG usetix vouchers products archive --agent type=bool
+FLAG usetix vouchers products archive --api-url type=string
+FLAG usetix vouchers products archive --count type=bool
+FLAG usetix vouchers products archive --ids-only type=bool
+FLAG usetix vouchers products archive --json type=bool
+FLAG usetix vouchers products archive --profile type=string
+FLAG usetix vouchers products archive --quiet type=bool
+FLAG usetix vouchers products archive --styled type=bool
+FLAG usetix vouchers products archive --yes type=bool
+FLAG usetix vouchers products create --agent type=bool
+FLAG usetix vouchers products create --amount type=string
+FLAG usetix vouchers products create --api-url type=string
+FLAG usetix vouchers products create --count type=bool
+FLAG usetix vouchers products create --description type=string
+FLAG usetix vouchers products create --ids-only type=bool
+FLAG usetix vouchers products create --json type=bool
+FLAG usetix vouchers products create --maximum type=string
+FLAG usetix vouchers products create --minimum type=string
+FLAG usetix vouchers products create --name type=string
+FLAG usetix vouchers products create --position type=int
+FLAG usetix vouchers products create --pricing type=string
+FLAG usetix vouchers products create --profile type=string
+FLAG usetix vouchers products create --quiet type=bool
+FLAG usetix vouchers products create --styled type=bool
+FLAG usetix vouchers products create --validity-months type=int
+FLAG usetix vouchers products create --visibility type=string
+FLAG usetix vouchers products list --agent type=bool
+FLAG usetix vouchers products list --api-url type=string
+FLAG usetix vouchers products list --count type=bool
+FLAG usetix vouchers products list --ids-only type=bool
+FLAG usetix vouchers products list --json type=bool
+FLAG usetix vouchers products list --profile type=string
+FLAG usetix vouchers products list --quiet type=bool
+FLAG usetix vouchers products list --styled type=bool
+FLAG usetix vouchers products remove-image --agent type=bool
+FLAG usetix vouchers products remove-image --api-url type=string
+FLAG usetix vouchers products remove-image --count type=bool
+FLAG usetix vouchers products remove-image --ids-only type=bool
+FLAG usetix vouchers products remove-image --json type=bool
+FLAG usetix vouchers products remove-image --profile type=string
+FLAG usetix vouchers products remove-image --quiet type=bool
+FLAG usetix vouchers products remove-image --styled type=bool
+FLAG usetix vouchers products remove-image --yes type=bool
+FLAG usetix vouchers products show --agent type=bool
+FLAG usetix vouchers products show --api-url type=string
+FLAG usetix vouchers products show --count type=bool
+FLAG usetix vouchers products show --ids-only type=bool
+FLAG usetix vouchers products show --json type=bool
+FLAG usetix vouchers products show --profile type=string
+FLAG usetix vouchers products show --quiet type=bool
+FLAG usetix vouchers products show --styled type=bool
+FLAG usetix vouchers products update --agent type=bool
+FLAG usetix vouchers products update --amount type=string
+FLAG usetix vouchers products update --api-url type=string
+FLAG usetix vouchers products update --count type=bool
+FLAG usetix vouchers products update --description type=string
+FLAG usetix vouchers products update --ids-only type=bool
+FLAG usetix vouchers products update --json type=bool
+FLAG usetix vouchers products update --maximum type=string
+FLAG usetix vouchers products update --minimum type=string
+FLAG usetix vouchers products update --name type=string
+FLAG usetix vouchers products update --position type=int
+FLAG usetix vouchers products update --pricing type=string
+FLAG usetix vouchers products update --profile type=string
+FLAG usetix vouchers products update --quiet type=bool
+FLAG usetix vouchers products update --status type=string
+FLAG usetix vouchers products update --styled type=bool
+FLAG usetix vouchers products update --validity-months type=int
+FLAG usetix vouchers products update --visibility type=string
+FLAG usetix vouchers products update --yes type=bool
+FLAG usetix vouchers report --agent type=bool
+FLAG usetix vouchers report --api-url type=string
+FLAG usetix vouchers report --count type=bool
+FLAG usetix vouchers report --ids-only type=bool
+FLAG usetix vouchers report --json type=bool
+FLAG usetix vouchers report --profile type=string
+FLAG usetix vouchers report --quiet type=bool
+FLAG usetix vouchers report --styled type=bool
+FLAG usetix vouchers show --agent type=bool
+FLAG usetix vouchers show --api-url type=string
+FLAG usetix vouchers show --count type=bool
+FLAG usetix vouchers show --ids-only type=bool
+FLAG usetix vouchers show --json type=bool
+FLAG usetix vouchers show --profile type=string
+FLAG usetix vouchers show --quiet type=bool
+FLAG usetix vouchers show --styled type=bool
+FLAG usetix vouchers unblock --agent type=bool
+FLAG usetix vouchers unblock --api-url type=string
+FLAG usetix vouchers unblock --count type=bool
+FLAG usetix vouchers unblock --ids-only type=bool
+FLAG usetix vouchers unblock --json type=bool
+FLAG usetix vouchers unblock --profile type=string
+FLAG usetix vouchers unblock --quiet type=bool
+FLAG usetix vouchers unblock --styled type=bool
+FLAG usetix vouchers unblock --yes type=bool
 SUB usetix analytics
 SUB usetix analytics revoke
 SUB usetix analytics share
@@ -368,3 +550,19 @@ SUB usetix profile delete
 SUB usetix profile list
 SUB usetix profile use
 SUB usetix version
+SUB usetix vouchers
+SUB usetix vouchers adjust
+SUB usetix vouchers block
+SUB usetix vouchers import
+SUB usetix vouchers issue
+SUB usetix vouchers list
+SUB usetix vouchers products
+SUB usetix vouchers products archive
+SUB usetix vouchers products create
+SUB usetix vouchers products list
+SUB usetix vouchers products remove-image
+SUB usetix vouchers products show
+SUB usetix vouchers products update
+SUB usetix vouchers report
+SUB usetix vouchers show
+SUB usetix vouchers unblock

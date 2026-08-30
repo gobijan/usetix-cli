@@ -25,6 +25,7 @@ Typed coverage will grow where it materially improves daily use.
 | Event FAQs | — | `api ... /admin/events/:slug/faq_items...` | Direct |
 | Custom checkout fields | — | `api ... /admin/events/:slug/custom_fields...` | Direct |
 | Promo codes | — | `api ... /admin/promo_codes...` | Direct |
+| Gift vouchers | `vouchers list/report/show/issue/adjust/block/unblock/import`, `vouchers products list/show/create/update/archive/remove-image` | `api ... /admin/vouchers...`, `/admin/voucher_lookup`, `/admin/voucher_products...`, `/admin/voucher_imports...` | Typed for common operations, product lifecycle/artwork removal, body-safe exact-code lookup, reporting, and atomic CSV imports; direct for CSV export |
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including refunds, booking cancellation, and archival |
 | Customers | — | `api ... /admin/customers...` | Direct |
@@ -57,7 +58,7 @@ API mechanically:
 1. ~~Event show/create/update/publication.~~ Done.
 2. ~~Orders read and refund workflows.~~ Done.
 3. Customers read workflows.
-4. Tickets, promo codes, and guest-list operations.
+4. Tickets, promo codes, and guest-list operations. Gift vouchers are already typed.
 5. Venues, performers, analytics, and account settings.
 6. Scanner workflows if terminal scanning proves useful alongside the native
    scanner app.
