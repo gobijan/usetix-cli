@@ -82,6 +82,18 @@ usetix analytics shares
 usetix analytics share --event summer-festival --expires-in 7
 usetix analytics revoke 42 --yes
 
+usetix vouchers list
+usetix vouchers list --query ABCD-2345-EFGH-6789 # code is sent in the request body
+usetix vouchers report
+usetix vouchers show q7R9mT2vX4pL8nK6
+usetix vouchers issue --amount 50.00 --note "Customer goodwill"
+usetix vouchers adjust q7R9mT2vX4pL8nK6 --direction debit --amount 5.00 --reason "Correction" --yes
+usetix vouchers products create --name "Gift 50" --amount 50.00
+usetix vouchers products show mN9uR4pKc8xQ
+usetix vouchers products update mN9uR4pKc8xQ --status active
+usetix vouchers products remove-image mN9uR4pKc8xQ --yes
+usetix vouchers import vouchers.csv --apply --yes
+
 usetix profile create production --api-url https://app.usetix.io
 usetix profile create local --api-url https://app.lvh.me
 usetix profile use production
@@ -89,7 +101,7 @@ usetix --profile local auth login
 usetix profile list
 ```
 
-Refunds, cancellations, deletions, archiving, and analytics-link revocation always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-product image removal, and applied voucher imports always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
