@@ -29,6 +29,7 @@ Typed coverage will grow where it materially improves daily use.
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including refunds, booking cancellation, and archival |
 | Customers | — | `api ... /admin/customers...` | Direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
+| Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | CSV/XLSX/PDF exports | — | `api GET ...csv --output FILE` | Direct via `--output` (orders, customers, attendees, analytics) |
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout fees | — | `api ... /admin/account_settings/payments` | Direct |
