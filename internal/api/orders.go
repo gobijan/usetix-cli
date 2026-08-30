@@ -24,6 +24,8 @@ type Order struct {
 	PaidAt          *string        `json:"paid_at"`
 	CreatedAt       string         `json:"created_at"`
 	ItemCount       int            `json:"item_count"`
+	LineCount       int            `json:"line_count"`
+	ProductQuantity int            `json:"product_quantity"`
 	Attribution     map[string]any `json:"attribution"`
 }
 
@@ -48,8 +50,39 @@ type OrderItem struct {
 	BlockedReason               *string `json:"blocked_reason"`
 }
 
+type OrderTax struct {
+	Rate     string `json:"rate"`
+	Amount   string `json:"amount"`
+	Currency string `json:"currency"`
+}
+
+type VoucherPurchaseSummary struct {
+	PublicID       string  `json:"public_id"`
+	Status         string  `json:"status"`
+	RecipientName  string  `json:"recipient_name"`
+	RecipientEmail string  `json:"recipient_email"`
+	VoucherID      *string `json:"voucher_id"`
+}
+
+type OrderLine struct {
+	PublicID        string                  `json:"public_id"`
+	ProductID       *string                 `json:"product_id"`
+	ProductType     string                  `json:"product_type"`
+	Name            string                  `json:"name"`
+	Description     *string                 `json:"description"`
+	Quantity        int                     `json:"quantity"`
+	UnitPrice       Money                   `json:"unit_price"`
+	Subtotal        Money                   `json:"subtotal"`
+	Discount        Money                   `json:"discount"`
+	Tax             OrderTax                `json:"tax"`
+	Total           Money                   `json:"total"`
+	FulfilledAt     *string                 `json:"fulfilled_at"`
+	VoucherPurchase *VoucherPurchaseSummary `json:"voucher_purchase,omitempty"`
+}
+
 type OrderDetail struct {
 	Order
+	Lines []OrderLine `json:"lines"`
 	Items []OrderItem `json:"items"`
 }
 

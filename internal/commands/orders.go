@@ -62,7 +62,8 @@ page size from 1 to 100, --page with the opaque next-page cursor printed by the
 previous request, or --all to follow every page automatically.
 
 --query searches order codes, public IDs, customer names, email addresses,
-payment IDs, ticket codes, and event slugs prefixed with @.`,
+payment IDs, ticket codes, voucher-purchase IDs, voucher codes, and event slugs
+prefixed with @.`,
 		Example: `  usetix orders list --period all
   usetix orders list --query 8WZN-28GT
   usetix orders list --limit 25 --page NEXT_PAGE
@@ -115,8 +116,9 @@ payment IDs, ticket codes, and event slugs prefixed with @.`,
 func newOrdersShow(runtime *appctx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show IDENTIFIER",
-		Short: "Show an order with its tickets",
-		Long: `Show one order, including its customer, payment status, and tickets.
+		Short: "Show an order with its products and admissions",
+		Long: `Show one order, including its customer, payment status, commercial
+product lines, and ticket admissions.
 
 IDENTIFIER may be the human order code (8WZN-28GT) or the stable public ID
 (sm1KWiRAShvptqKrYzh6AKKJ). Both are printed by "usetix orders list".`,
@@ -296,7 +298,7 @@ func renderOrders(response api.OrdersResponse) output.StyledRenderer {
 				order.Status,
 				terminal.SanitizeLine(order.CustomerName),
 				order.Total.Amount+" "+order.Total.Currency,
-				fmt.Sprintf("%d", order.ItemCount),
+				fmt.Sprintf("%d", orderProductCount(order)),
 				terminal.SanitizeLine(order.PublicID),
 			)
 		}
@@ -347,13 +349,55 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 				return err
 			}
 		}
-		if len(order.Items) == 0 {
+		if len(order.Lines) == 0 && len(order.Items) == 0 {
 			return nil
 		}
 		if _, err := fmt.Fprintln(destination); err != nil {
 			return err
 		}
 		header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
+		if len(order.Lines) > 0 {
+			products := table.New().
+				Headers("PRODUCT", "TYPE", "QUANTITY", "TOTAL", "RECIPIENT").
+				Border(lipgloss.HiddenBorder()).
+				BorderTop(false).
+				BorderBottom(false).
+				BorderLeft(false).
+				BorderRight(false).
+				BorderHeader(false).
+				BorderColumn(false).
+				StyleFunc(func(row, _ int) lipgloss.Style {
+					style := lipgloss.NewStyle().PaddingRight(2)
+					if row == table.HeaderRow {
+						return style.Inherit(header)
+					}
+					return style
+				})
+			for _, line := range order.Lines {
+				recipient := "—"
+				if line.VoucherPurchase != nil {
+					recipient = terminal.SanitizeLine(line.VoucherPurchase.RecipientName)
+				}
+				products.Row(
+					terminal.SanitizeLine(line.Name),
+					terminal.SanitizeLine(line.ProductType),
+					fmt.Sprintf("%d", line.Quantity),
+					line.Total.Amount+" "+line.Total.Currency,
+					recipient,
+				)
+			}
+			if _, err := fmt.Fprintln(destination, products.String()); err != nil {
+				return err
+			}
+		}
+		if len(order.Items) == 0 {
+			return nil
+		}
+		if len(order.Lines) > 0 {
+			if _, err := fmt.Fprintln(destination); err != nil {
+				return err
+			}
+		}
 		view := table.New().
 			Headers("TICKET", "ATTENDEE", "CODE", "EVENT", "REDEEMED").
 			Border(lipgloss.HiddenBorder()).
@@ -390,6 +434,16 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 		_, err := fmt.Fprintln(destination, view.String())
 		return err
 	}
+}
+
+func orderProductCount(order api.Order) int {
+	if order.ProductQuantity > 0 {
+		return order.ProductQuantity
+	}
+	if order.LineCount > 0 {
+		return order.LineCount
+	}
+	return order.ItemCount
 }
 
 func renderOrderAction(action string, order api.Order) output.StyledRenderer {

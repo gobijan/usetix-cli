@@ -101,6 +101,10 @@ usetix --profile local auth login
 usetix profile list
 ```
 
+`orders show` prints commercial product lines separately from ticket admissions,
+so mixed ticket and voucher orders remain understandable. Order search also
+accepts voucher-purchase IDs and voucher codes.
+
 Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-product image removal, and applied voucher imports always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
