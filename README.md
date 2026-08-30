@@ -86,6 +86,7 @@ usetix vouchers list
 usetix vouchers list --query ABCD-2345-EFGH-6789 # code is sent in the request body
 usetix vouchers report
 usetix vouchers show q7R9mT2vX4pL8nK6
+usetix vouchers retry-delivery DELIVERY_ID --yes
 usetix vouchers issue --amount 50.00 --note "Customer goodwill"
 usetix vouchers adjust q7R9mT2vX4pL8nK6 --direction debit --amount 5.00 --reason "Correction" --yes
 usetix vouchers products create --name "Gift 50" --amount 50.00
@@ -110,7 +111,7 @@ or `failed`.
 so mixed ticket and voucher orders remain understandable. Order search also
 accepts voucher-purchase IDs and voucher codes.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-product image removal, and applied voucher imports always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, and applied voucher imports always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 

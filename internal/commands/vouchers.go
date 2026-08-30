@@ -43,7 +43,7 @@ func newVouchersRetryDelivery(runtime *appctx.Runtime) *cobra.Command {
 	var yes bool
 	command := &cobra.Command{
 		Use:   "retry-delivery DELIVERY_ID",
-		Short: "Retry a failed voucher email delivery",
+		Short: "Retry a failed or interrupted voucher email delivery",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
 			if !yes {
