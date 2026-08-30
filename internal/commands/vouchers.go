@@ -22,7 +22,7 @@ func NewVouchers(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "vouchers",
 		Short: "Work with gift vouchers",
-		Long:  "List, inspect, issue, adjust, block, import, and configure account-wide gift vouchers.",
+		Long:  "List, inspect, issue, adjust, block, retry delivery, import, and configure account-wide gift vouchers.",
 	}
 	command.AddCommand(
 		newVouchersList(runtime),
@@ -32,9 +32,37 @@ func NewVouchers(runtime *appctx.Runtime) *cobra.Command {
 		newVouchersAdjust(runtime),
 		newVouchersBlock(runtime),
 		newVouchersUnblock(runtime),
+		newVouchersRetryDelivery(runtime),
 		newVouchersImport(runtime),
 		newVoucherProducts(runtime),
 	)
+	return command
+}
+
+func newVouchersRetryDelivery(runtime *appctx.Runtime) *cobra.Command {
+	var yes bool
+	command := &cobra.Command{
+		Use:   "retry-delivery DELIVERY_ID",
+		Short: "Retry a failed voucher email delivery",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			if !yes {
+				return output.ErrUsageHint("retrying a voucher delivery requires explicit confirmation", "Re-run with --yes")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			delivery, err := client.RetryVoucherDelivery(command.Context(), args[0])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(delivery,
+				renderSimpleAction("Queued voucher delivery "+delivery.ID),
+				output.WithSummary("Voucher delivery queued"))
+		},
+	}
+	command.Flags().BoolVar(&yes, "yes", false, "confirm retrying the delivery")
 	return command
 }
 
@@ -624,14 +652,34 @@ func renderVoucherDetail(voucher api.VoucherDetail) output.StyledRenderer {
 		}
 		if voucher.Purchase != nil {
 			purchase := voucher.Purchase
+			recipient := "—"
+			if purchase.RecipientEmail != nil {
+				recipient = optionalString(purchase.RecipientName) + " · " + optionalString(purchase.RecipientEmail)
+			}
 			lines = append(lines,
 				"",
 				"Shop purchase:",
 				"  Status    "+terminal.SanitizeLine(purchase.Status),
 				"  Payment   "+terminal.SanitizeLine(purchase.PaymentProvider),
 				"  Buyer     "+terminal.SanitizeLine(purchase.CustomerName+" · "+purchase.CustomerEmail),
-				"  Recipient "+terminal.SanitizeLine(purchase.RecipientName+" · "+purchase.RecipientEmail),
+				"  Delivery  "+terminal.SanitizeLine(purchase.DeliveryMode),
+				"  Scheduled "+optionalString(purchase.ScheduledFor),
+				"  Recipient "+terminal.SanitizeLine(recipient),
 			)
+			for _, delivery := range purchase.Deliveries {
+				state := "queued"
+				if delivery.DeliveredAt != nil {
+					state = "delivered " + *delivery.DeliveredAt
+				} else if delivery.FailedAt != nil {
+					state = "failed " + *delivery.FailedAt
+				} else if delivery.DeliveringAt != nil {
+					state = "sending"
+				} else if delivery.ScheduledFor != nil {
+					state = "scheduled " + *delivery.ScheduledFor
+				}
+				lines = append(lines, fmt.Sprintf("  Attempt   %s · %s · %s · %d tries",
+					delivery.ID, terminal.SanitizeLine(delivery.RecipientEmail), state, delivery.AttemptsCount))
+			}
 		}
 		lines = append(lines, "", "Ledger:")
 		for _, entry := range voucher.Entries {

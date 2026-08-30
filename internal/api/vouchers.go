@@ -46,18 +46,41 @@ type VoucherDetail struct {
 }
 
 type VoucherPurchase struct {
+	ID              string            `json:"id"`
+	Status          string            `json:"status"`
+	PaymentProvider string            `json:"payment_provider"`
+	Amount          Money             `json:"amount"`
+	CustomerName    string            `json:"customer_name"`
+	CustomerEmail   string            `json:"customer_email"`
+	RecipientName   *string           `json:"recipient_name"`
+	RecipientEmail  *string           `json:"recipient_email"`
+	DeliveryMode    string            `json:"delivery_mode"`
+	ScheduledFor    *string           `json:"scheduled_for"`
+	Message         *string           `json:"message"`
+	PaidAt          *string           `json:"paid_at"`
+	DeliveredAt     *string           `json:"delivered_at"`
+	CreatedAt       string            `json:"created_at"`
+	Deliveries      []VoucherDelivery `json:"deliveries"`
+}
+
+type VoucherDelivery struct {
 	ID              string  `json:"id"`
-	Status          string  `json:"status"`
-	PaymentProvider string  `json:"payment_provider"`
-	Amount          Money   `json:"amount"`
-	CustomerName    string  `json:"customer_name"`
-	CustomerEmail   string  `json:"customer_email"`
+	Audience        string  `json:"audience"`
 	RecipientName   string  `json:"recipient_name"`
 	RecipientEmail  string  `json:"recipient_email"`
-	Message         *string `json:"message"`
-	PaidAt          *string `json:"paid_at"`
+	ScheduledFor    *string `json:"scheduled_for"`
+	QueuedAt        *string `json:"queued_at"`
+	DeliveringAt    *string `json:"delivering_at"`
+	LastAttemptedAt *string `json:"last_attempted_at"`
 	DeliveredAt     *string `json:"delivered_at"`
-	CreatedAt       string  `json:"created_at"`
+	FailedAt        *string `json:"failed_at"`
+	FailureMessage  *string `json:"failure_message"`
+	AttemptsCount   int     `json:"attempts_count"`
+}
+
+type VoucherDeliveryRetry struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
 }
 
 type VouchersResponse struct {
@@ -171,6 +194,12 @@ func (client *Client) UnblockVoucher(ctx context.Context, id string) (Voucher, e
 	var voucher Voucher
 	err := client.delete(ctx, "/admin/vouchers/"+url.PathEscape(id)+"/block.json", &voucher)
 	return voucher, err
+}
+
+func (client *Client) RetryVoucherDelivery(ctx context.Context, id string) (VoucherDeliveryRetry, error) {
+	var delivery VoucherDeliveryRetry
+	_, err := client.post(ctx, "/admin/voucher_deliveries/"+url.PathEscape(id)+"/retry.json", nil, &delivery)
+	return delivery, err
 }
 
 func (client *Client) ListVoucherProducts(ctx context.Context) (VoucherProductsResponse, error) {

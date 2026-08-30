@@ -38,9 +38,20 @@ func TestVoucherCommandsUseDocumentedEndpointsAndConfirmMutations(t *testing.T) 
 				_, _ = writer.Write([]byte(voucherJSON))
 			}
 		case "/admin/vouchers/VOUCHER1.json":
-			_, _ = writer.Write([]byte(strings.TrimSuffix(voucherJSON, "}") + `,"entries":[]}`))
+			_, _ = writer.Write([]byte(strings.TrimSuffix(voucherJSON, "}") + `,
+              "purchase":{"id":"PURCHASE1","status":"paid","payment_provider":"stripe",
+                "amount":{"amount":"50.00","currency":"EUR"},
+                "customer_name":"Buyer","customer_email":"buyer@example.com",
+                "recipient_name":"Recipient","recipient_email":"recipient@example.com",
+                "delivery_mode":"email_scheduled","scheduled_for":"2026-12-24T10:00:00Z",
+                "deliveries":[{"id":"DELIVERY1","audience":"recipient",
+                  "recipient_name":"Recipient","recipient_email":"recipient@example.com",
+                  "scheduled_for":"2026-12-24T10:00:00Z","queued_at":"2026-08-30T12:01:00Z",
+                  "attempts_count":0}]},"entries":[]}`))
 		case "/admin/vouchers/VOUCHER1/adjustment.json", "/admin/vouchers/VOUCHER1/block.json":
 			_, _ = writer.Write([]byte(voucherJSON))
+		case "/admin/voucher_deliveries/DELIVERY1/retry.json":
+			_, _ = writer.Write([]byte(`{"id":"DELIVERY1","status":"queued"}`))
 		default:
 			t.Fatalf("unexpected request %s %s", request.Method, request.URL.Path)
 		}
@@ -62,6 +73,23 @@ func TestVoucherCommandsUseDocumentedEndpointsAndConfirmMutations(t *testing.T) 
 	}
 	if lastMethod != http.MethodPost || lastPath != "/admin/voucher_lookup.json" || !strings.Contains(lastBody, `"code":"ABCD-2345-EFGH-6789"`) {
 		t.Fatalf("lookup request: method=%s path=%s body=%q", lastMethod, lastPath, lastBody)
+	}
+
+	stdout, _, exitCode = runCLI(t, []string{"--styled", "vouchers", "show", "VOUCHER1"}, "", environment, nil)
+	if exitCode != 0 || !strings.Contains(stdout, "Delivery  email_scheduled") ||
+		!strings.Contains(stdout, "DELIVERY1") || !strings.Contains(stdout, "scheduled 2026-12-24T10:00:00Z") {
+		t.Fatalf("show delivery: exit=%d stdout=%q", exitCode, stdout)
+	}
+
+	stdout, _, exitCode = runCLI(t, []string{"--json", "vouchers", "retry-delivery", "DELIVERY1"}, "", environment, nil)
+	if exitCode != 1 || !strings.Contains(stdout, "requires explicit confirmation") {
+		t.Fatalf("retry delivery without --yes: exit=%d stdout=%q", exitCode, stdout)
+	}
+	stdout, _, exitCode = runCLI(t, []string{"--json", "vouchers", "retry-delivery", "DELIVERY1", "--yes"}, "", environment, nil)
+	if exitCode != 0 || lastMethod != http.MethodPost ||
+		lastPath != "/admin/voucher_deliveries/DELIVERY1/retry.json" ||
+		!strings.Contains(stdout, `"status": "queued"`) {
+		t.Fatalf("retry delivery: exit=%d method=%s path=%s stdout=%q", exitCode, lastMethod, lastPath, stdout)
 	}
 
 	stdout, _, exitCode = runCLI(t, []string{"--styled", "vouchers", "report"}, "", environment, nil)

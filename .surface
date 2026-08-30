@@ -44,6 +44,7 @@ CMD usetix vouchers products remove-image
 CMD usetix vouchers products show
 CMD usetix vouchers products update
 CMD usetix vouchers report
+CMD usetix vouchers retry-delivery
 CMD usetix vouchers show
 CMD usetix vouchers unblock
 FLAG usetix --agent type=bool
@@ -502,6 +503,15 @@ FLAG usetix vouchers report --json type=bool
 FLAG usetix vouchers report --profile type=string
 FLAG usetix vouchers report --quiet type=bool
 FLAG usetix vouchers report --styled type=bool
+FLAG usetix vouchers retry-delivery --agent type=bool
+FLAG usetix vouchers retry-delivery --api-url type=string
+FLAG usetix vouchers retry-delivery --count type=bool
+FLAG usetix vouchers retry-delivery --ids-only type=bool
+FLAG usetix vouchers retry-delivery --json type=bool
+FLAG usetix vouchers retry-delivery --profile type=string
+FLAG usetix vouchers retry-delivery --quiet type=bool
+FLAG usetix vouchers retry-delivery --styled type=bool
+FLAG usetix vouchers retry-delivery --yes type=bool
 FLAG usetix vouchers show --agent type=bool
 FLAG usetix vouchers show --api-url type=string
 FLAG usetix vouchers show --count type=bool
@@ -564,5 +574,6 @@ SUB usetix vouchers products remove-image
 SUB usetix vouchers products show
 SUB usetix vouchers products update
 SUB usetix vouchers report
+SUB usetix vouchers retry-delivery
 SUB usetix vouchers show
 SUB usetix vouchers unblock
