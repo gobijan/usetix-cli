@@ -177,7 +177,7 @@ func newVouchersIssue(runtime *appctx.Runtime) *cobra.Command {
 		Use:   "issue",
 		Short: "Issue a voucher",
 		Long:  "Issue a voucher with a securely generated code through the audited ledger. Supply --amount, or select a fixed product with --product.",
-		Example: `  usetix vouchers issue --amount 50.00 --note "Customer goodwill"
+		Example: `  usetix vouchers issue --amount 50.00 --note "Offline sale"
   usetix vouchers issue --product mN9uR4pKc8xQ`,
 		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {

@@ -129,12 +129,12 @@ func TestVoucherCommandsUseDocumentedEndpointsAndConfirmMutations(t *testing.T) 
 		t.Fatalf("report: exit=%d stdout=%q", exitCode, stdout)
 	}
 
-	stdout, _, exitCode = runCLI(t, []string{"--json", "vouchers", "issue", "--amount", "50.00", "--note", "Goodwill"}, "", environment, nil)
+	stdout, _, exitCode = runCLI(t, []string{"--json", "vouchers", "issue", "--amount", "50.00", "--note", "Offline sale"}, "", environment, nil)
 	if exitCode != 0 || !strings.Contains(stdout, `"id": "VOUCHER1"`) ||
 		!strings.Contains(stdout, `"code": "ABCD-2345-EFGH-6789"`) {
 		t.Fatalf("issue: exit=%d stdout=%q", exitCode, stdout)
 	}
-	if !strings.Contains(lastBody, `"voucher":{"amount":"50.00","note":"Goodwill"}`) {
+	if !strings.Contains(lastBody, `"voucher":{"amount":"50.00","note":"Offline sale"}`) {
 		t.Fatalf("issue body = %q", lastBody)
 	}
 
