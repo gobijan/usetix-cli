@@ -153,13 +153,13 @@ func newVouchersShow(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newVouchersIssue(runtime *appctx.Runtime) *cobra.Command {
-	var amount, productID, code, expiresAt, note string
+	var amount, productID, expiresAt, note string
 	command := &cobra.Command{
 		Use:   "issue",
 		Short: "Issue a voucher",
-		Long:  "Issue a voucher through the audited ledger. Supply --amount, or select a fixed product with --product.",
+		Long:  "Issue a voucher with a securely generated code through the audited ledger. Supply --amount, or select a fixed product with --product.",
 		Example: `  usetix vouchers issue --amount 50.00 --note "Customer goodwill"
-  usetix vouchers issue --product mN9uR4pKc8xQ --code PARTNER-2026`,
+  usetix vouchers issue --product mN9uR4pKc8xQ`,
 		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
 			if amount == "" && productID == "" {
@@ -168,7 +168,6 @@ func newVouchersIssue(runtime *appctx.Runtime) *cobra.Command {
 			attributes := map[string]any{}
 			addString(attributes, "amount", amount)
 			addString(attributes, "voucher_product_id", productID)
-			addString(attributes, "code", code)
 			addString(attributes, "expires_at", expiresAt)
 			addString(attributes, "note", note)
 			client, _, err := runtime.APIClient()
@@ -188,7 +187,6 @@ func newVouchersIssue(runtime *appctx.Runtime) *cobra.Command {
 	}
 	command.Flags().StringVar(&amount, "amount", "", "major-unit amount, for example 50.00")
 	command.Flags().StringVar(&productID, "product", "", "voucher product public ID")
-	command.Flags().StringVar(&code, "code", "", "optional custom voucher code")
 	command.Flags().StringVar(&expiresAt, "expires-at", "", "optional ISO 8601 expiration")
 	command.Flags().StringVar(&note, "note", "", "audit note")
 	return command

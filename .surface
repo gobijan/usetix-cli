@@ -397,7 +397,6 @@ FLAG usetix vouchers import --yes type=bool
 FLAG usetix vouchers issue --agent type=bool
 FLAG usetix vouchers issue --amount type=string
 FLAG usetix vouchers issue --api-url type=string
-FLAG usetix vouchers issue --code type=string
 FLAG usetix vouchers issue --count type=bool
 FLAG usetix vouchers issue --expires-at type=string
 FLAG usetix vouchers issue --ids-only type=bool
