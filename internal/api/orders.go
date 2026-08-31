@@ -59,8 +59,14 @@ type OrderTax struct {
 type VoucherPurchaseSummary struct {
 	PublicID       string  `json:"public_id"`
 	Status         string  `json:"status"`
-	RecipientName  string  `json:"recipient_name"`
-	RecipientEmail string  `json:"recipient_email"`
+	VoucherAmount  Money   `json:"voucher_amount"`
+	PaidAmount     Money   `json:"paid_amount"`
+	BonusAmount    Money   `json:"bonus_amount"`
+	RecipientName  *string `json:"recipient_name"`
+	RecipientEmail *string `json:"recipient_email"`
+	DeliveryMode   string  `json:"delivery_mode"`
+	ScheduledFor   *string `json:"scheduled_for"`
+	DeliveredAt    *string `json:"delivered_at"`
 	VoucherID      *string `json:"voucher_id"`
 }
 

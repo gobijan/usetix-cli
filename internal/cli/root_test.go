@@ -253,7 +253,7 @@ func TestOrdersCommands(t *testing.T) {
 				_, _ = writer.Write([]byte(`{"orders":[` + orderJSON + `],"stats":{"order_count":2,"revenue":{"amount":"84.00","currency":"EUR"}},"pagination":{"total_count":2,"limit":50,"next_page":"next-cursor"}}`))
 			}
 		case request.URL.Path == "/admin/orders/pub123.json", request.URL.Path == "/admin/orders/8WZN-28GT.json":
-			detail := orderJSON[:len(orderJSON)-1] + `,"lines":[{"public_id":"line1","product_id":"product1","product_type":"ticket","name":"GA","quantity":1,"unit_price":{"amount":"20.00","currency":"EUR"},"subtotal":{"amount":"20.00","currency":"EUR"},"discount":{"amount":"0.00","currency":"EUR"},"tax":{"rate":"19.0","amount":"3.19","currency":"EUR"},"total":{"amount":"20.00","currency":"EUR"}},{"public_id":"line2","product_id":"product2","product_type":"voucher","name":"Gift 25","quantity":1,"unit_price":{"amount":"25.00","currency":"EUR"},"subtotal":{"amount":"25.00","currency":"EUR"},"discount":{"amount":"0.00","currency":"EUR"},"tax":{"rate":"0.0","amount":"0.00","currency":"EUR"},"total":{"amount":"25.00","currency":"EUR"},"voucher_purchase":{"public_id":"purchase1","status":"paid","recipient_name":"Alex","recipient_email":"alex@example.com"}}],"items":[{"public_id":"item1","check_in_code":"9M5V2H8C","display_check_in_code":"9M5V-2H8C","ticket_title":"GA","event_id":1,"event_slug":"summer","redeemed":false,"admission_status":"active"}]}`
+			detail := orderJSON[:len(orderJSON)-1] + `,"lines":[{"public_id":"line1","product_id":"product1","product_type":"ticket","name":"GA","quantity":1,"unit_price":{"amount":"20.00","currency":"EUR"},"subtotal":{"amount":"20.00","currency":"EUR"},"discount":{"amount":"0.00","currency":"EUR"},"tax":{"rate":"19.0","amount":"3.19","currency":"EUR"},"total":{"amount":"20.00","currency":"EUR"}},{"public_id":"line2","product_id":"product2","product_type":"voucher","name":"Gift 75","quantity":1,"unit_price":{"amount":"50.00","currency":"EUR"},"subtotal":{"amount":"50.00","currency":"EUR"},"discount":{"amount":"0.00","currency":"EUR"},"tax":{"rate":"0.0","amount":"0.00","currency":"EUR"},"total":{"amount":"50.00","currency":"EUR"},"voucher_purchase":{"public_id":"purchase1","status":"paid","voucher_amount":{"amount":"75.00","currency":"EUR"},"paid_amount":{"amount":"50.00","currency":"EUR"},"bonus_amount":{"amount":"25.00","currency":"EUR"},"recipient_name":"Alex","recipient_email":"alex@example.com","delivery_mode":"email_now"}}],"items":[{"public_id":"item1","check_in_code":"9M5V2H8C","display_check_in_code":"9M5V-2H8C","ticket_title":"GA","event_id":1,"event_slug":"summer","redeemed":false,"admission_status":"active"}]}`
 			_, _ = writer.Write([]byte(detail))
 		case request.URL.Path == "/admin/orders/pub123/refund.json",
 			request.URL.Path == "/admin/orders/pub123/cancellation.json",
@@ -288,7 +288,9 @@ func TestOrdersCommands(t *testing.T) {
 	}
 
 	stdout, _, exitCode = runCLI(t, []string{"--styled", "orders", "show", "8WZN-28GT"}, "", environment, nil)
-	if exitCode != 0 || !strings.Contains(stdout, "9M5V-2H8C") || !strings.Contains(stdout, "Gift 25") || !strings.Contains(stdout, "Alex") || lastPath != "/admin/orders/8WZN-28GT.json" {
+	if exitCode != 0 || !strings.Contains(stdout, "9M5V-2H8C") || !strings.Contains(stdout, "Gift 75") ||
+		!strings.Contains(stdout, "75.00 EUR (+25.00 bonus)") || !strings.Contains(stdout, "Alex") ||
+		lastPath != "/admin/orders/8WZN-28GT.json" {
 		t.Fatalf("show: exit=%d stdout=%q", exitCode, stdout)
 	}
 

@@ -22,7 +22,10 @@ func NewVouchers(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "vouchers",
 		Short: "Work with gift vouchers",
-		Long:  "List, inspect, issue, adjust, block, retry delivery, import, and configure account-wide gift vouchers.",
+		Long: `List, inspect, issue, adjust, block, retry delivery, import, and configure account-wide gift vouchers.
+
+Voucher lists use cursor pagination. The first 50 records are returned by
+default; use --page to continue or --all to fetch every matching voucher.`,
 	}
 	command.AddCommand(
 		newVouchersList(runtime),
@@ -67,44 +70,60 @@ func newVouchersRetryDelivery(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newVouchersList(runtime *appctx.Runtime) *cobra.Command {
-	var query, status string
+	query := api.VouchersQuery{Limit: 50}
+	var all bool
 	command := &cobra.Command{
 		Use:     "list",
-		Short:   "List vouchers and balances",
-		Example: "  usetix vouchers list\n  usetix vouchers list --status blocked\n  usetix vouchers list --query ABCD-2345-EFGH-6789 --json",
+		Short:   "List vouchers and balances with cursor pagination",
+		Example: "  usetix vouchers list\n  usetix vouchers list --status blocked\n  usetix vouchers list --all\n  usetix vouchers list --query ABCD-2345-EFGH-6789 --json",
 		Args:    cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
-			if status == "all" {
-				status = ""
+			if query.Status == "all" {
+				query.Status = ""
 			}
-			if status != "" && status != "active" && status != "blocked" && status != "expired" && status != "depleted" {
+			if query.Status != "" && query.Status != "active" && query.Status != "blocked" && query.Status != "expired" && query.Status != "depleted" {
 				return output.ErrUsage("--status must be all, active, blocked, expired, or depleted")
 			}
-			if query != "" && status != "" {
-				return output.ErrUsage("--query and --status cannot be combined")
+			if query.Limit < 1 || query.Limit > 100 {
+				return output.ErrUsage("--limit must be between 1 and 100")
+			}
+			if query.Query != "" && (query.Status != "" || query.Page != "" || all) {
+				return output.ErrUsage("--query cannot be combined with --status, --page, or --all")
 			}
 			client, target, err := runtime.APIClient()
 			if err != nil {
 				return err
 			}
-			response, err := client.ListVouchers(command.Context(), query, status)
+			var response api.VouchersResponse
+			if all {
+				response, err = client.ListAllVouchers(command.Context(), query)
+			} else {
+				response, err = client.ListVouchers(command.Context(), query)
+			}
 			if err != nil {
 				return NormalizeError(err)
 			}
 			if runtime.OutputFormat() == output.FormatCount {
-				_, err := fmt.Fprintln(runtime.Stdout, len(response.Vouchers))
+				_, err := fmt.Fprintln(runtime.Stdout, response.Pagination.TotalCount)
 				return err
 			}
+			data := any(response)
+			if runtime.OutputFormat() == output.FormatIDs {
+				data = voucherIDs(response.Vouchers)
+			}
 			return runtime.Output().OK(
-				response.Vouchers,
-				renderVouchers(response.Vouchers),
-				output.WithSummary(summaryCount(len(response.Vouchers), "voucher", "vouchers")),
+				data,
+				renderVouchers(response),
+				output.WithSummary(voucherListSummary(response)),
 				output.WithNotice(profileNotice(target)),
 			)
 		},
 	}
-	command.Flags().StringVar(&query, "query", "", "exact voucher code (sent in the request body, never the URL)")
-	command.Flags().StringVar(&status, "status", "all", "filter: all, active, blocked, expired, or depleted")
+	command.Flags().StringVar(&query.Query, "query", "", "exact voucher code (sent in the request body, never the URL)")
+	command.Flags().StringVar(&query.Status, "status", "all", "filter: all, active, blocked, expired, or depleted")
+	command.Flags().IntVar(&query.Limit, "limit", 50, "vouchers per page (1-100)")
+	command.Flags().StringVar(&query.Page, "page", "", "opaque next-page cursor from the previous response")
+	command.Flags().BoolVar(&all, "all", false, "fetch every remaining page")
 	return command
 }
 
@@ -118,7 +137,7 @@ func newVouchersReport(runtime *appctx.Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			response, err := client.ListVouchers(command.Context(), "", "")
+			response, err := client.ListVouchers(command.Context(), api.VouchersQuery{Limit: 1})
 			if err != nil {
 				return NormalizeError(err)
 			}
@@ -147,7 +166,7 @@ func newVouchersShow(runtime *appctx.Runtime) *cobra.Command {
 			if err != nil {
 				return NormalizeError(err)
 			}
-			return runtime.Output().OK(voucher, renderVoucherDetail(voucher), output.WithSummary(voucher.Code))
+			return runtime.Output().OK(voucher, renderVoucherDetail(voucher), output.WithSummary(voucherDisplayCode(voucher.Voucher)))
 		},
 	}
 }
@@ -394,12 +413,13 @@ func newVoucherProductsList(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newVoucherProductsCreate(runtime *appctx.Runtime) *cobra.Command {
-	var name, description, pricingType, amount, minimum, maximum, visibility string
-	var validityMonths, position int
+	var name, description, pricingType, amount, purchasePrice, minimum, maximum, visibility string
+	var validityMonths int
 	command := &cobra.Command{
 		Use:   "create",
 		Short: "Create a fixed or flexible voucher product",
 		Example: `  usetix vouchers products create --name "Gift 50" --pricing fixed --amount 50.00
+  usetix vouchers products create --name "Pay 50, get 75" --amount 75.00 --purchase-price 50.00
   usetix vouchers products create --name "Choose amount" --pricing flexible --minimum 10.00 --maximum 250.00`,
 		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
@@ -415,12 +435,18 @@ func newVoucherProductsCreate(runtime *appctx.Runtime) *cobra.Command {
 			if pricingType == "flexible" && (minimum == "" || maximum == "") {
 				return output.ErrUsage("flexible products require --minimum and --maximum")
 			}
+			if pricingType == "flexible" && purchasePrice != "" {
+				return output.ErrUsage("--purchase-price is available only for fixed products")
+			}
 			attributes := map[string]any{
 				"name": name, "description": description, "pricing_type": pricingType,
-				"visibility": visibility, "validity_months": validityMonths, "position": position,
+				"visibility": visibility, "validity_months": validityMonths,
 			}
 			if pricingType == "fixed" {
 				attributes["fixed_amount"] = amount
+				if command.Flags().Changed("purchase-price") {
+					attributes["purchase_price"] = purchasePrice
+				}
 			} else {
 				attributes["minimum_amount"] = minimum
 				attributes["maximum_amount"] = maximum
@@ -444,18 +470,18 @@ func newVoucherProductsCreate(runtime *appctx.Runtime) *cobra.Command {
 	command.Flags().StringVar(&description, "description", "", "product description")
 	command.Flags().StringVar(&pricingType, "pricing", "fixed", "fixed or flexible")
 	command.Flags().StringVar(&amount, "amount", "", "fixed major-unit amount")
+	command.Flags().StringVar(&purchasePrice, "purchase-price", "", "lower price charged for fixed voucher credit")
 	command.Flags().StringVar(&minimum, "minimum", "", "flexible minimum amount")
 	command.Flags().StringVar(&maximum, "maximum", "", "flexible maximum amount")
 	command.Flags().StringVar(&visibility, "visibility", "public_catalog", "public_catalog or secret")
 	command.Flags().IntVar(&validityMonths, "validity-months", 36, "months until issued vouchers expire")
-	command.Flags().IntVar(&position, "position", 0, "catalog sort position")
 	_ = command.MarkFlagRequired("name")
 	return command
 }
 
 func newVoucherProductsUpdate(runtime *appctx.Runtime) *cobra.Command {
-	var name, description, pricingType, amount, minimum, maximum, visibility, status string
-	var validityMonths, position int
+	var name, description, pricingType, amount, purchasePrice, minimum, maximum, visibility, status string
+	var validityMonths int
 	var yes bool
 	command := &cobra.Command{
 		Use:   "update ID",
@@ -481,6 +507,9 @@ func newVoucherProductsUpdate(runtime *appctx.Runtime) *cobra.Command {
 				(!command.Flags().Changed("minimum") || !command.Flags().Changed("maximum")) {
 				return output.ErrUsage("changing to flexible pricing requires --minimum and --maximum")
 			}
+			if pricingType == "flexible" && command.Flags().Changed("purchase-price") {
+				return output.ErrUsage("--purchase-price is available only for fixed products")
+			}
 
 			attributes := map[string]any{}
 			stringFlags := map[string]struct {
@@ -489,7 +518,8 @@ func newVoucherProductsUpdate(runtime *appctx.Runtime) *cobra.Command {
 			}{
 				"name": {"name", name}, "description": {"description", description},
 				"pricing": {"pricing_type", pricingType}, "amount": {"fixed_amount", amount},
-				"minimum": {"minimum_amount", minimum}, "maximum": {"maximum_amount", maximum},
+				"purchase-price": {"purchase_price", purchasePrice},
+				"minimum":        {"minimum_amount", minimum}, "maximum": {"maximum_amount", maximum},
 				"visibility": {"visibility", visibility}, "status": {"status", status},
 			}
 			for flag, field := range stringFlags {
@@ -499,9 +529,6 @@ func newVoucherProductsUpdate(runtime *appctx.Runtime) *cobra.Command {
 			}
 			if command.Flags().Changed("validity-months") {
 				attributes["validity_months"] = validityMonths
-			}
-			if command.Flags().Changed("position") {
-				attributes["position"] = position
 			}
 			if len(attributes) == 0 {
 				return output.ErrUsage("provide at least one field to update")
@@ -523,12 +550,12 @@ func newVoucherProductsUpdate(runtime *appctx.Runtime) *cobra.Command {
 	command.Flags().StringVar(&description, "description", "", "product description; pass an empty value to clear")
 	command.Flags().StringVar(&pricingType, "pricing", "", "fixed or flexible")
 	command.Flags().StringVar(&amount, "amount", "", "fixed major-unit amount")
+	command.Flags().StringVar(&purchasePrice, "purchase-price", "", "lower price charged for fixed voucher credit; empty clears it")
 	command.Flags().StringVar(&minimum, "minimum", "", "flexible minimum amount")
 	command.Flags().StringVar(&maximum, "maximum", "", "flexible maximum amount")
 	command.Flags().StringVar(&visibility, "visibility", "", "public_catalog or secret")
 	command.Flags().StringVar(&status, "status", "", "active or archived")
 	command.Flags().IntVar(&validityMonths, "validity-months", 0, "months until issued vouchers expire")
-	command.Flags().IntVar(&position, "position", 0, "catalog sort position")
 	command.Flags().BoolVar(&yes, "yes", false, "confirm archival when setting --status archived")
 	return command
 }
@@ -590,9 +617,24 @@ func addString(attributes map[string]any, key, value string) {
 	}
 }
 
-func renderVouchers(vouchers []api.Voucher) output.StyledRenderer {
+func voucherListSummary(response api.VouchersResponse) string {
+	if len(response.Vouchers) == response.Pagination.TotalCount {
+		return summaryCount(len(response.Vouchers), "voucher", "vouchers")
+	}
+	return fmt.Sprintf("%d of %d vouchers", len(response.Vouchers), response.Pagination.TotalCount)
+}
+
+func voucherIDs(vouchers []api.Voucher) []map[string]any {
+	projection := make([]map[string]any, 0, len(vouchers))
+	for _, voucher := range vouchers {
+		projection = append(projection, map[string]any{"id": voucher.ID})
+	}
+	return projection
+}
+
+func renderVouchers(response api.VouchersResponse) output.StyledRenderer {
 	return func(destination io.Writer) error {
-		if len(vouchers) == 0 {
+		if len(response.Vouchers) == 0 {
 			_, err := fmt.Fprintln(destination, "No vouchers found.")
 			return err
 		}
@@ -607,17 +649,28 @@ func renderVouchers(vouchers []api.Voucher) output.StyledRenderer {
 				}
 				return style
 			})
-		for _, voucher := range vouchers {
+		for _, voucher := range response.Vouchers {
 			view.Row(
-				terminal.SanitizeLine(voucher.Code),
+				terminal.SanitizeLine(voucherDisplayCode(voucher)),
 				voucher.Balance.Amount+" "+voucher.Balance.Currency,
 				voucherState(voucher),
 				optionalString(voucher.ProductName),
 				optionalString(voucher.ExpiresAt),
 			)
 		}
-		_, err := fmt.Fprintln(destination, view.String())
-		return err
+		if _, err := fmt.Fprintln(destination, view.String()); err != nil {
+			return err
+		}
+		if response.Pagination.NextPage != nil {
+			_, err := fmt.Fprintf(destination,
+				"Showing %d of %d. Continue with --page %s or use --all.\n",
+				len(response.Vouchers),
+				response.Pagination.TotalCount,
+				terminal.SanitizeLine(*response.Pagination.NextPage),
+			)
+			return err
+		}
+		return nil
 	}
 }
 
@@ -625,12 +678,13 @@ func renderVoucherReport(response api.VouchersResponse) output.StyledRenderer {
 	return func(destination io.Writer) error {
 		summary := response.Summary
 		_, err := fmt.Fprintf(destination,
-			"Voucher report\n  Vouchers:    %d\n  Issued:      %s %s\n  Redeemed:    %s %s\n  Outstanding: %s %s\n  Shop sales:  %d · %s %s\n  Blocked:     %d\n",
+			"Voucher report\n  Vouchers:    %d\n  Issued:      %s %s\n  Redeemed:    %s %s\n  Outstanding: %s %s\n  Shop sales:  %d · %s %s paid · %s %s bonus\n  Blocked:     %d\n",
 			summary.Count,
 			summary.Issued.Amount, summary.Issued.Currency,
 			summary.Redeemed.Amount, summary.Redeemed.Currency,
 			summary.Outstanding.Amount, summary.Outstanding.Currency,
 			summary.SoldCount, summary.Sold.Amount, summary.Sold.Currency,
+			summary.Bonus.Amount, summary.Bonus.Currency,
 			summary.BlockedCount,
 		)
 		return err
@@ -640,7 +694,7 @@ func renderVoucherReport(response api.VouchersResponse) output.StyledRenderer {
 func renderVoucherDetail(voucher api.VoucherDetail) output.StyledRenderer {
 	return func(destination io.Writer) error {
 		lines := []string{
-			voucher.Code,
+			voucherDisplayCode(voucher.Voucher),
 			"  ID        " + voucher.ID,
 			"  Balance   " + voucher.Balance.Amount + " " + voucher.Balance.Currency,
 			"  Available " + voucher.AvailableBalance.Amount + " " + voucher.AvailableBalance.Currency,
@@ -659,6 +713,9 @@ func renderVoucherDetail(voucher api.VoucherDetail) output.StyledRenderer {
 				"Shop purchase:",
 				"  Status    "+terminal.SanitizeLine(purchase.Status),
 				"  Payment   "+terminal.SanitizeLine(purchase.PaymentProvider),
+				"  Credit    "+purchase.Amount.Amount+" "+purchase.Amount.Currency,
+				"  Paid      "+purchase.PaidAmount.Amount+" "+purchase.PaidAmount.Currency,
+				"  Bonus     "+purchase.BonusAmount.Amount+" "+purchase.BonusAmount.Currency,
 				"  Buyer     "+terminal.SanitizeLine(purchase.CustomerName+" · "+purchase.CustomerEmail),
 				"  Delivery  "+terminal.SanitizeLine(purchase.DeliveryMode),
 				"  Scheduled "+optionalString(purchase.ScheduledFor),
@@ -695,7 +752,7 @@ func renderVoucherDetail(voucher api.VoucherDetail) output.StyledRenderer {
 
 func renderVoucherAction(action string, voucher api.Voucher) output.StyledRenderer {
 	return renderSimpleAction(fmt.Sprintf("%s voucher %s · %s %s remaining", action,
-		terminal.SanitizeLine(voucher.Code), voucher.Balance.Amount, voucher.Balance.Currency))
+		terminal.SanitizeLine(voucherDisplayCode(voucher)), voucher.Balance.Amount, voucher.Balance.Currency))
 }
 
 func renderVoucherProducts(products []api.VoucherProduct) output.StyledRenderer {
@@ -746,6 +803,14 @@ func renderVoucherImport(voucherImport api.VoucherImport) output.StyledRenderer 
 }
 
 func voucherProductPrice(product api.VoucherProduct) string {
+	if product.PurchasePrice != nil && product.FixedAmount != nil {
+		price := product.PurchasePrice.Amount + " " + product.PurchasePrice.Currency +
+			" for " + product.FixedAmount.Amount + " " + product.FixedAmount.Currency + " credit"
+		if product.BonusAmount != nil {
+			price += " (+" + product.BonusAmount.Amount + " bonus)"
+		}
+		return price
+	}
 	if product.FixedAmount != nil {
 		return product.FixedAmount.Amount + " " + product.FixedAmount.Currency
 	}
@@ -753,6 +818,13 @@ func voucherProductPrice(product api.VoucherProduct) string {
 		return product.MinimumAmount.Amount + "–" + product.MaximumAmount.Amount + " " + product.Currency
 	}
 	return "—"
+}
+
+func voucherDisplayCode(voucher api.Voucher) string {
+	if voucher.Code != "" {
+		return voucher.Code
+	}
+	return voucher.MaskedCode
 }
 
 func voucherState(voucher api.Voucher) string {

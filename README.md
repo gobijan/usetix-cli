@@ -83,6 +83,7 @@ usetix analytics share --event summer-festival --expires-in 7
 usetix analytics revoke 42 --yes
 
 usetix vouchers list
+usetix vouchers list --all
 usetix vouchers list --query ABCD-2345-EFGH-6789 # code is sent in the request body
 usetix vouchers report
 usetix vouchers show q7R9mT2vX4pL8nK6
@@ -90,6 +91,7 @@ usetix vouchers retry-delivery DELIVERY_ID --yes
 usetix vouchers issue --amount 50.00 --note "Customer goodwill"
 usetix vouchers adjust q7R9mT2vX4pL8nK6 --direction debit --amount 5.00 --reason "Correction" --yes
 usetix vouchers products create --name "Gift 50" --amount 50.00
+usetix vouchers products create --name "Pay 50, get 75" --amount 75.00 --purchase-price 50.00
 usetix vouchers products show mN9uR4pKc8xQ
 usetix vouchers products update mN9uR4pKc8xQ --status active
 usetix vouchers products remove-image mN9uR4pKc8xQ --yes
@@ -102,7 +104,9 @@ usetix --profile local auth login
 usetix profile list
 ```
 
-`vouchers import --apply --yes` queues the atomic import and returns status
+Voucher lists use the same opaque cursor pagination as orders: use `--limit`
+and `--page` for manual paging or `--all` to fetch every match. `vouchers
+import --apply --yes` queues the atomic import and returns status
 `applying`. Scripts that must wait can poll
 `usetix api get /admin/voucher_imports/IMPORT_ID` until the status is `applied`
 or `failed`.

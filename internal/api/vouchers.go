@@ -2,12 +2,15 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type Voucher struct {
 	ID               string  `json:"id"`
-	Code             string  `json:"code"`
+	Code             string  `json:"code,omitempty"`
+	MaskedCode       string  `json:"masked_code,omitempty"`
 	ProductID        *string `json:"product_id"`
 	ProductName      *string `json:"product_name"`
 	Source           string  `json:"source"`
@@ -28,7 +31,7 @@ type VoucherActor struct {
 }
 
 type VoucherEntry struct {
-	ID           int64          `json:"id"`
+	ID           string         `json:"id"`
 	Kind         string         `json:"kind"`
 	Amount       Money          `json:"amount"`
 	BalanceAfter Money          `json:"balance_after"`
@@ -50,6 +53,8 @@ type VoucherPurchase struct {
 	Status          string            `json:"status"`
 	PaymentProvider string            `json:"payment_provider"`
 	Amount          Money             `json:"amount"`
+	PaidAmount      Money             `json:"paid_amount"`
+	BonusAmount     Money             `json:"bonus_amount"`
 	CustomerName    string            `json:"customer_name"`
 	CustomerEmail   string            `json:"customer_email"`
 	RecipientName   *string           `json:"recipient_name"`
@@ -91,9 +96,24 @@ type VouchersResponse struct {
 		Outstanding  Money `json:"outstanding"`
 		SoldCount    int   `json:"sold_count"`
 		Sold         Money `json:"sold"`
+		Bonus        Money `json:"bonus"`
 		BlockedCount int   `json:"blocked_count"`
 	} `json:"summary"`
-	Vouchers []Voucher `json:"vouchers"`
+	Vouchers   []Voucher          `json:"vouchers"`
+	Pagination VouchersPagination `json:"pagination"`
+}
+
+type VouchersPagination struct {
+	TotalCount int     `json:"total_count"`
+	Limit      int     `json:"limit"`
+	NextPage   *string `json:"next_page"`
+}
+
+type VouchersQuery struct {
+	Query  string
+	Status string
+	Limit  int
+	Page   string
 }
 
 type VoucherProduct struct {
@@ -105,6 +125,8 @@ type VoucherProduct struct {
 	Status         string  `json:"status"`
 	Currency       string  `json:"currency"`
 	FixedAmount    *Money  `json:"fixed_amount"`
+	PurchasePrice  *Money  `json:"purchase_price"`
+	BonusAmount    *Money  `json:"bonus_amount"`
 	MinimumAmount  *Money  `json:"minimum_amount"`
 	MaximumAmount  *Money  `json:"maximum_amount"`
 	ValidityMonths int     `json:"validity_months"`
@@ -137,15 +159,24 @@ type VoucherImport struct {
 	CreatedAt         string               `json:"created_at"`
 }
 
-func (client *Client) ListVouchers(ctx context.Context, query, status string) (VouchersResponse, error) {
-	if query != "" {
-		voucher, err := client.LookupVoucher(ctx, query)
-		return VouchersResponse{Vouchers: []Voucher{voucher}}, err
+func (client *Client) ListVouchers(ctx context.Context, query VouchersQuery) (VouchersResponse, error) {
+	if query.Query != "" {
+		voucher, err := client.LookupVoucher(ctx, query.Query)
+		return VouchersResponse{
+			Vouchers:   []Voucher{voucher},
+			Pagination: VouchersPagination{TotalCount: 1, Limit: 1},
+		}, err
 	}
 
 	values := url.Values{}
-	if status != "" {
-		values.Set("status", status)
+	if query.Status != "" {
+		values.Set("status", query.Status)
+	}
+	if query.Limit > 0 {
+		values.Set("limit", strconv.Itoa(query.Limit))
+	}
+	if query.Page != "" {
+		values.Set("page", query.Page)
 	}
 	path := "/admin/vouchers.json"
 	if encoded := values.Encode(); encoded != "" {
@@ -153,7 +184,47 @@ func (client *Client) ListVouchers(ctx context.Context, query, status string) (V
 	}
 	var response VouchersResponse
 	err := client.get(ctx, path, &response)
+	if err == nil {
+		response.normalizePagination(query)
+	}
 	return response, err
+}
+
+func (response *VouchersResponse) normalizePagination(query VouchersQuery) {
+	if response.Pagination.TotalCount == 0 && len(response.Vouchers) > 0 {
+		response.Pagination.TotalCount = len(response.Vouchers)
+	}
+	if response.Pagination.Limit == 0 {
+		response.Pagination.Limit = query.Limit
+	}
+}
+
+func (client *Client) ListAllVouchers(ctx context.Context, query VouchersQuery) (VouchersResponse, error) {
+	response, err := client.ListVouchers(ctx, query)
+	if err != nil {
+		return VouchersResponse{}, err
+	}
+
+	totalCount := response.Pagination.TotalCount
+	seen := map[string]struct{}{}
+	for response.Pagination.NextPage != nil {
+		cursor := *response.Pagination.NextPage
+		if _, exists := seen[cursor]; exists {
+			return VouchersResponse{}, fmt.Errorf("Usetix API returned a repeated vouchers pagination cursor")
+		}
+		seen[cursor] = struct{}{}
+
+		query.Page = cursor
+		next, err := client.ListVouchers(ctx, query)
+		if err != nil {
+			return VouchersResponse{}, err
+		}
+		response.Vouchers = append(response.Vouchers, next.Vouchers...)
+		response.Pagination = next.Pagination
+	}
+
+	response.Pagination.TotalCount = totalCount
+	return response, nil
 }
 
 func (client *Client) LookupVoucher(ctx context.Context, code string) (Voucher, error) {

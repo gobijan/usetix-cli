@@ -358,7 +358,7 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 		header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
 		if len(order.Lines) > 0 {
 			products := table.New().
-				Headers("PRODUCT", "TYPE", "QUANTITY", "TOTAL", "RECIPIENT").
+				Headers("PRODUCT", "TYPE", "QUANTITY", "TOTAL", "CREDIT", "RECIPIENT").
 				Border(lipgloss.HiddenBorder()).
 				BorderTop(false).
 				BorderBottom(false).
@@ -375,14 +375,20 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 				})
 			for _, line := range order.Lines {
 				recipient := "—"
+				credit := "—"
 				if line.VoucherPurchase != nil {
-					recipient = terminal.SanitizeLine(line.VoucherPurchase.RecipientName)
+					recipient = terminal.SanitizeLine(optionalString(line.VoucherPurchase.RecipientName))
+					credit = line.VoucherPurchase.VoucherAmount.Amount + " " + line.VoucherPurchase.VoucherAmount.Currency
+					if line.VoucherPurchase.BonusAmount.Amount != "" && line.VoucherPurchase.BonusAmount.Amount != "0.0" && line.VoucherPurchase.BonusAmount.Amount != "0.00" {
+						credit += " (+" + line.VoucherPurchase.BonusAmount.Amount + " bonus)"
+					}
 				}
 				products.Row(
 					terminal.SanitizeLine(line.Name),
 					terminal.SanitizeLine(line.ProductType),
 					fmt.Sprintf("%d", line.Quantity),
 					line.Total.Amount+" "+line.Total.Currency,
+					credit,
 					recipient,
 				)
 			}
