@@ -18,7 +18,7 @@ Typed coverage will grow where it materially improves daily use.
 | Documented area | Typed command | Direct access | Status |
 |---|---|---|---|
 | Authentication | `auth login`, `auth status`, `auth logout` | n/a | Local token validation and storage are typed; server token creation/revocation remains in Settings |
-| Events | `events list/show/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Fully typed; fee policy and image attachments are direct |
+| Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle and missing-answer follow-up; fee policy and image attachments are direct |
 | Venues | — | `api ... /admin/venues...` | Direct |
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |
@@ -28,7 +28,7 @@ Typed coverage will grow where it materially improves daily use.
 | Gift vouchers | `vouchers list/report/show/issue/adjust/block/unblock/retry-delivery/import`, `vouchers products list/show/create/update/archive/remove-image` | `api ... /admin/vouchers...`, `/admin/voucher_deliveries/:id/retry`, `/admin/voucher_lookup`, `/admin/voucher_products...`, `/admin/voucher_imports...` | Typed for cursor pagination, bonus-priced products, common balance operations, delivery inspection/retry, product lifecycle/artwork removal, body-safe exact-code lookup, reporting, and atomic CSV imports; direct for CSV export and catalog reordering |
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
-| Customers | — | `api ... /admin/customers...` | Direct |
+| Customers | `customers contacts list/show/log` | `api ... /admin/customers...` | Interaction timelines are typed; customer list/show/export remain direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | Advertising (limited beta) | — | `api GET /admin/advertising` | Direct for enabled accounts; Meta connection summary and cursor-paginated campaigns |
@@ -57,7 +57,7 @@ API mechanically:
 
 1. ~~Event show/create/update/publication.~~ Done.
 2. ~~Orders read and refund workflows.~~ Done.
-3. Customers read workflows.
+3. General customer list/show workflows. Interaction timelines are already typed.
 4. Tickets, promo codes, and guest-list operations. Gift vouchers are already typed.
 5. Venues, performers, analytics, and account settings.
 6. Scanner workflows if terminal scanning proves useful alongside the native

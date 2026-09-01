@@ -9,10 +9,16 @@ CMD usetix auth login
 CMD usetix auth logout
 CMD usetix auth status
 CMD usetix completion
+CMD usetix customers
+CMD usetix customers contacts
+CMD usetix customers contacts list
+CMD usetix customers contacts log
+CMD usetix customers contacts show
 CMD usetix events
 CMD usetix events create
 CMD usetix events delete
 CMD usetix events list
+CMD usetix events open-answers
 CMD usetix events publish
 CMD usetix events show
 CMD usetix events unpublish
@@ -146,6 +152,53 @@ FLAG usetix completion --json type=bool
 FLAG usetix completion --profile type=string
 FLAG usetix completion --quiet type=bool
 FLAG usetix completion --styled type=bool
+FLAG usetix customers --agent type=bool
+FLAG usetix customers --api-url type=string
+FLAG usetix customers --count type=bool
+FLAG usetix customers --ids-only type=bool
+FLAG usetix customers --json type=bool
+FLAG usetix customers --profile type=string
+FLAG usetix customers --quiet type=bool
+FLAG usetix customers --styled type=bool
+FLAG usetix customers contacts --agent type=bool
+FLAG usetix customers contacts --api-url type=string
+FLAG usetix customers contacts --count type=bool
+FLAG usetix customers contacts --ids-only type=bool
+FLAG usetix customers contacts --json type=bool
+FLAG usetix customers contacts --profile type=string
+FLAG usetix customers contacts --quiet type=bool
+FLAG usetix customers contacts --styled type=bool
+FLAG usetix customers contacts list --agent type=bool
+FLAG usetix customers contacts list --api-url type=string
+FLAG usetix customers contacts list --count type=bool
+FLAG usetix customers contacts list --ids-only type=bool
+FLAG usetix customers contacts list --json type=bool
+FLAG usetix customers contacts list --limit type=int
+FLAG usetix customers contacts list --page type=string
+FLAG usetix customers contacts list --profile type=string
+FLAG usetix customers contacts list --quiet type=bool
+FLAG usetix customers contacts list --styled type=bool
+FLAG usetix customers contacts log --agent type=bool
+FLAG usetix customers contacts log --api-url type=string
+FLAG usetix customers contacts log --count type=bool
+FLAG usetix customers contacts log --event type=string
+FLAG usetix customers contacts log --ids-only type=bool
+FLAG usetix customers contacts log --json type=bool
+FLAG usetix customers contacts log --kind type=string
+FLAG usetix customers contacts log --note type=string
+FLAG usetix customers contacts log --occurred-at type=string
+FLAG usetix customers contacts log --order type=string
+FLAG usetix customers contacts log --profile type=string
+FLAG usetix customers contacts log --quiet type=bool
+FLAG usetix customers contacts log --styled type=bool
+FLAG usetix customers contacts show --agent type=bool
+FLAG usetix customers contacts show --api-url type=string
+FLAG usetix customers contacts show --count type=bool
+FLAG usetix customers contacts show --ids-only type=bool
+FLAG usetix customers contacts show --json type=bool
+FLAG usetix customers contacts show --profile type=string
+FLAG usetix customers contacts show --quiet type=bool
+FLAG usetix customers contacts show --styled type=bool
 FLAG usetix events --agent type=bool
 FLAG usetix events --api-url type=string
 FLAG usetix events --count type=bool
@@ -193,6 +246,17 @@ FLAG usetix events list --period type=string
 FLAG usetix events list --profile type=string
 FLAG usetix events list --quiet type=bool
 FLAG usetix events list --styled type=bool
+FLAG usetix events open-answers --agent type=bool
+FLAG usetix events open-answers --api-url type=string
+FLAG usetix events open-answers --count type=bool
+FLAG usetix events open-answers --ids-only type=bool
+FLAG usetix events open-answers --json type=bool
+FLAG usetix events open-answers --page type=int
+FLAG usetix events open-answers --profile type=string
+FLAG usetix events open-answers --query type=string
+FLAG usetix events open-answers --quiet type=bool
+FLAG usetix events open-answers --status type=string
+FLAG usetix events open-answers --styled type=bool
 FLAG usetix events publish --agent type=bool
 FLAG usetix events publish --api-url type=string
 FLAG usetix events publish --count type=bool
@@ -541,10 +605,16 @@ SUB usetix auth login
 SUB usetix auth logout
 SUB usetix auth status
 SUB usetix completion
+SUB usetix customers
+SUB usetix customers contacts
+SUB usetix customers contacts list
+SUB usetix customers contacts log
+SUB usetix customers contacts show
 SUB usetix events
 SUB usetix events create
 SUB usetix events delete
 SUB usetix events list
+SUB usetix events open-answers
 SUB usetix events publish
 SUB usetix events show
 SUB usetix events unpublish

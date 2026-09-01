@@ -70,6 +70,12 @@ usetix events update summer-festival --listed=false
 usetix events publish summer-festival
 usetix events unpublish summer-festival
 usetix events delete summer-festival --yes
+usetix events open-answers summer-festival --status uncontacted
+
+usetix customers contacts list 17
+usetix customers contacts show 17 91
+usetix customers contacts log 17 --kind email_sent --note "Asked for the missing menu choice" \
+  --event summer-festival --order abcd1234efgh5678
 
 usetix orders list --period month --event summer-festival
 usetix orders show abcd1234efgh5678
@@ -114,6 +120,10 @@ or `failed`.
 `orders show` prints commercial product lines separately from ticket admissions,
 so mixed ticket and voucher orders remain understandable. Order search also
 accepts voucher-purchase IDs and voucher codes.
+
+`events open-answers` is the follow-up worklist for required checkout answers.
+Customer interactions use `customers contacts`; an internal `note` stays in the
+timeline but does not mark the customer as contacted.
 
 Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, and applied voucher imports always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
