@@ -18,7 +18,7 @@ Typed coverage will grow where it materially improves daily use.
 | Documented area | Typed command | Direct access | Status |
 |---|---|---|---|
 | Authentication | `auth login`, `auth status`, `auth logout` | n/a | Local token validation and storage are typed; server token creation/revocation remains in Settings |
-| Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle and missing-answer follow-up; fee policy and image attachments are direct |
+| Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle, post-purchase attendee notes, and missing-answer follow-up; fee policy and image attachments are direct |
 | Venues | — | `api ... /admin/venues...` | Direct |
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |

@@ -18,6 +18,7 @@ type Event struct {
 	// Description is raw for compatibility with older Usetix servers that
 	// serialized Action Text as an object instead of the documented string.
 	Description   json.RawMessage `json:"description"`
+	AttendeeNote  *string         `json:"attendee_note"`
 	StartsAt      *string         `json:"starts_at"`
 	DoorsOpenAt   *string         `json:"doors_open_at"`
 	EndsAt        *string         `json:"ends_at"`

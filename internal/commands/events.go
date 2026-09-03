@@ -19,6 +19,7 @@ import (
 type eventFlags struct {
 	title         string
 	description   string
+	attendeeNote  string
 	slug          string
 	venueID       int64
 	startsAt      string
@@ -238,6 +239,7 @@ func addEventFlags(command *cobra.Command, flags *eventFlags) {
 	set := command.Flags()
 	set.StringVar(&flags.title, "title", "", "event title")
 	set.StringVar(&flags.description, "description", "", "event description (HTML allowed)")
+	set.StringVar(&flags.attendeeNote, "attendee-note", "", "post-purchase note for ticket holders (HTML allowed; empty clears)")
 	set.StringVar(&flags.slug, "slug", "", "URL slug")
 	set.Int64Var(&flags.venueID, "venue-id", 0, "venue ID")
 	set.StringVar(&flags.startsAt, "starts-at", "", "start time (ISO 8601)")
@@ -261,6 +263,9 @@ func eventAttributes(command *cobra.Command, flags *eventFlags) map[string]any {
 	}
 	if set.Changed("description") {
 		attributes["description"] = flags.description
+	}
+	if set.Changed("attendee-note") {
+		attributes["attendee_note"] = flags.attendeeNote
 	}
 	if set.Changed("slug") {
 		attributes["slug"] = flags.slug

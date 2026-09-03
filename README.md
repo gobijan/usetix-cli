@@ -66,6 +66,8 @@ usetix events show summer-festival
 usetix events create --title "Summer Festival" --venue-id 7 \
   --starts-at 2026-07-01T18:00:00Z --ends-at 2026-07-01T23:00:00Z \
   --sales-ends-at 2026-07-01T18:00:00Z
+usetix events update summer-festival --attendee-note "Bring your ID to the entrance"
+usetix events update summer-festival --attendee-note "" # Clear the note
 usetix events update summer-festival --listed=false
 usetix events publish summer-festival
 usetix events unpublish summer-festival

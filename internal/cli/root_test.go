@@ -133,7 +133,7 @@ func TestEventsLifecycleCommands(t *testing.T) {
 		case request.Method == http.MethodPost && request.URL.Path == "/admin/events.json":
 			writer.Header().Set("Location", "/admin/events/summer.json")
 			writer.WriteHeader(http.StatusCreated)
-			_, _ = writer.Write([]byte(`{"id":1,"slug":"summer","title":"Summer","published":false,"listed":true}`))
+			_, _ = writer.Write([]byte(`{"id":1,"slug":"summer","title":"Summer","attendee_note":"Bring your ID","published":false,"listed":true}`))
 		case request.URL.Path == "/admin/events/summer/publication.json":
 			_, _ = writer.Write([]byte(`{"id":1,"slug":"summer","title":"Summer","published":true,"listed":true}`))
 		case request.Method == http.MethodDelete && request.URL.Path == "/admin/events/summer.json":
@@ -153,12 +153,13 @@ func TestEventsLifecycleCommands(t *testing.T) {
 
 	stdout, stderr, exitCode := runCLI(t, []string{"--json", "events", "create",
 		"--title", "Summer", "--venue-id", "7",
+		"--attendee-note", "Bring your ID",
 		"--starts-at", "2026-09-01T18:00:00Z", "--ends-at", "2026-09-01T23:00:00Z",
 		"--sales-ends-at", "2026-09-01T18:00:00Z"}, "", environment, nil)
-	if exitCode != 0 || !strings.Contains(stdout, `"slug": "summer"`) {
+	if exitCode != 0 || !strings.Contains(stdout, `"slug": "summer"`) || !strings.Contains(stdout, `"attendee_note": "Bring your ID"`) {
 		t.Fatalf("create: exit=%d stdout=%q stderr=%q", exitCode, stdout, stderr)
 	}
-	if !strings.Contains(lastBody, `"venue_id":7`) || !strings.Contains(lastBody, `"title":"Summer"`) {
+	if !strings.Contains(lastBody, `"venue_id":7`) || !strings.Contains(lastBody, `"title":"Summer"`) || !strings.Contains(lastBody, `"attendee_note":"Bring your ID"`) {
 		t.Fatalf("create body = %q", lastBody)
 	}
 
@@ -196,6 +197,11 @@ func TestEventsUpdateSendsOnlyChangedFlags(t *testing.T) {
 	_, _, exitCode := runCLI(t, []string{"--json", "events", "update", "summer", "--listed=false"}, "", environment, nil)
 	if exitCode != 0 || lastBody != `{"listed":false}` {
 		t.Fatalf("update: exit=%d body=%q", exitCode, lastBody)
+	}
+
+	_, _, exitCode = runCLI(t, []string{"--json", "events", "update", "summer", "--attendee-note", ""}, "", environment, nil)
+	if exitCode != 0 || lastBody != `{"attendee_note":""}` {
+		t.Fatalf("clear attendee note: exit=%d body=%q", exitCode, lastBody)
 	}
 
 	stdout, _, exitCode := runCLI(t, []string{"--json", "events", "update", "summer"}, "", environment, nil)
