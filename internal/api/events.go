@@ -28,6 +28,7 @@ type Event struct {
 	Published     bool            `json:"published"`
 	Listed        bool            `json:"listed"`
 	Capacity      *int            `json:"capacity"`
+	Media         map[string]any  `json:"media,omitempty"`
 	CheckoutFees  map[string]any  `json:"checkout_fees"`
 	Venue         *Venue          `json:"venue"`
 }
