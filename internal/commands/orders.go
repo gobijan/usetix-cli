@@ -338,6 +338,9 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 			"  Total     " + order.Total.Amount + " " + order.Total.Currency,
 			"  Provider  " + order.PaymentProvider,
 		}
+		if order.ShopURL != "" {
+			lines = append(lines, "  Order link  "+terminal.SanitizeLine(order.ShopURL))
+		}
 		if order.CustomerEmail != nil {
 			lines = append(lines, "  Email     "+terminal.SanitizeLine(*order.CustomerEmail))
 		}

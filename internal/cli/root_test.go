@@ -233,7 +233,7 @@ func TestEventsCreateSurfacesValidationErrors(t *testing.T) {
 
 func TestOrdersCommands(t *testing.T) {
 	var lastMethod, lastPath, lastQuery, lastBody string
-	orderJSON := `{"public_id":"pub123","order_code":"7K3Q9D2A","display_number":"7K3Q-9D2A","status":"paid","origin":"checkout",
+	orderJSON := `{"public_id":"pub123","shop_url":"https://tickets.example.com/orders/pub123","order_code":"7K3Q9D2A","display_number":"7K3Q-9D2A","status":"paid","origin":"checkout",
 		"customer_name":"Jane Doe","customer_email":"jane@example.com","total":{"amount":"42.00","currency":"EUR"},
 		"fees":{"buyer_platform_fee":"0.00","custom":"0.00"},"payment_provider":"stripe","archived":false,
 		"paid_at":"2026-04-22T12:34:50Z","created_at":"2026-04-22T12:34:00Z","item_count":1,"line_count":2,"product_quantity":2,"attribution":{}}`
@@ -296,8 +296,16 @@ func TestOrdersCommands(t *testing.T) {
 	stdout, _, exitCode = runCLI(t, []string{"--styled", "orders", "show", "8WZN-28GT"}, "", environment, nil)
 	if exitCode != 0 || !strings.Contains(stdout, "9M5V-2H8C") || !strings.Contains(stdout, "Gift 75") ||
 		!strings.Contains(stdout, "75.00 EUR (+25.00 bonus)") || !strings.Contains(stdout, "Alex") ||
+		!strings.Contains(stdout, "https://tickets.example.com/orders/pub123") ||
 		lastPath != "/admin/orders/8WZN-28GT.json" {
 		t.Fatalf("show: exit=%d stdout=%q", exitCode, stdout)
+	}
+
+	for _, args := range [][]string{{"--json", "orders", "list"}, {"--json", "orders", "show", "pub123"}} {
+		stdout, _, exitCode = runCLI(t, args, "", environment, nil)
+		if exitCode != 0 || !strings.Contains(stdout, `"shop_url": "https://tickets.example.com/orders/pub123"`) {
+			t.Fatalf("order link: args=%v exit=%d stdout=%q", args, exitCode, stdout)
+		}
 	}
 
 	stdout, _, exitCode = runCLI(t, []string{"--json", "orders", "refund", "pub123", "--amount", "5.00"}, "", environment, nil)

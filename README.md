@@ -121,7 +121,10 @@ or `failed`.
 
 `orders show` prints commercial product lines separately from ticket admissions,
 so mixed ticket and voucher orders remain understandable. Order search also
-accepts voucher-purchase IDs and voucher codes.
+accepts voucher-purchase IDs and voucher codes. The detail output also shows the
+customer order link. JSON order objects include `shop_url` in both list and
+detail responses when provided by the server. This link opens that entire
+order without login; share it only with the buyer.
 
 `events open-answers` is the follow-up worklist for required checkout answers.
 Customer interactions use `customers contacts`; an internal `note` stays in the
