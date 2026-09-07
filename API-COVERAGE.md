@@ -36,7 +36,9 @@ Typed coverage will grow where it materially improves daily use.
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
 | Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
-| Memberships | — | `api GET /admin/memberships` | Direct read (active, deactivated, pending invitations); invitation and role mutations are dashboard-only today |
+| Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation; venue only |
+| Event duplication | `events duplicate SLUG` | `api POST /admin/events/SLUG/duplication` | Draft copy; co-organizers receive access to their copy |
+| Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents, video and artwork; same editor validations |
 | Scanner | — | `api ... /scanner/...` | Direct |
 | Public event feed | — | `api GET /events --no-auth --api-url SHOP_URL` | Direct; lives on the shop host (`shop_url` from shop settings), not on `app.usetix.io` |
 | Active Storage direct-upload metadata | — | `api POST /rails/active_storage/direct_uploads ...` | Direct; uploading bytes to the returned storage URL remains an external HTTP step |
@@ -45,7 +47,7 @@ Typed coverage will grow where it materially improves daily use.
 
 These exist in the product but have no JSON endpoints yet, so neither typed
 nor direct access can reach them: outbound webhook management, API token
-lifecycle, team invitation and role mutations, event duplication, seat-map
+lifecycle, seat-map
 editing, scanner device pairing, walk-in sales, and billing/connect settings.
 If one of these becomes a real CLI need, the JSON endpoint belongs in the
 Rails application first.
@@ -66,3 +68,5 @@ API mechanically:
 Every typed command must retain `--json` stability, account scoping, explicit
 confirmation for destructive actions, and a direct mapping to an existing
 documented endpoint.
+
+Personal co-organizer tokens use the same authentication and event commands. They follow current membership/event access and cannot call account-wide team, scanner, refund or settings endpoints.

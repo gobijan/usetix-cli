@@ -240,3 +240,22 @@ write-scoped deploy key for the tap repository.
  ░██   ░██         ░██ ░██           ░██    ░██ ░██  ░██
   ░██████    ░███████   ░███████      ░████ ░██░██    ░██
 ```
+
+## Team and external co-organizers
+
+```sh
+usetix events invite-co-organizer friday-night promoter@example.com
+usetix team list
+usetix team invite promoter@example.com --event friday-night --event saturday-night
+usetix team access 42 --event saturday-night
+usetix team access 42 --clear-events --yes
+usetix team deactivate 42 --yes
+usetix team reactivate 42
+usetix team invitations resend 81
+usetix team invitations revoke 81 --yes
+usetix events duplicate friday-night
+```
+
+`team access` replaces the complete event assignment. Roles are `scanner`, `manager`, or `co_organizer`. Team commands require venue access; external co-organizers create personal tokens under API Tokens in their dashboard sidebar and use the existing `usetix auth login`. Event commands and direct API requests then follow their current event assignments. Personal tokens cannot access the account-wide team, customer directory, refunds, shop/payment settings, or scanner.
+
+The event JSON includes `media` with gallery IDs and order. Upload files through the existing direct-upload API and use `usetix api PATCH /admin/events/SLUG --data @event.json` for gallery, artwork, video and document changes.
