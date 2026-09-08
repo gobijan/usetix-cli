@@ -101,6 +101,8 @@ type CustomerContact struct {
 	OccurredAt string                  `json:"occurred_at"`
 	Creator    *CustomerContactCreator `json:"creator"`
 	CreatedAt  string                  `json:"created_at"`
+	UpdatedAt  string                  `json:"updated_at"`
+	Editable   bool                    `json:"editable"`
 }
 
 type CustomerContactsPagination struct {
@@ -178,4 +180,43 @@ func (client *Client) CreateCustomerContact(ctx context.Context, customerID int6
 	path := "/admin/customers/" + strconv.FormatInt(customerID, 10) + "/contacts.json"
 	response, err := client.post(ctx, path, body, &contact)
 	return contact, response.Location, err
+}
+
+type CustomerContactContext struct {
+	EventSlug     string
+	OrderPublicID string
+}
+
+func customerContactPath(customerID, contactID int64, scope CustomerContactContext) string {
+	path := "/admin/customers/" + strconv.FormatInt(customerID, 10) + "/contacts/" + strconv.FormatInt(contactID, 10) + ".json"
+	query := url.Values{}
+	if scope.EventSlug != "" {
+		query.Set("event_slug", scope.EventSlug)
+	}
+	if scope.OrderPublicID != "" {
+		query.Set("order_public_id", scope.OrderPublicID)
+	}
+	if encoded := query.Encode(); encoded != "" {
+		path += "?" + encoded
+	}
+	return path
+}
+
+// UpdateCustomerContactInput preserves omitted fields in a partial update.
+type UpdateCustomerContactInput struct {
+	Kind       *string `json:"kind,omitempty"`
+	Note       *string `json:"note,omitempty"`
+	OccurredAt *string `json:"occurred_at,omitempty"`
+}
+
+func (client *Client) UpdateCustomerContact(ctx context.Context, customerID, contactID int64, input UpdateCustomerContactInput, scope CustomerContactContext) (CustomerContact, error) {
+	var contact CustomerContact
+	path := customerContactPath(customerID, contactID, scope)
+	err := client.patch(ctx, path, map[string]any{"customer_contact": input}, &contact)
+	return contact, err
+}
+
+func (client *Client) DeleteCustomerContact(ctx context.Context, customerID, contactID int64, scope CustomerContactContext) error {
+	path := customerContactPath(customerID, contactID, scope)
+	return client.delete(ctx, path, nil)
 }
