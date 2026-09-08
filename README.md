@@ -241,6 +241,21 @@ write-scoped deploy key for the tap repository.
   ░██████    ░███████   ░███████      ░████ ░██░██    ░██
 ```
 
+## Correcting customer interactions
+
+Correct or remove manually recorded interactions:
+
+```sh
+usetix customers contacts update 17 91 --note "Corrected call summary"
+usetix customers contacts update 17 91 --kind phone_call_received --occurred-at 2026-09-08T12:00:00Z
+usetix customers contacts delete 17 91 --yes
+```
+
+Updates preserve omitted fields. Automatically recorded announcement deliveries
+are read-only (`editable: false`). `updated_at` records the last change.
+
+Co-organizers supply `--event SLUG --order ORDER_CODE` on update and delete commands.
+
 ## Team and external co-organizers
 
 ```sh

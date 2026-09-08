@@ -11,9 +11,11 @@ CMD usetix auth status
 CMD usetix completion
 CMD usetix customers
 CMD usetix customers contacts
+CMD usetix customers contacts delete
 CMD usetix customers contacts list
 CMD usetix customers contacts log
 CMD usetix customers contacts show
+CMD usetix customers contacts update
 CMD usetix events
 CMD usetix events create
 CMD usetix events delete
@@ -179,6 +181,17 @@ FLAG usetix customers contacts --json type=bool
 FLAG usetix customers contacts --profile type=string
 FLAG usetix customers contacts --quiet type=bool
 FLAG usetix customers contacts --styled type=bool
+FLAG usetix customers contacts delete --agent type=bool
+FLAG usetix customers contacts delete --api-url type=string
+FLAG usetix customers contacts delete --count type=bool
+FLAG usetix customers contacts delete --event type=string
+FLAG usetix customers contacts delete --ids-only type=bool
+FLAG usetix customers contacts delete --json type=bool
+FLAG usetix customers contacts delete --order type=string
+FLAG usetix customers contacts delete --profile type=string
+FLAG usetix customers contacts delete --quiet type=bool
+FLAG usetix customers contacts delete --styled type=bool
+FLAG usetix customers contacts delete --yes type=bool
 FLAG usetix customers contacts list --agent type=bool
 FLAG usetix customers contacts list --api-url type=string
 FLAG usetix customers contacts list --count type=bool
@@ -210,6 +223,19 @@ FLAG usetix customers contacts show --json type=bool
 FLAG usetix customers contacts show --profile type=string
 FLAG usetix customers contacts show --quiet type=bool
 FLAG usetix customers contacts show --styled type=bool
+FLAG usetix customers contacts update --agent type=bool
+FLAG usetix customers contacts update --api-url type=string
+FLAG usetix customers contacts update --count type=bool
+FLAG usetix customers contacts update --event type=string
+FLAG usetix customers contacts update --ids-only type=bool
+FLAG usetix customers contacts update --json type=bool
+FLAG usetix customers contacts update --kind type=string
+FLAG usetix customers contacts update --note type=string
+FLAG usetix customers contacts update --occurred-at type=string
+FLAG usetix customers contacts update --order type=string
+FLAG usetix customers contacts update --profile type=string
+FLAG usetix customers contacts update --quiet type=bool
+FLAG usetix customers contacts update --styled type=bool
 FLAG usetix events --agent type=bool
 FLAG usetix events --api-url type=string
 FLAG usetix events --count type=bool
@@ -716,9 +742,11 @@ SUB usetix auth status
 SUB usetix completion
 SUB usetix customers
 SUB usetix customers contacts
+SUB usetix customers contacts delete
 SUB usetix customers contacts list
 SUB usetix customers contacts log
 SUB usetix customers contacts show
+SUB usetix customers contacts update
 SUB usetix events
 SUB usetix events create
 SUB usetix events delete
