@@ -87,6 +87,8 @@ func NewRoot(version string, dependencies Dependencies) (*cobra.Command, *appctx
 		commands.NewProfile(runtime),
 		commands.NewEvents(runtime),
 		commands.NewTeam(runtime),
+		commands.NewPromoters(runtime),
+		commands.NewPromoCodes(runtime),
 		commands.NewCustomers(runtime),
 		commands.NewOrders(runtime),
 		commands.NewAnalytics(runtime),
@@ -140,7 +142,7 @@ func normalizeExecutionError(err error) error {
 		return structured
 	}
 	message := err.Error()
-	for _, prefix := range []string{"unknown command", "unknown flag", "accepts ", "requires ", "arg(s)"} {
+	for _, prefix := range []string{"unknown command", "unknown flag", "required flag", "accepts ", "requires ", "arg(s)"} {
 		if strings.Contains(strings.ToLower(message), prefix) {
 			return output.ErrUsage(message)
 		}
