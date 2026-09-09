@@ -17,6 +17,7 @@ CMD usetix customers contacts log
 CMD usetix customers contacts show
 CMD usetix customers contacts update
 CMD usetix events
+CMD usetix events arrivals
 CMD usetix events create
 CMD usetix events delete
 CMD usetix events duplicate
@@ -253,6 +254,15 @@ FLAG usetix events --json type=bool
 FLAG usetix events --profile type=string
 FLAG usetix events --quiet type=bool
 FLAG usetix events --styled type=bool
+FLAG usetix events arrivals --agent type=bool
+FLAG usetix events arrivals --api-url type=string
+FLAG usetix events arrivals --count type=bool
+FLAG usetix events arrivals --ids-only type=bool
+FLAG usetix events arrivals --intervals type=bool
+FLAG usetix events arrivals --json type=bool
+FLAG usetix events arrivals --profile type=string
+FLAG usetix events arrivals --quiet type=bool
+FLAG usetix events arrivals --styled type=bool
 FLAG usetix events create --agent type=bool
 FLAG usetix events create --api-url type=string
 FLAG usetix events create --attendee-note type=string
@@ -849,6 +859,7 @@ SUB usetix customers contacts log
 SUB usetix customers contacts show
 SUB usetix customers contacts update
 SUB usetix events
+SUB usetix events arrivals
 SUB usetix events create
 SUB usetix events delete
 SUB usetix events duplicate

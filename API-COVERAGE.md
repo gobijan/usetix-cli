@@ -19,6 +19,7 @@ Typed coverage will grow where it materially improves daily use.
 |---|---|---|---|
 | Authentication | `auth login`, `auth status`, `auth logout` | n/a | Local token validation and storage are typed; server token creation/revocation remains in Settings |
 | Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle, post-purchase attendee notes, and missing-answer follow-up; fee policy and image attachments are direct |
+| Admission and arrivals | `events arrivals SLUG` | `api GET /admin/events/:slug/arrivals` | Typed totals, redemption rate, peak and chronological intervals; read-only, including assigned events for co-organizers |
 | Venues | — | `api ... /admin/venues...` | Direct |
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |

@@ -304,3 +304,18 @@ refunds and follows the event report; no commissions or payouts are calculated.
 Owners/managers manage promoters and assignments through their existing tokens.
 Promoters themselves use their read-only web dashboard and receive no API/CLI
 or MCP access. Invite promoters without `--event`; events belong on their codes.
+
+## Admission and arrivals
+
+Read event check-ins from the local admission day onwards, including historical reports:
+
+```sh
+usetix events arrivals club-night
+usetix events arrivals club-night --intervals
+usetix events arrivals club-night --json
+usetix events arrivals club-night --count
+```
+
+The summary includes redemption rate, recorded check-ins, outstanding admissions and the busiest interval. `--intervals` adds chronological buckets to human-readable output in the venue timezone, with UTC offsets. `--json` always includes all intervals in the normal `data` envelope; `--count` prints recorded check-ins. Each invocation reads once. Read tokens work, including personal co-organizer tokens for currently assigned events. Group members and guest-list admissions are counted individually. This is check-in history, not current occupancy or an attendance forecast.
+
+See the [event arrivals API reference](https://usetix.io/docs/api/event-arrivals/).
