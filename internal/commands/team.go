@@ -74,7 +74,7 @@ func newTeamInvite(runtime *appctx.Runtime) *cobra.Command {
 		}
 		return runtime.Output().OK(invitation, renderSimpleAction(fmt.Sprintf("Invitation %d queued for %s", invitation.ID, terminal.SanitizeLine(invitation.Email))), output.WithMeta("location", location))
 	}}
-	command.Flags().StringVar(&role, "role", "co_organizer", "scanner, manager, or co_organizer")
+	command.Flags().StringVar(&role, "role", "co_organizer", "scanner, manager, co_organizer, or promoter")
 	command.Flags().StringArrayVar(&events, "event", nil, "assigned event slug; repeat for multiple events")
 	return command
 }
@@ -114,7 +114,7 @@ func newTeamAccess(runtime *appctx.Runtime) *cobra.Command {
 		}
 		return runtime.Output().OK(member, renderSimpleAction(fmt.Sprintf("Updated member %d: %s, events %v", member.ID, terminal.SanitizeLine(member.Role), teamEventIDs(member.EventIDs))))
 	}}
-	command.Flags().StringVar(&role, "role", "co_organizer", "scanner, manager, or co_organizer")
+	command.Flags().StringVar(&role, "role", "co_organizer", "scanner, manager, co_organizer, or promoter")
 	command.Flags().StringArrayVar(&events, "event", nil, "complete event assignment; repeat for multiple slugs")
 	command.Flags().BoolVar(&clear, "clear-events", false, "remove all assigned event access")
 	command.Flags().BoolVar(&yes, "yes", false, "confirm removing all event access")
@@ -190,8 +190,8 @@ func newEventsDuplicate(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func validateTeamRole(role string) error {
-	if role != "scanner" && role != "manager" && role != "co_organizer" {
-		return output.ErrUsage("--role must be scanner, manager, or co_organizer")
+	if role != "scanner" && role != "manager" && role != "co_organizer" && role != "promoter" {
+		return output.ErrUsage("--role must be scanner, manager, co_organizer, or promoter")
 	}
 	return nil
 }

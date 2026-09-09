@@ -39,6 +39,15 @@ CMD usetix profile create
 CMD usetix profile delete
 CMD usetix profile list
 CMD usetix profile use
+CMD usetix promo-codes
+CMD usetix promo-codes create
+CMD usetix promo-codes deactivate
+CMD usetix promo-codes list
+CMD usetix promo-codes reactivate
+CMD usetix promo-codes show
+CMD usetix promo-codes update
+CMD usetix promoters
+CMD usetix promoters list
 CMD usetix team
 CMD usetix team access
 CMD usetix team deactivate
@@ -465,6 +474,98 @@ FLAG usetix profile use --json type=bool
 FLAG usetix profile use --profile type=string
 FLAG usetix profile use --quiet type=bool
 FLAG usetix profile use --styled type=bool
+FLAG usetix promo-codes --agent type=bool
+FLAG usetix promo-codes --api-url type=string
+FLAG usetix promo-codes --count type=bool
+FLAG usetix promo-codes --ids-only type=bool
+FLAG usetix promo-codes --json type=bool
+FLAG usetix promo-codes --profile type=string
+FLAG usetix promo-codes --quiet type=bool
+FLAG usetix promo-codes --styled type=bool
+FLAG usetix promo-codes create --agent type=bool
+FLAG usetix promo-codes create --api-url type=string
+FLAG usetix promo-codes create --code type=string
+FLAG usetix promo-codes create --count type=bool
+FLAG usetix promo-codes create --discount-amount type=string
+FLAG usetix promo-codes create --discount-type type=string
+FLAG usetix promo-codes create --event type=string
+FLAG usetix promo-codes create --expires-at type=string
+FLAG usetix promo-codes create --ids-only type=bool
+FLAG usetix promo-codes create --json type=bool
+FLAG usetix promo-codes create --max-per-customer type=int
+FLAG usetix promo-codes create --profile type=string
+FLAG usetix promo-codes create --promoter type=int64
+FLAG usetix promo-codes create --quiet type=bool
+FLAG usetix promo-codes create --styled type=bool
+FLAG usetix promo-codes create --usage-limit type=int
+FLAG usetix promo-codes deactivate --agent type=bool
+FLAG usetix promo-codes deactivate --api-url type=string
+FLAG usetix promo-codes deactivate --count type=bool
+FLAG usetix promo-codes deactivate --ids-only type=bool
+FLAG usetix promo-codes deactivate --json type=bool
+FLAG usetix promo-codes deactivate --profile type=string
+FLAG usetix promo-codes deactivate --quiet type=bool
+FLAG usetix promo-codes deactivate --styled type=bool
+FLAG usetix promo-codes deactivate --yes type=bool
+FLAG usetix promo-codes list --agent type=bool
+FLAG usetix promo-codes list --api-url type=string
+FLAG usetix promo-codes list --count type=bool
+FLAG usetix promo-codes list --ids-only type=bool
+FLAG usetix promo-codes list --json type=bool
+FLAG usetix promo-codes list --profile type=string
+FLAG usetix promo-codes list --quiet type=bool
+FLAG usetix promo-codes list --styled type=bool
+FLAG usetix promo-codes reactivate --agent type=bool
+FLAG usetix promo-codes reactivate --api-url type=string
+FLAG usetix promo-codes reactivate --count type=bool
+FLAG usetix promo-codes reactivate --ids-only type=bool
+FLAG usetix promo-codes reactivate --json type=bool
+FLAG usetix promo-codes reactivate --profile type=string
+FLAG usetix promo-codes reactivate --quiet type=bool
+FLAG usetix promo-codes reactivate --styled type=bool
+FLAG usetix promo-codes reactivate --yes type=bool
+FLAG usetix promo-codes show --agent type=bool
+FLAG usetix promo-codes show --api-url type=string
+FLAG usetix promo-codes show --count type=bool
+FLAG usetix promo-codes show --ids-only type=bool
+FLAG usetix promo-codes show --json type=bool
+FLAG usetix promo-codes show --profile type=string
+FLAG usetix promo-codes show --quiet type=bool
+FLAG usetix promo-codes show --styled type=bool
+FLAG usetix promo-codes update --agent type=bool
+FLAG usetix promo-codes update --api-url type=string
+FLAG usetix promo-codes update --code type=string
+FLAG usetix promo-codes update --count type=bool
+FLAG usetix promo-codes update --discount-amount type=string
+FLAG usetix promo-codes update --discount-type type=string
+FLAG usetix promo-codes update --event type=string
+FLAG usetix promo-codes update --expires-at type=string
+FLAG usetix promo-codes update --ids-only type=bool
+FLAG usetix promo-codes update --json type=bool
+FLAG usetix promo-codes update --max-per-customer type=int
+FLAG usetix promo-codes update --profile type=string
+FLAG usetix promo-codes update --promoter type=int64
+FLAG usetix promo-codes update --quiet type=bool
+FLAG usetix promo-codes update --styled type=bool
+FLAG usetix promo-codes update --usage-limit type=int
+FLAG usetix promoters --agent type=bool
+FLAG usetix promoters --api-url type=string
+FLAG usetix promoters --count type=bool
+FLAG usetix promoters --ids-only type=bool
+FLAG usetix promoters --json type=bool
+FLAG usetix promoters --profile type=string
+FLAG usetix promoters --quiet type=bool
+FLAG usetix promoters --styled type=bool
+FLAG usetix promoters list --agent type=bool
+FLAG usetix promoters list --api-url type=string
+FLAG usetix promoters list --count type=bool
+FLAG usetix promoters list --event type=string
+FLAG usetix promoters list --ids-only type=bool
+FLAG usetix promoters list --json type=bool
+FLAG usetix promoters list --period type=string
+FLAG usetix promoters list --profile type=string
+FLAG usetix promoters list --quiet type=bool
+FLAG usetix promoters list --styled type=bool
 FLAG usetix team --agent type=bool
 FLAG usetix team --api-url type=string
 FLAG usetix team --count type=bool
@@ -770,6 +871,15 @@ SUB usetix profile create
 SUB usetix profile delete
 SUB usetix profile list
 SUB usetix profile use
+SUB usetix promo-codes
+SUB usetix promo-codes create
+SUB usetix promo-codes deactivate
+SUB usetix promo-codes list
+SUB usetix promo-codes reactivate
+SUB usetix promo-codes show
+SUB usetix promo-codes update
+SUB usetix promoters
+SUB usetix promoters list
 SUB usetix team
 SUB usetix team access
 SUB usetix team deactivate

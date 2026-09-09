@@ -271,6 +271,36 @@ usetix team invitations revoke 81 --yes
 usetix events duplicate friday-night
 ```
 
-`team access` replaces the complete event assignment. Roles are `scanner`, `manager`, or `co_organizer`. Team commands require venue access; external co-organizers create personal tokens under API Tokens in their dashboard sidebar and use the existing `usetix auth login`. Event commands and direct API requests then follow their current event assignments. Personal tokens cannot access the account-wide team, customer directory, refunds, shop/payment settings, or scanner.
+`team access` replaces the complete event assignment. Roles are `scanner`, `manager`, `co_organizer`, or `promoter`. Team commands require venue access; external co-organizers create personal tokens under API Tokens in their dashboard sidebar and use the existing `usetix auth login`. Event commands and direct API requests then follow their current event assignments. Personal tokens cannot access the account-wide team, customer directory, refunds, shop/payment settings, or scanner.
 
 The event JSON includes `media` with gallery IDs and order. Upload files through the existing direct-upload API and use `usetix api PATCH /admin/events/SLUG --data @event.json` for gallery, artwork, video and document changes.
+
+
+### Promoters and promo codes
+
+```sh
+usetix team invite lisa@example.com --role promoter
+usetix team list
+# After Lisa accepts, use her membership ID:
+usetix promo-codes create --code LISA --promoter 42 --event summer-night
+usetix promo-codes list
+usetix promo-codes show 17
+usetix promo-codes update 17 --discount-amount 10
+usetix promoters list --event summer-night --period month
+usetix promoters list --json
+usetix promo-codes deactivate 17 --yes
+usetix promo-codes reactivate 17 --yes
+```
+
+New codes default to 0%: sales are attributed without changing the ticket price.
+Omit `--event` for a shop-wide code. Updates preserve omitted fields; use
+`--promoter 0` or `--event ''` to clear an unused assignment. Once a code has a
+reservation or sale, the server locks its event and promoter assignment.
+`--expires-at ''`, `--usage-limit 0`, and `--max-per-customer 0` clear those limits.
+
+Promoter reports support `today`, `week`, `month`, `year`, and `all` (default),
+based on purchase time in the account timezone. Revenue reflects completed
+refunds and follows the event report; no commissions or payouts are calculated.
+Owners/managers manage promoters and assignments through their existing tokens.
+Promoters themselves use their read-only web dashboard and receive no API/CLI
+or MCP access. Invite promoters without `--event`; events belong on their codes.
