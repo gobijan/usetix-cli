@@ -29,6 +29,7 @@ Typed coverage will grow where it materially improves daily use.
 | Promoter reports | `promoters list` | `api GET /admin/promoters` | Typed per-promoter/code sales and refund-adjusted revenue, with event and purchase-period filters; organizer only |
 | Gift vouchers | `vouchers list/report/show/issue/adjust/block/unblock/retry-delivery/import`, `vouchers products list/show/create/update/archive/remove-image` | `api ... /admin/vouchers...`, `/admin/voucher_deliveries/:id/retry`, `/admin/voucher_lookup`, `/admin/voucher_products...`, `/admin/voucher_imports...` | Typed for cursor pagination, bonus-priced products, common balance operations, delivery inspection/retry, product lifecycle/artwork removal, body-safe exact-code lookup, reporting, and atomic CSV imports; direct for CSV export and catalog reordering |
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
+| Guest-list signup links and review | `events guest-list form/configure/requests/approve/reject` | `api ... /admin/events/:slug/guest_list_form`, `/guest_requests...` | Typed settings, manual/automatic approval, numeric request pagination and confirmed review; existing parties and seat moves remain direct |
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
 | Customers | `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Interaction timelines are typed; customer list/show/export remain direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
@@ -62,7 +63,7 @@ API mechanically:
 1. ~~Event show/create/update/publication.~~ Done.
 2. ~~Orders read and refund workflows.~~ Done.
 3. General customer list/show workflows. Interaction timelines are already typed.
-4. Tickets and guest-list operations. Gift vouchers, promo codes, and promoter reports are already typed.
+4. Tickets and manual guest-list parties/seat moves. Signup links, request reviews, gift vouchers, promo codes, and promoter reports are already typed.
 5. Venues, performers, analytics, and account settings.
 6. Scanner workflows if terminal scanning proves useful alongside the native
    scanner app.

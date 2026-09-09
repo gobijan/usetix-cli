@@ -21,6 +21,12 @@ CMD usetix events arrivals
 CMD usetix events create
 CMD usetix events delete
 CMD usetix events duplicate
+CMD usetix events guest-list
+CMD usetix events guest-list approve
+CMD usetix events guest-list configure
+CMD usetix events guest-list form
+CMD usetix events guest-list reject
+CMD usetix events guest-list requests
 CMD usetix events invite-co-organizer
 CMD usetix events list
 CMD usetix events open-answers
@@ -302,6 +308,64 @@ FLAG usetix events duplicate --json type=bool
 FLAG usetix events duplicate --profile type=string
 FLAG usetix events duplicate --quiet type=bool
 FLAG usetix events duplicate --styled type=bool
+FLAG usetix events guest-list --agent type=bool
+FLAG usetix events guest-list --api-url type=string
+FLAG usetix events guest-list --count type=bool
+FLAG usetix events guest-list --ids-only type=bool
+FLAG usetix events guest-list --json type=bool
+FLAG usetix events guest-list --profile type=string
+FLAG usetix events guest-list --quiet type=bool
+FLAG usetix events guest-list --styled type=bool
+FLAG usetix events guest-list approve --agent type=bool
+FLAG usetix events guest-list approve --api-url type=string
+FLAG usetix events guest-list approve --count type=bool
+FLAG usetix events guest-list approve --ids-only type=bool
+FLAG usetix events guest-list approve --json type=bool
+FLAG usetix events guest-list approve --profile type=string
+FLAG usetix events guest-list approve --quiet type=bool
+FLAG usetix events guest-list approve --styled type=bool
+FLAG usetix events guest-list approve --yes type=bool
+FLAG usetix events guest-list configure --agent type=bool
+FLAG usetix events guest-list configure --api-url type=string
+FLAG usetix events guest-list configure --approval-mode type=string
+FLAG usetix events guest-list configure --capacity type=int
+FLAG usetix events guest-list configure --count type=bool
+FLAG usetix events guest-list configure --enabled type=bool
+FLAG usetix events guest-list configure --ids-only type=bool
+FLAG usetix events guest-list configure --json type=bool
+FLAG usetix events guest-list configure --max-companions type=int
+FLAG usetix events guest-list configure --profile type=string
+FLAG usetix events guest-list configure --quiet type=bool
+FLAG usetix events guest-list configure --standing-pool-id type=int64
+FLAG usetix events guest-list configure --styled type=bool
+FLAG usetix events guest-list configure --ticket-id type=int64
+FLAG usetix events guest-list form --agent type=bool
+FLAG usetix events guest-list form --api-url type=string
+FLAG usetix events guest-list form --count type=bool
+FLAG usetix events guest-list form --ids-only type=bool
+FLAG usetix events guest-list form --json type=bool
+FLAG usetix events guest-list form --profile type=string
+FLAG usetix events guest-list form --quiet type=bool
+FLAG usetix events guest-list form --styled type=bool
+FLAG usetix events guest-list reject --agent type=bool
+FLAG usetix events guest-list reject --api-url type=string
+FLAG usetix events guest-list reject --count type=bool
+FLAG usetix events guest-list reject --ids-only type=bool
+FLAG usetix events guest-list reject --json type=bool
+FLAG usetix events guest-list reject --profile type=string
+FLAG usetix events guest-list reject --quiet type=bool
+FLAG usetix events guest-list reject --styled type=bool
+FLAG usetix events guest-list reject --yes type=bool
+FLAG usetix events guest-list requests --agent type=bool
+FLAG usetix events guest-list requests --api-url type=string
+FLAG usetix events guest-list requests --count type=bool
+FLAG usetix events guest-list requests --ids-only type=bool
+FLAG usetix events guest-list requests --json type=bool
+FLAG usetix events guest-list requests --page type=int
+FLAG usetix events guest-list requests --profile type=string
+FLAG usetix events guest-list requests --quiet type=bool
+FLAG usetix events guest-list requests --status type=string
+FLAG usetix events guest-list requests --styled type=bool
 FLAG usetix events invite-co-organizer --agent type=bool
 FLAG usetix events invite-co-organizer --api-url type=string
 FLAG usetix events invite-co-organizer --count type=bool
@@ -863,6 +927,12 @@ SUB usetix events arrivals
 SUB usetix events create
 SUB usetix events delete
 SUB usetix events duplicate
+SUB usetix events guest-list
+SUB usetix events guest-list approve
+SUB usetix events guest-list configure
+SUB usetix events guest-list form
+SUB usetix events guest-list reject
+SUB usetix events guest-list requests
 SUB usetix events invite-co-organizer
 SUB usetix events list
 SUB usetix events open-answers

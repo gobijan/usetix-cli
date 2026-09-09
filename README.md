@@ -73,6 +73,8 @@ usetix events publish summer-festival
 usetix events unpublish summer-festival
 usetix events delete summer-festival --yes
 usetix events open-answers summer-festival --status uncontacted
+usetix events guest-list form summer-festival
+usetix events guest-list requests summer-festival
 
 usetix customers contacts list 17
 usetix customers contacts show 17 91
@@ -191,6 +193,40 @@ authorization, rate-limit, network, and API failures.
 
 Generate shell completion with `usetix completion bash`, `zsh`, `fish`, or
 `powershell`.
+
+## Guest-list signup links
+
+Use one shared link for an account-free form with name, email, optional company
+and companions. Inspect eligible ticket IDs and standing pools with
+`usetix api GET /admin/events/summer-festival/guest_list`, then configure the link:
+
+```sh
+usetix events guest-list configure summer-festival \
+  --ticket-id 42 --enabled --approval-mode manual --max-companions 2 --capacity 50
+usetix events guest-list form summer-festival --json
+usetix events guest-list requests summer-festival
+usetix events guest-list requests summer-festival --status approved --page 2 --json
+usetix events guest-list approve summer-festival REQUEST_ID --yes
+usetix events guest-list reject summer-festival REQUEST_ID --yes
+usetix events guest-list configure summer-festival --enabled=false
+```
+
+`manual` requires organizer review; `automatic` emails complimentary QR tickets
+for new valid signups immediately. Pending requests reserve no places. Approval
+checks the link capacity and real ticket inventory, and sends one ticket per
+person. Repeating approval does not resend tickets. Rejection sends no email.
+
+Only supplied configuration flags are changed. `--enabled=false` stops new
+signups while preserving requests and tickets. `--max-companions 0` removes
+companions; `--standing-pool-id 0` clears the standing pool. The event and shop
+must be published. Signup links support standard GA and standing tickets;
+numbered seats use the existing manual guest-list workflow.
+
+Requests return 25 per page. Pass the numeric `next_page` value to `--page` until
+it is null. `--count` and `--ids-only` describe the current page; JSON also
+includes the event-wide `pending_count`. Review uses the exact `public_id` from
+the request list. Reads require a read token; configuration and review need a
+write token and follow current co-organizer event assignments.
 
 ## Development
 
