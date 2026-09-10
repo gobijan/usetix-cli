@@ -24,9 +24,12 @@ CMD usetix events duplicate
 CMD usetix events guest-list
 CMD usetix events guest-list approve
 CMD usetix events guest-list configure
+CMD usetix events guest-list create
 CMD usetix events guest-list form
+CMD usetix events guest-list forms
 CMD usetix events guest-list reject
 CMD usetix events guest-list requests
+CMD usetix events guest-list rotate
 CMD usetix events invite-co-organizer
 CMD usetix events list
 CMD usetix events open-answers
@@ -331,22 +334,48 @@ FLAG usetix events guest-list configure --approval-mode type=string
 FLAG usetix events guest-list configure --capacity type=int
 FLAG usetix events guest-list configure --count type=bool
 FLAG usetix events guest-list configure --enabled type=bool
+FLAG usetix events guest-list configure --form-id type=string
 FLAG usetix events guest-list configure --ids-only type=bool
 FLAG usetix events guest-list configure --json type=bool
 FLAG usetix events guest-list configure --max-companions type=int
+FLAG usetix events guest-list configure --name type=string
 FLAG usetix events guest-list configure --profile type=string
 FLAG usetix events guest-list configure --quiet type=bool
 FLAG usetix events guest-list configure --standing-pool-id type=int64
 FLAG usetix events guest-list configure --styled type=bool
 FLAG usetix events guest-list configure --ticket-id type=int64
+FLAG usetix events guest-list create --agent type=bool
+FLAG usetix events guest-list create --api-url type=string
+FLAG usetix events guest-list create --approval-mode type=string
+FLAG usetix events guest-list create --capacity type=int
+FLAG usetix events guest-list create --count type=bool
+FLAG usetix events guest-list create --enabled type=bool
+FLAG usetix events guest-list create --ids-only type=bool
+FLAG usetix events guest-list create --json type=bool
+FLAG usetix events guest-list create --max-companions type=int
+FLAG usetix events guest-list create --name type=string
+FLAG usetix events guest-list create --profile type=string
+FLAG usetix events guest-list create --quiet type=bool
+FLAG usetix events guest-list create --standing-pool-id type=int64
+FLAG usetix events guest-list create --styled type=bool
+FLAG usetix events guest-list create --ticket-id type=int64
 FLAG usetix events guest-list form --agent type=bool
 FLAG usetix events guest-list form --api-url type=string
 FLAG usetix events guest-list form --count type=bool
+FLAG usetix events guest-list form --form-id type=string
 FLAG usetix events guest-list form --ids-only type=bool
 FLAG usetix events guest-list form --json type=bool
 FLAG usetix events guest-list form --profile type=string
 FLAG usetix events guest-list form --quiet type=bool
 FLAG usetix events guest-list form --styled type=bool
+FLAG usetix events guest-list forms --agent type=bool
+FLAG usetix events guest-list forms --api-url type=string
+FLAG usetix events guest-list forms --count type=bool
+FLAG usetix events guest-list forms --ids-only type=bool
+FLAG usetix events guest-list forms --json type=bool
+FLAG usetix events guest-list forms --profile type=string
+FLAG usetix events guest-list forms --quiet type=bool
+FLAG usetix events guest-list forms --styled type=bool
 FLAG usetix events guest-list reject --agent type=bool
 FLAG usetix events guest-list reject --api-url type=string
 FLAG usetix events guest-list reject --count type=bool
@@ -359,6 +388,7 @@ FLAG usetix events guest-list reject --yes type=bool
 FLAG usetix events guest-list requests --agent type=bool
 FLAG usetix events guest-list requests --api-url type=string
 FLAG usetix events guest-list requests --count type=bool
+FLAG usetix events guest-list requests --form-id type=string
 FLAG usetix events guest-list requests --ids-only type=bool
 FLAG usetix events guest-list requests --json type=bool
 FLAG usetix events guest-list requests --page type=int
@@ -366,6 +396,15 @@ FLAG usetix events guest-list requests --profile type=string
 FLAG usetix events guest-list requests --quiet type=bool
 FLAG usetix events guest-list requests --status type=string
 FLAG usetix events guest-list requests --styled type=bool
+FLAG usetix events guest-list rotate --agent type=bool
+FLAG usetix events guest-list rotate --api-url type=string
+FLAG usetix events guest-list rotate --count type=bool
+FLAG usetix events guest-list rotate --ids-only type=bool
+FLAG usetix events guest-list rotate --json type=bool
+FLAG usetix events guest-list rotate --profile type=string
+FLAG usetix events guest-list rotate --quiet type=bool
+FLAG usetix events guest-list rotate --styled type=bool
+FLAG usetix events guest-list rotate --yes type=bool
 FLAG usetix events invite-co-organizer --agent type=bool
 FLAG usetix events invite-co-organizer --api-url type=string
 FLAG usetix events invite-co-organizer --count type=bool
@@ -930,9 +969,12 @@ SUB usetix events duplicate
 SUB usetix events guest-list
 SUB usetix events guest-list approve
 SUB usetix events guest-list configure
+SUB usetix events guest-list create
 SUB usetix events guest-list form
+SUB usetix events guest-list forms
 SUB usetix events guest-list reject
 SUB usetix events guest-list requests
+SUB usetix events guest-list rotate
 SUB usetix events invite-co-organizer
 SUB usetix events list
 SUB usetix events open-answers
