@@ -10,8 +10,8 @@ import (
 	"testing"
 )
 
-const guestListFormJSON = `{"enabled":true,"approval_mode":"manual","ticket_id":42,"event_capacity_pool_id":null,"max_companions":2,"capacity":50,"admission_count":8,"remaining_capacity":42,"public_url":"https://shop.example/guest-list/TOKEN"}`
-const guestRequestJSON = `{"public_id":"REQUEST1","name":"Anna","email":"anna@example.com","company":null,"companions":1,"party_size":2,"status":"pending","created_at":"2026-09-09T12:00:00Z","reviewed_at":null,"order_public_id":null}`
+const guestListFormJSON = `{"public_id":"FORM1","name":null,"enabled":true,"approval_mode":"manual","ticket_id":42,"event_capacity_pool_id":null,"max_companions":2,"capacity":50,"admission_count":8,"remaining_capacity":42,"public_url":"https://shop.example/guest-list/TOKEN"}`
+const guestRequestJSON = `{"public_id":"REQUEST1","form_id":"FORM1","name":"Anna","email":"anna@example.com","company":null,"companions":1,"party_size":2,"status":"pending","created_at":"2026-09-09T12:00:00Z","reviewed_at":null,"order_public_id":null}`
 
 func TestGuestListFormCommandsPreservePartialUpdates(t *testing.T) {
 	var method, body string
@@ -169,5 +169,64 @@ func assertGuestListJSON(t *testing.T, stdout, expected string) {
 	}
 	if !reflect.DeepEqual(envelope.Data, want) {
 		t.Fatalf("JSON contract changed: got %#v, want %#v", envelope.Data, want)
+	}
+}
+
+func TestGuestListMultipleLinksAndRotation(t *testing.T) {
+	var path, method, query, body string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path, method, query = r.URL.Path, r.Method, r.URL.RawQuery
+		payload, _ := io.ReadAll(r.Body)
+		body = string(payload)
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodGet && strings.HasSuffix(path, "/guest_list_forms.json") {
+			_, _ = w.Write([]byte(`{"forms":[` + guestListFormJSON + `]}`))
+		} else if strings.HasSuffix(path, "/guest_requests.json") {
+			_, _ = w.Write([]byte(`{"status":"pending","pending_count":1,"next_page":null,"requests":[` + guestRequestJSON + `]}`))
+		} else {
+			_, _ = w.Write([]byte(guestListFormJSON))
+		}
+	}))
+	defer server.Close()
+	env := map[string]string{"USETIX_TOKEN": "test-token", "USETIX_API_URL": server.URL}
+	cases := []struct {
+		args         []string
+		method, path string
+	}{
+		{[]string{"forms", "club-night"}, "GET", "/admin/events/club-night/guest_list_forms.json"},
+		{[]string{"create", "club-night", "--ticket-id", "42", "--name", "Press"}, "POST", "/admin/events/club-night/guest_list_forms.json"},
+		{[]string{"form", "club-night", "--form-id", "FORM1"}, "GET", "/admin/events/club-night/guest_list_forms/FORM1.json"},
+		{[]string{"configure", "club-night", "--form-id", "FORM1", "--enabled=false"}, "PATCH", "/admin/events/club-night/guest_list_forms/FORM1.json"},
+		{[]string{"rotate", "club-night", "FORM1", "--yes"}, "POST", "/admin/events/club-night/guest_list_forms/FORM1/rotation.json"},
+	}
+	for _, check := range cases {
+		args := append([]string{"--json", "events", "guest-list"}, check.args...)
+		stdout, stderr, code := runCLI(t, args, "", env, nil)
+		if code != 0 || path != check.path || method != check.method {
+			t.Fatalf("%v: code=%d method=%s path=%s stdout=%s stderr=%s", check.args, code, method, path, stdout, stderr)
+		}
+		if check.args[0] == "create" {
+			var got map[string]any
+			if err := json.Unmarshal([]byte(body), &got); err != nil {
+				t.Fatal(err)
+			}
+			want := map[string]any{"guest_list_form": map[string]any{"ticket_id": float64(42), "name": "Press"}}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("create must preserve server defaults: %#v", got)
+			}
+		}
+	}
+	path = ""
+	stdout, _, code := runCLI(t, []string{"--json", "events", "guest-list", "rotate", "club-night", "FORM1"}, "", env, nil)
+	if code == 0 || path != "" || !strings.Contains(stdout, "explicit confirmation") {
+		t.Fatalf("rotation was not gated: code=%d path=%s output=%s", code, path, stdout)
+	}
+	stdout, _, code = runCLI(t, []string{"events", "guest-list", "requests", "club-night", "--form-id", "FORM1", "--json"}, "", env, nil)
+	if code != 0 || query != "form_id=FORM1&page=1&status=pending" {
+		t.Fatalf("filter code=%d query=%s output=%s", code, query, stdout)
+	}
+	stdout, _, code = runCLI(t, []string{"events", "guest-list", "forms", "club-night", "--ids-only"}, "", env, nil)
+	if code != 0 || stdout != "FORM1\n" {
+		t.Fatalf("ids code=%d output=%q", code, stdout)
 	}
 }

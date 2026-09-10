@@ -201,15 +201,19 @@ and companions. Inspect eligible ticket IDs and standing pools with
 `usetix api GET /admin/events/summer-festival/guest_list`, then configure the link:
 
 ```sh
-usetix events guest-list configure summer-festival \
+usetix events guest-list create summer-festival \
   --ticket-id 42 --enabled --approval-mode manual --max-companions 2 --capacity 50
-usetix events guest-list form summer-festival --json
+usetix events guest-list forms summer-festival --json
+usetix events guest-list form summer-festival --form-id FORM_ID --json
 usetix events guest-list requests summer-festival
 usetix events guest-list requests summer-festival --status approved --page 2 --json
 usetix events guest-list approve summer-festival REQUEST_ID --yes
 usetix events guest-list reject summer-festival REQUEST_ID --yes
-usetix events guest-list configure summer-festival --enabled=false
+usetix events guest-list configure summer-festival --form-id FORM_ID --enabled=false
+usetix events guest-list rotate summer-festival FORM_ID --yes
 ```
+
+Use `create` for another link with its own ticket and quota; new links are enabled by default. Pass `--name Press` for an internal label or `--enabled=false` to create a closed link. `forms` returns stable IDs; select one with `--form-id` for `form`, `configure` and optionally `requests`. `rotate SLUG FORM_ID --yes` invalidates only that public URL and returns its replacement; settings, requests and issued tickets remain valid. Without `--form-id`, legacy `form`/`configure` work only while an event has at most one link; multiple links return `409`.
 
 `manual` requires organizer review; `automatic` emails complimentary QR tickets
 for new valid signups immediately. Pending requests reserve no places. Approval
@@ -224,7 +228,7 @@ numbered seats use the existing manual guest-list workflow.
 
 Requests return 25 per page. Pass the numeric `next_page` value to `--page` until
 it is null. `--count` and `--ids-only` describe the current page; JSON also
-includes the event-wide `pending_count`. Review uses the exact `public_id` from
+includes the `pending_count` for the selected link (or the whole event without a filter). Review uses the exact `public_id` from
 the request list. Reads require a read token; configuration and review need a
 write token and follow current co-organizer event assignments.
 
@@ -310,7 +314,6 @@ usetix events duplicate friday-night
 `team access` replaces the complete event assignment. Roles are `scanner`, `manager`, `co_organizer`, or `promoter`. Team commands require venue access; external co-organizers create personal tokens under API Tokens in their dashboard sidebar and use the existing `usetix auth login`. Event commands and direct API requests then follow their current event assignments. Personal tokens cannot access the account-wide team, customer directory, refunds, shop/payment settings, or scanner.
 
 The event JSON includes `media` with gallery IDs and order. Upload files through the existing direct-upload API and use `usetix api PATCH /admin/events/SLUG --data @event.json` for gallery, artwork, video and document changes.
-
 
 ### Promoters and promo codes
 

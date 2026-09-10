@@ -16,41 +16,50 @@ func newEventsGuestList(runtime *appctx.Runtime) *cobra.Command {
 		Use: "guest-list", Short: "Manage guest-list signup links and review requests",
 		Long: "Configure a signup link for general admission or standing, then approve or reject requests. Pending requests reserve no places. Approval issues complimentary QR tickets and emails them automatically.",
 	}
-	command.AddCommand(newGuestListForm(runtime), newGuestListConfigure(runtime), newGuestListRequests(runtime),
+	command.AddCommand(newGuestListForm(runtime), newGuestListConfigure(runtime, false), newGuestListConfigure(runtime, true), newGuestListForms(runtime), newGuestListRotate(runtime), newGuestListRequests(runtime),
 		newGuestListReview(runtime, true), newGuestListReview(runtime, false))
 	return command
 }
 
 func newGuestListForm(runtime *appctx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	var formID string
+	command := &cobra.Command{
 		Use: "form SLUG", Short: "Show the signup link, settings and remaining places", Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
 			client, _, err := runtime.APIClient()
 			if err != nil {
 				return err
 			}
-			form, err := client.GetGuestListForm(command.Context(), args[0])
+			form, err := client.GetGuestListForm(command.Context(), args[0], formID)
 			if err != nil {
 				return NormalizeError(err)
 			}
 			return runtime.Output().OK(form, renderGuestListForm(form), output.WithSummary("Guest-list signup link"))
 		},
 	}
+	command.Flags().StringVar(&formID, "form-id", "", "stable link ID from forms; required when several links exist")
+	return command
 }
 
-func newGuestListConfigure(runtime *appctx.Runtime) *cobra.Command {
+func newGuestListConfigure(runtime *appctx.Runtime, create bool) *cobra.Command {
 	var enabled bool
-	var mode string
+	var mode, formID, name string
 	var ticketID, poolID int64
 	var companions, capacity int
 	command := &cobra.Command{
 		Use: "configure SLUG", Short: "Create or update a signup link", Args: cobra.ExactArgs(1),
-		Long: "Only supplied flags change settings. Enable the link to accept new signups; disabling it preserves existing requests and tickets. The shop and event must be published. Automatic mode sends tickets for new signups, without approving older pending requests.",
+		Long: "Only supplied flags change settings. New links are enabled by default; --enabled=false closes a link and preserves existing requests and tickets. Select --form-id when several links exist. The shop and event must be published. Automatic mode sends tickets for new signups, without approving older pending requests.",
 		Example: `  usetix events guest-list configure club-night --ticket-id 42 --enabled --approval-mode manual --max-companions 2 --capacity 50
   usetix events guest-list configure club-night --enabled=false`,
 		RunE: func(command *cobra.Command, args []string) error {
 			attributes := map[string]any{}
 			flags := command.Flags()
+			if create && !flags.Changed("ticket-id") {
+				return output.ErrUsage("--ticket-id is required to create a link")
+			}
+			if flags.Changed("name") {
+				attributes["name"] = name
+			}
 			if flags.Changed("enabled") {
 				attributes["enabled"] = enabled
 			}
@@ -94,14 +103,27 @@ func newGuestListConfigure(runtime *appctx.Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			form, err := client.ConfigureGuestListForm(command.Context(), args[0], attributes)
+			var form api.GuestListForm
+			if create {
+				form, err = client.CreateGuestListForm(command.Context(), args[0], attributes)
+			} else {
+				form, err = client.ConfigureGuestListForm(command.Context(), args[0], attributes, formID)
+			}
 			if err != nil {
 				return NormalizeError(err)
 			}
 			return runtime.Output().OK(form, renderGuestListForm(form), output.WithSummary("Signup settings saved"))
 		},
 	}
-	command.Flags().BoolVar(&enabled, "enabled", false, "accept new signups through the link; false closes it")
+	if create {
+		command.Use = "create SLUG"
+		command.Short = "Create another signup link, enabled by default"
+		command.Example = "  usetix events guest-list create club-night --ticket-id 42 --name Press --capacity 50"
+	} else {
+		command.Flags().StringVar(&formID, "form-id", "", "stable link ID from forms; required when several links exist")
+	}
+	command.Flags().StringVar(&name, "name", "", "optional internal link name; empty clears it")
+	command.Flags().BoolVar(&enabled, "enabled", true, "accept new signups through the link; false closes it")
 	command.Flags().StringVar(&mode, "approval-mode", "", "manual (review first) or automatic (immediate tickets)")
 	command.Flags().Int64Var(&ticketID, "ticket-id", 0, "standard GA or standing ticket ID; required for initial setup")
 	command.Flags().Int64Var(&poolID, "standing-pool-id", 0, "standing capacity pool ID; 0 clears the selection")
@@ -111,11 +133,11 @@ func newGuestListConfigure(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newGuestListRequests(runtime *appctx.Runtime) *cobra.Command {
-	var status string
+	var status, formID string
 	var page int
 	command := &cobra.Command{
 		Use: "requests SLUG", Short: "List signup requests to review", Args: cobra.ExactArgs(1),
-		Long: "List requests newest first, 25 per page. Pass next_page to --page to continue. --count and --ids-only apply to the returned page; pending_count in JSON is the event-wide pending total.",
+		Long: "List requests newest first, 25 per page. Pass next_page to --page to continue. --count and --ids-only apply to the returned page; pending_count in JSON is the pending total within the selected link, or the whole event when no --form-id is given.",
 		RunE: func(command *cobra.Command, args []string) error {
 			if status != "pending" && status != "approved" && status != "rejected" {
 				return output.ErrUsage("--status must be pending, approved, or rejected")
@@ -127,7 +149,7 @@ func newGuestListRequests(runtime *appctx.Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			response, err := client.ListGuestRequests(command.Context(), args[0], status, page)
+			response, err := client.ListGuestRequests(command.Context(), args[0], status, page, formID)
 			if err != nil {
 				return NormalizeError(err)
 			}
@@ -142,6 +164,7 @@ func newGuestListRequests(runtime *appctx.Runtime) *cobra.Command {
 			return runtime.Output().OK(data, renderGuestListRequests(response), output.WithSummary("Guest-list signup requests"))
 		},
 	}
+	command.Flags().StringVar(&formID, "form-id", "", "filter requests by stable link ID from forms")
 	command.Flags().StringVar(&status, "status", "pending", "filter: pending, approved, or rejected")
 	command.Flags().IntVar(&page, "page", 1, "numeric next_page value from the previous response")
 	return command
@@ -185,8 +208,8 @@ func newGuestListReview(runtime *appctx.Runtime, approve bool) *cobra.Command {
 
 func renderGuestListForm(form api.GuestListForm) output.StyledRenderer {
 	return func(w io.Writer) error {
-		_, err := fmt.Fprintf(w, "Signup link enabled: %t\nConfirmation: %s\n%d / %d places confirmed · %d remaining\nMaximum companions: %d\nLink: %s\n",
-			form.Enabled, terminal.SanitizeLine(form.ApprovalMode), form.AdmissionCount, form.Capacity,
+		_, err := fmt.Fprintf(w, "Link ID: %s\nName: %s\nSignup link enabled: %t\nConfirmation: %s\n%d / %d places confirmed · %d remaining\nMaximum companions: %d\nLink: %s\n",
+			optionalString(form.PublicID), optionalString(form.Name), form.Enabled, terminal.SanitizeLine(form.ApprovalMode), form.AdmissionCount, form.Capacity,
 			form.RemainingCapacity, form.MaxCompanions, optionalString(form.PublicURL))
 		return err
 	}
@@ -195,9 +218,9 @@ func renderGuestListForm(form api.GuestListForm) output.StyledRenderer {
 func renderGuestListRequests(response api.GuestRequestsResponse) output.StyledRenderer {
 	return func(w io.Writer) error {
 		for _, request := range response.Requests {
-			if _, err := fmt.Fprintf(w, "%s  %s <%s>  %s  %d people  %s\n", terminal.SanitizeLine(request.PublicID),
+			if _, err := fmt.Fprintf(w, "%s  %s <%s>  %s  %d people  %s  Link: %s\n", terminal.SanitizeLine(request.PublicID),
 				terminal.SanitizeLine(request.Name), terminal.SanitizeLine(request.Email), optionalString(request.Company),
-				request.PartySize, terminal.SanitizeLine(request.Status)); err != nil {
+				request.PartySize, terminal.SanitizeLine(request.Status), terminal.SanitizeLine(request.FormID)); err != nil {
 				return err
 			}
 		}
@@ -210,4 +233,60 @@ func renderGuestListRequests(response api.GuestRequestsResponse) output.StyledRe
 		}
 		return nil
 	}
+}
+
+func newGuestListForms(runtime *appctx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use: "forms SLUG", Short: "List all signup links and their stable IDs", Args: cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			response, err := client.ListGuestListForms(command.Context(), args[0])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			data := any(response)
+			if format := runtime.OutputFormat(); format == output.FormatIDs || format == output.FormatCount {
+				ids := make([]map[string]any, 0, len(response.Forms))
+				for _, form := range response.Forms {
+					ids = append(ids, map[string]any{"id": optionalString(form.PublicID)})
+				}
+				data = ids
+			}
+			return runtime.Output().OK(data, func(w io.Writer) error {
+				for _, form := range response.Forms {
+					if err := renderGuestListForm(form)(w); err != nil {
+						return err
+					}
+				}
+				return nil
+			}, output.WithSummary("Guest-list signup links"))
+		},
+	}
+}
+
+func newGuestListRotate(runtime *appctx.Runtime) *cobra.Command {
+	var yes bool
+	command := &cobra.Command{
+		Use: "rotate SLUG FORM_ID", Short: "Replace a signup URL and immediately invalidate the old link", Args: cobra.ExactArgs(2),
+		Long: "Rotate the selected signup link. Its stable ID, settings, requests and issued tickets remain unchanged. Share the returned public_url with guests who still need to register.",
+		RunE: func(command *cobra.Command, args []string) error {
+			if !yes {
+				return output.ErrUsageHint("link rotation requires explicit confirmation", "Select the exact ID with events guest-list forms, then re-run with --yes")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			form, err := client.RotateGuestListForm(command.Context(), args[0], args[1])
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(form, renderGuestListForm(form), output.WithSummary("Signup link renewed"))
+		},
+	}
+	command.Flags().BoolVar(&yes, "yes", false, "invalidate the selected old URL; existing requests and tickets remain valid")
+	return command
 }
