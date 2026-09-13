@@ -235,3 +235,50 @@ write-scoped deploy key for the tap repository.
  ░██   ░██         ░██ ░██           ░██    ░██ ░██  ░██
   ░██████    ░███████   ░███████      ░████ ░██░██    ░██
 ```
+
+## Shared tasks
+
+Use task public IDs from `list` and assignee membership IDs from `people`:
+
+```sh
+usetix tasks list --event october-party --assignee me --hide-done
+usetix tasks people --event october-party
+usetix tasks create --title "Confirm the door briefing" --event october-party --assignee 42 --due 2026-10-24
+usetix tasks show TASK_ID
+usetix tasks update TASK_ID --description "Meet at 18:00" --lock-version 0
+usetix tasks move TASK_ID --status in_progress --before NEXT_TASK_ID --lock-version 1
+usetix tasks comment TASK_ID --body "Entrance team confirmed."
+usetix tasks comments TASK_ID
+usetix tasks move TASK_ID --status done --lock-version 2
+usetix tasks archive TASK_ID --lock-version 4
+usetix tasks list --archived
+usetix tasks restore TASK_ID --lock-version 5
+usetix tasks delete TASK_ID --yes
+```
+
+Read each current `lock_version` with `show` before editing or moving; the values
+above are examples. Conflicts are reported without retrying the write. Optional
+fields can be cleared explicitly, for example `--assignee= --due=`. Description
+updates replace its complete rich text, including files. Omitted flags leave
+fields unchanged. `--json`, `--ids-only` and `--count` work on task lists, people
+and activity; JSON preserves rich HTML and attachment metadata.
+
+Only completed tasks can be archived. Restore keeps them in Done. Deletion
+requires `--yes` and removes comments and history. Personal co-organizer tokens
+follow current event assignments; use an event when creating a task.
+
+Private upload metadata and downloads use the direct API command:
+
+```sh
+usetix api POST /admin/task_uploads --data @upload-metadata.json
+usetix api GET /admin/task_uploads/SIGNED_BLOB_ID --output briefing.pdf
+```
+
+Upload metadata contains a `blob` object with filename, content type, byte size
+and a base64 MD5 checksum. Transfer file bytes with `PUT` to the returned
+`direct_upload.url`, using its headers and an HTTP client. Do not send your
+Usetix Bearer token to storage. Embed the returned `attachable_sgid` in
+`<action-text-attachment sgid="..."></action-text-attachment>` HTML through
+`tasks update --description` or `tasks comment --body`.
+
+See the [Tasks API](https://www.usetix.io/docs/api/tasks/) for the upload contract.
