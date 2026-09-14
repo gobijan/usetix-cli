@@ -18,18 +18,21 @@ Typed coverage will grow where it materially improves daily use.
 | Documented area | Typed command | Direct access | Status |
 |---|---|---|---|
 | Authentication | `auth login`, `auth status`, `auth logout` | n/a | Local token validation and storage are typed; server token creation/revocation remains in Settings |
-| Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle and missing-answer follow-up; fee policy and image attachments are direct |
 | Shared tasks | `tasks list/show/people/create/update/move/comments/comment/archive/restore/delete` | `api ... /admin/tasks...`, `/admin/task_assignees`, `/admin/task_uploads...` | Typed for board filters, assignments, due dates, rich text, comments, ordering, versions and archives; private upload metadata/downloads are direct, storage PUT is an external HTTP step |
+| Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle, post-purchase attendee notes, and missing-answer follow-up; fee policy and image attachments are direct |
+| Admission and arrivals | `events arrivals SLUG` | `api GET /admin/events/:slug/arrivals` | Typed totals, redemption rate, peak and chronological intervals; read-only, including assigned events for co-organizers |
 | Venues | — | `api ... /admin/venues...` | Direct |
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |
 | Event FAQs | — | `api ... /admin/events/:slug/faq_items...` | Direct |
 | Custom checkout fields | — | `api ... /admin/events/:slug/custom_fields...` | Direct |
-| Promo codes | — | `api ... /admin/promo_codes...` | Direct |
+| Promo codes | `promo-codes list/show/create/update/deactivate/reactivate` | `api ... /admin/promo_codes...` | Typed codes, zero discounts, share links, limits and promoter assignments; deletion remains direct |
+| Promoter reports | `promoters list` | `api GET /admin/promoters` | Typed per-promoter/code sales and refund-adjusted revenue, with event and purchase-period filters; organizer only |
 | Gift vouchers | `vouchers list/report/show/issue/adjust/block/unblock/retry-delivery/import`, `vouchers products list/show/create/update/archive/remove-image` | `api ... /admin/vouchers...`, `/admin/voucher_deliveries/:id/retry`, `/admin/voucher_lookup`, `/admin/voucher_products...`, `/admin/voucher_imports...` | Typed for cursor pagination, bonus-priced products, common balance operations, delivery inspection/retry, product lifecycle/artwork removal, body-safe exact-code lookup, reporting, and atomic CSV imports; direct for CSV export and catalog reordering |
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
-| Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
-| Customers | `customers contacts list/show/log` | `api ... /admin/customers...` | Interaction timelines are typed; customer list/show/export remain direct |
+| Guest-list signup links and review | `events guest-list forms/create/form/configure/rotate/requests/approve/reject` | `api ... /admin/events/:slug/guest_list_forms`, `/guest_list_forms/:public_id/rotation`, `/guest_requests...` | Multiple active-by-default links, exact link selection, confirmed URL rotation, manual/automatic approval, numeric request pagination and confirmed review; existing parties and seat moves remain direct |
+| Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
+| Customers | `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Interaction timelines are typed; customer list/show/export remain direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | Advertising (limited beta) | — | `api GET /admin/advertising` | Direct for enabled accounts; Meta connection summary and cursor-paginated campaigns |
@@ -37,7 +40,9 @@ Typed coverage will grow where it materially improves daily use.
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
 | Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
-| Memberships | — | `api GET /admin/memberships` | Direct read (active, deactivated, pending invitations); invitation and role mutations are dashboard-only today |
+| Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation; venue only |
+| Event duplication | `events duplicate SLUG` | `api POST /admin/events/SLUG/duplication` | Draft copy; co-organizers receive access to their copy |
+| Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents, video and artwork; same editor validations |
 | Scanner | — | `api ... /scanner/...` | Direct |
 | Public event feed | — | `api GET /events --no-auth --api-url SHOP_URL` | Direct; lives on the shop host (`shop_url` from shop settings), not on `app.usetix.io` |
 | Active Storage direct-upload metadata | — | `api POST /rails/active_storage/direct_uploads ...` | Direct; uploading bytes to the returned storage URL remains an external HTTP step |
@@ -46,7 +51,7 @@ Typed coverage will grow where it materially improves daily use.
 
 These exist in the product but have no JSON endpoints yet, so neither typed
 nor direct access can reach them: outbound webhook management, API token
-lifecycle, team invitation and role mutations, event duplication, seat-map
+lifecycle, seat-map
 editing, scanner device pairing, walk-in sales, and billing/connect settings.
 If one of these becomes a real CLI need, the JSON endpoint belongs in the
 Rails application first.
@@ -59,7 +64,7 @@ API mechanically:
 1. ~~Event show/create/update/publication.~~ Done.
 2. ~~Orders read and refund workflows.~~ Done.
 3. General customer list/show workflows. Interaction timelines are already typed.
-4. Tickets, promo codes, and guest-list operations. Gift vouchers are already typed.
+4. Tickets and manual guest-list parties/seat moves. Signup links, request reviews, gift vouchers, promo codes, and promoter reports are already typed.
 5. Venues, performers, analytics, and account settings.
 6. Scanner workflows if terminal scanning proves useful alongside the native
    scanner app.
@@ -67,3 +72,5 @@ API mechanically:
 Every typed command must retain `--json` stability, account scoping, explicit
 confirmation for destructive actions, and a direct mapping to an existing
 documented endpoint.
+
+Personal co-organizer tokens use the same authentication and event commands. They follow current membership/event access and cannot call account-wide team, scanner, refund or settings endpoints.

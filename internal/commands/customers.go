@@ -44,6 +44,8 @@ func newCustomerContacts(runtime *appctx.Runtime) *cobra.Command {
 		newCustomerContactsList(runtime),
 		newCustomerContactsShow(runtime),
 		newCustomerContactsLog(runtime),
+		newCustomerContactsUpdate(runtime),
+		newCustomerContactsDelete(runtime),
 	)
 	return command
 }
@@ -273,4 +275,95 @@ func abbreviate(value string, limit int) string {
 		return clean
 	}
 	return string(runes[:limit-1]) + "…"
+}
+
+func newCustomerContactsUpdate(runtime *appctx.Runtime) *cobra.Command {
+	var kind, note, occurredAt string
+	scope := api.CustomerContactContext{}
+	command := &cobra.Command{
+		Use:   "update CUSTOMER_ID CONTACT_ID",
+		Short: "Correct a manually recorded interaction",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(command *cobra.Command, args []string) error {
+			customerID, err := positiveID(args[0], "customer ID")
+			if err != nil {
+				return err
+			}
+			contactID, err := positiveID(args[1], "contact ID")
+			if err != nil {
+				return err
+			}
+			input := api.UpdateCustomerContactInput{}
+			if command.Flags().Changed("kind") {
+				if _, valid := customerContactKinds[kind]; !valid {
+					return output.ErrUsage("invalid --kind")
+				}
+				input.Kind = &kind
+			}
+			if command.Flags().Changed("note") {
+				input.Note = &note
+			}
+			if command.Flags().Changed("occurred-at") {
+				input.OccurredAt = &occurredAt
+			}
+			if input.Kind == nil && input.Note == nil && input.OccurredAt == nil {
+				return output.ErrUsage("provide --kind, --note, or --occurred-at")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			contact, err := client.UpdateCustomerContact(command.Context(), customerID, contactID, input, scope)
+			if err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(contact, renderCustomerContact(contact), output.WithSummary("Customer interaction updated"))
+		},
+	}
+	command.Flags().StringVar(&scope.EventSlug, "event", "", "assigned event slug for a co-organizer")
+	command.Flags().StringVar(&scope.OrderPublicID, "order", "", "related order code for a co-organizer")
+	command.Flags().StringVar(&kind, "kind", "", "corrected interaction kind")
+	command.Flags().StringVar(&note, "note", "", "corrected factual note")
+	command.Flags().StringVar(&occurredAt, "occurred-at", "", "corrected time (ISO 8601 with timezone)")
+	return command
+}
+
+func newCustomerContactsDelete(runtime *appctx.Runtime) *cobra.Command {
+	var yes bool
+	scope := api.CustomerContactContext{}
+	command := &cobra.Command{
+		Use:   "delete CUSTOMER_ID CONTACT_ID",
+		Short: "Delete a manually recorded interaction",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(command *cobra.Command, args []string) error {
+			customerID, err := positiveID(args[0], "customer ID")
+			if err != nil {
+				return err
+			}
+			contactID, err := positiveID(args[1], "contact ID")
+			if err != nil {
+				return err
+			}
+			if !yes {
+				return output.ErrUsageHint("deleting an interaction requires explicit confirmation", "Re-run with --yes")
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			if err := client.DeleteCustomerContact(command.Context(), customerID, contactID, scope); err != nil {
+				return NormalizeError(err)
+			}
+			return runtime.Output().OK(map[string]any{"id": contactID, "deleted": true},
+				func(destination io.Writer) error {
+					_, err := fmt.Fprintf(destination, "Deleted interaction #%d\n", contactID)
+					return err
+				},
+				output.WithSummary("Customer interaction deleted"))
+		},
+	}
+	command.Flags().StringVar(&scope.EventSlug, "event", "", "assigned event slug for a co-organizer")
+	command.Flags().StringVar(&scope.OrderPublicID, "order", "", "related order code for a co-organizer")
+	command.Flags().BoolVar(&yes, "yes", false, "confirm permanent deletion")
+	return command
 }

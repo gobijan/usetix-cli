@@ -145,3 +145,41 @@ func TestCustomerContactCommands(t *testing.T) {
 		t.Fatalf("invalid customer ID: exit=%d stdout=%q", exitCode, stdout)
 	}
 }
+
+func TestCustomerContactMutations(t *testing.T) {
+	var method, path, body, query string
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		method, path, query = r.Method, r.URL.Path, r.URL.RawQuery
+		data, _ := io.ReadAll(r.Body)
+		body = string(data)
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, customerContactJSON)
+	}))
+	defer server.Close()
+	environment := map[string]string{"USETIX_TOKEN": "token-test", "USETIX_API_URL": server.URL}
+	stdout, stderr, code := runCLI(t, []string{"--json", "customers", "contacts", "update", "17", "91", "--note", "Corrected"}, "", environment, nil)
+	if code != 0 {
+		t.Fatalf("update: %d %s %s", code, stdout, stderr)
+	}
+	if method != http.MethodPatch || path != "/admin/customers/17/contacts/91.json" || body != `{"customer_contact":{"note":"Corrected"}}` {
+		t.Fatalf("unexpected update: %s %s %s", method, path, body)
+	}
+	_, _, code = runCLI(t, []string{"--json", "customers", "contacts", "update", "17", "91", "--note", "Scoped", "--event", "spring-showcase", "--order", "ORDER1"}, "", environment, nil)
+	if code != 0 || query != "event_slug=spring-showcase&order_public_id=ORDER1" {
+		t.Fatalf("missing event context: %d %s", code, query)
+	}
+	_, _, code = runCLI(t, []string{"--json", "customers", "contacts", "delete", "17", "91"}, "", environment, nil)
+	if code == 0 || calls != 2 {
+		t.Fatal("delete must require --yes without making a request")
+	}
+	stdout, stderr, code = runCLI(t, []string{"--json", "customers", "contacts", "delete", "17", "91", "--yes"}, "", environment, nil)
+	if code != 0 || method != http.MethodDelete || path != "/admin/customers/17/contacts/91.json" {
+		t.Fatalf("delete: %d %s %s", code, stdout, stderr)
+	}
+}

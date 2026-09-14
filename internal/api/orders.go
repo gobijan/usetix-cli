@@ -9,6 +9,7 @@ import (
 
 type Order struct {
 	PublicID        string         `json:"public_id"`
+	ShopURL         string         `json:"shop_url,omitempty"`
 	OrderCode       string         `json:"order_code"`
 	DisplayNumber   string         `json:"display_number"`
 	Status          string         `json:"status"`

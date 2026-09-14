@@ -11,12 +11,26 @@ CMD usetix auth status
 CMD usetix completion
 CMD usetix customers
 CMD usetix customers contacts
+CMD usetix customers contacts delete
 CMD usetix customers contacts list
 CMD usetix customers contacts log
 CMD usetix customers contacts show
+CMD usetix customers contacts update
 CMD usetix events
+CMD usetix events arrivals
 CMD usetix events create
 CMD usetix events delete
+CMD usetix events duplicate
+CMD usetix events guest-list
+CMD usetix events guest-list approve
+CMD usetix events guest-list configure
+CMD usetix events guest-list create
+CMD usetix events guest-list form
+CMD usetix events guest-list forms
+CMD usetix events guest-list reject
+CMD usetix events guest-list requests
+CMD usetix events guest-list rotate
+CMD usetix events invite-co-organizer
 CMD usetix events list
 CMD usetix events open-answers
 CMD usetix events publish
@@ -35,6 +49,15 @@ CMD usetix profile create
 CMD usetix profile delete
 CMD usetix profile list
 CMD usetix profile use
+CMD usetix promo-codes
+CMD usetix promo-codes create
+CMD usetix promo-codes deactivate
+CMD usetix promo-codes list
+CMD usetix promo-codes reactivate
+CMD usetix promo-codes show
+CMD usetix promo-codes update
+CMD usetix promoters
+CMD usetix promoters list
 CMD usetix tasks
 CMD usetix tasks archive
 CMD usetix tasks comment
@@ -47,6 +70,15 @@ CMD usetix tasks people
 CMD usetix tasks restore
 CMD usetix tasks show
 CMD usetix tasks update
+CMD usetix team
+CMD usetix team access
+CMD usetix team deactivate
+CMD usetix team invitations
+CMD usetix team invitations resend
+CMD usetix team invitations revoke
+CMD usetix team invite
+CMD usetix team list
+CMD usetix team reactivate
 CMD usetix version
 CMD usetix vouchers
 CMD usetix vouchers adjust
@@ -180,6 +212,17 @@ FLAG usetix customers contacts --json type=bool
 FLAG usetix customers contacts --profile type=string
 FLAG usetix customers contacts --quiet type=bool
 FLAG usetix customers contacts --styled type=bool
+FLAG usetix customers contacts delete --agent type=bool
+FLAG usetix customers contacts delete --api-url type=string
+FLAG usetix customers contacts delete --count type=bool
+FLAG usetix customers contacts delete --event type=string
+FLAG usetix customers contacts delete --ids-only type=bool
+FLAG usetix customers contacts delete --json type=bool
+FLAG usetix customers contacts delete --order type=string
+FLAG usetix customers contacts delete --profile type=string
+FLAG usetix customers contacts delete --quiet type=bool
+FLAG usetix customers contacts delete --styled type=bool
+FLAG usetix customers contacts delete --yes type=bool
 FLAG usetix customers contacts list --agent type=bool
 FLAG usetix customers contacts list --api-url type=string
 FLAG usetix customers contacts list --count type=bool
@@ -211,6 +254,19 @@ FLAG usetix customers contacts show --json type=bool
 FLAG usetix customers contacts show --profile type=string
 FLAG usetix customers contacts show --quiet type=bool
 FLAG usetix customers contacts show --styled type=bool
+FLAG usetix customers contacts update --agent type=bool
+FLAG usetix customers contacts update --api-url type=string
+FLAG usetix customers contacts update --count type=bool
+FLAG usetix customers contacts update --event type=string
+FLAG usetix customers contacts update --ids-only type=bool
+FLAG usetix customers contacts update --json type=bool
+FLAG usetix customers contacts update --kind type=string
+FLAG usetix customers contacts update --note type=string
+FLAG usetix customers contacts update --occurred-at type=string
+FLAG usetix customers contacts update --order type=string
+FLAG usetix customers contacts update --profile type=string
+FLAG usetix customers contacts update --quiet type=bool
+FLAG usetix customers contacts update --styled type=bool
 FLAG usetix events --agent type=bool
 FLAG usetix events --api-url type=string
 FLAG usetix events --count type=bool
@@ -219,8 +275,18 @@ FLAG usetix events --json type=bool
 FLAG usetix events --profile type=string
 FLAG usetix events --quiet type=bool
 FLAG usetix events --styled type=bool
+FLAG usetix events arrivals --agent type=bool
+FLAG usetix events arrivals --api-url type=string
+FLAG usetix events arrivals --count type=bool
+FLAG usetix events arrivals --ids-only type=bool
+FLAG usetix events arrivals --intervals type=bool
+FLAG usetix events arrivals --json type=bool
+FLAG usetix events arrivals --profile type=string
+FLAG usetix events arrivals --quiet type=bool
+FLAG usetix events arrivals --styled type=bool
 FLAG usetix events create --agent type=bool
 FLAG usetix events create --api-url type=string
+FLAG usetix events create --attendee-note type=string
 FLAG usetix events create --capacity type=int
 FLAG usetix events create --count type=bool
 FLAG usetix events create --description type=string
@@ -249,6 +315,116 @@ FLAG usetix events delete --profile type=string
 FLAG usetix events delete --quiet type=bool
 FLAG usetix events delete --styled type=bool
 FLAG usetix events delete --yes type=bool
+FLAG usetix events duplicate --agent type=bool
+FLAG usetix events duplicate --api-url type=string
+FLAG usetix events duplicate --count type=bool
+FLAG usetix events duplicate --ids-only type=bool
+FLAG usetix events duplicate --json type=bool
+FLAG usetix events duplicate --profile type=string
+FLAG usetix events duplicate --quiet type=bool
+FLAG usetix events duplicate --styled type=bool
+FLAG usetix events guest-list --agent type=bool
+FLAG usetix events guest-list --api-url type=string
+FLAG usetix events guest-list --count type=bool
+FLAG usetix events guest-list --ids-only type=bool
+FLAG usetix events guest-list --json type=bool
+FLAG usetix events guest-list --profile type=string
+FLAG usetix events guest-list --quiet type=bool
+FLAG usetix events guest-list --styled type=bool
+FLAG usetix events guest-list approve --agent type=bool
+FLAG usetix events guest-list approve --api-url type=string
+FLAG usetix events guest-list approve --count type=bool
+FLAG usetix events guest-list approve --ids-only type=bool
+FLAG usetix events guest-list approve --json type=bool
+FLAG usetix events guest-list approve --profile type=string
+FLAG usetix events guest-list approve --quiet type=bool
+FLAG usetix events guest-list approve --styled type=bool
+FLAG usetix events guest-list approve --yes type=bool
+FLAG usetix events guest-list configure --agent type=bool
+FLAG usetix events guest-list configure --api-url type=string
+FLAG usetix events guest-list configure --approval-mode type=string
+FLAG usetix events guest-list configure --capacity type=int
+FLAG usetix events guest-list configure --count type=bool
+FLAG usetix events guest-list configure --enabled type=bool
+FLAG usetix events guest-list configure --form-id type=string
+FLAG usetix events guest-list configure --ids-only type=bool
+FLAG usetix events guest-list configure --json type=bool
+FLAG usetix events guest-list configure --max-companions type=int
+FLAG usetix events guest-list configure --name type=string
+FLAG usetix events guest-list configure --profile type=string
+FLAG usetix events guest-list configure --quiet type=bool
+FLAG usetix events guest-list configure --standing-pool-id type=int64
+FLAG usetix events guest-list configure --styled type=bool
+FLAG usetix events guest-list configure --ticket-id type=int64
+FLAG usetix events guest-list create --agent type=bool
+FLAG usetix events guest-list create --api-url type=string
+FLAG usetix events guest-list create --approval-mode type=string
+FLAG usetix events guest-list create --capacity type=int
+FLAG usetix events guest-list create --count type=bool
+FLAG usetix events guest-list create --enabled type=bool
+FLAG usetix events guest-list create --ids-only type=bool
+FLAG usetix events guest-list create --json type=bool
+FLAG usetix events guest-list create --max-companions type=int
+FLAG usetix events guest-list create --name type=string
+FLAG usetix events guest-list create --profile type=string
+FLAG usetix events guest-list create --quiet type=bool
+FLAG usetix events guest-list create --standing-pool-id type=int64
+FLAG usetix events guest-list create --styled type=bool
+FLAG usetix events guest-list create --ticket-id type=int64
+FLAG usetix events guest-list form --agent type=bool
+FLAG usetix events guest-list form --api-url type=string
+FLAG usetix events guest-list form --count type=bool
+FLAG usetix events guest-list form --form-id type=string
+FLAG usetix events guest-list form --ids-only type=bool
+FLAG usetix events guest-list form --json type=bool
+FLAG usetix events guest-list form --profile type=string
+FLAG usetix events guest-list form --quiet type=bool
+FLAG usetix events guest-list form --styled type=bool
+FLAG usetix events guest-list forms --agent type=bool
+FLAG usetix events guest-list forms --api-url type=string
+FLAG usetix events guest-list forms --count type=bool
+FLAG usetix events guest-list forms --ids-only type=bool
+FLAG usetix events guest-list forms --json type=bool
+FLAG usetix events guest-list forms --profile type=string
+FLAG usetix events guest-list forms --quiet type=bool
+FLAG usetix events guest-list forms --styled type=bool
+FLAG usetix events guest-list reject --agent type=bool
+FLAG usetix events guest-list reject --api-url type=string
+FLAG usetix events guest-list reject --count type=bool
+FLAG usetix events guest-list reject --ids-only type=bool
+FLAG usetix events guest-list reject --json type=bool
+FLAG usetix events guest-list reject --profile type=string
+FLAG usetix events guest-list reject --quiet type=bool
+FLAG usetix events guest-list reject --styled type=bool
+FLAG usetix events guest-list reject --yes type=bool
+FLAG usetix events guest-list requests --agent type=bool
+FLAG usetix events guest-list requests --api-url type=string
+FLAG usetix events guest-list requests --count type=bool
+FLAG usetix events guest-list requests --form-id type=string
+FLAG usetix events guest-list requests --ids-only type=bool
+FLAG usetix events guest-list requests --json type=bool
+FLAG usetix events guest-list requests --page type=int
+FLAG usetix events guest-list requests --profile type=string
+FLAG usetix events guest-list requests --quiet type=bool
+FLAG usetix events guest-list requests --status type=string
+FLAG usetix events guest-list requests --styled type=bool
+FLAG usetix events guest-list rotate --agent type=bool
+FLAG usetix events guest-list rotate --api-url type=string
+FLAG usetix events guest-list rotate --count type=bool
+FLAG usetix events guest-list rotate --ids-only type=bool
+FLAG usetix events guest-list rotate --json type=bool
+FLAG usetix events guest-list rotate --profile type=string
+FLAG usetix events guest-list rotate --quiet type=bool
+FLAG usetix events guest-list rotate --styled type=bool
+FLAG usetix events guest-list rotate --yes type=bool
+FLAG usetix events invite-co-organizer --agent type=bool
+FLAG usetix events invite-co-organizer --api-url type=string
+FLAG usetix events invite-co-organizer --count type=bool
+FLAG usetix events invite-co-organizer --ids-only type=bool
+FLAG usetix events invite-co-organizer --json type=bool
+FLAG usetix events invite-co-organizer --profile type=string
+FLAG usetix events invite-co-organizer --quiet type=bool
+FLAG usetix events invite-co-organizer --styled type=bool
 FLAG usetix events list --agent type=bool
 FLAG usetix events list --api-url type=string
 FLAG usetix events list --count type=bool
@@ -295,6 +471,7 @@ FLAG usetix events unpublish --quiet type=bool
 FLAG usetix events unpublish --styled type=bool
 FLAG usetix events update --agent type=bool
 FLAG usetix events update --api-url type=string
+FLAG usetix events update --attendee-note type=string
 FLAG usetix events update --capacity type=int
 FLAG usetix events update --count type=bool
 FLAG usetix events update --description type=string
@@ -422,6 +599,98 @@ FLAG usetix profile use --json type=bool
 FLAG usetix profile use --profile type=string
 FLAG usetix profile use --quiet type=bool
 FLAG usetix profile use --styled type=bool
+FLAG usetix promo-codes --agent type=bool
+FLAG usetix promo-codes --api-url type=string
+FLAG usetix promo-codes --count type=bool
+FLAG usetix promo-codes --ids-only type=bool
+FLAG usetix promo-codes --json type=bool
+FLAG usetix promo-codes --profile type=string
+FLAG usetix promo-codes --quiet type=bool
+FLAG usetix promo-codes --styled type=bool
+FLAG usetix promo-codes create --agent type=bool
+FLAG usetix promo-codes create --api-url type=string
+FLAG usetix promo-codes create --code type=string
+FLAG usetix promo-codes create --count type=bool
+FLAG usetix promo-codes create --discount-amount type=string
+FLAG usetix promo-codes create --discount-type type=string
+FLAG usetix promo-codes create --event type=string
+FLAG usetix promo-codes create --expires-at type=string
+FLAG usetix promo-codes create --ids-only type=bool
+FLAG usetix promo-codes create --json type=bool
+FLAG usetix promo-codes create --max-per-customer type=int
+FLAG usetix promo-codes create --profile type=string
+FLAG usetix promo-codes create --promoter type=int64
+FLAG usetix promo-codes create --quiet type=bool
+FLAG usetix promo-codes create --styled type=bool
+FLAG usetix promo-codes create --usage-limit type=int
+FLAG usetix promo-codes deactivate --agent type=bool
+FLAG usetix promo-codes deactivate --api-url type=string
+FLAG usetix promo-codes deactivate --count type=bool
+FLAG usetix promo-codes deactivate --ids-only type=bool
+FLAG usetix promo-codes deactivate --json type=bool
+FLAG usetix promo-codes deactivate --profile type=string
+FLAG usetix promo-codes deactivate --quiet type=bool
+FLAG usetix promo-codes deactivate --styled type=bool
+FLAG usetix promo-codes deactivate --yes type=bool
+FLAG usetix promo-codes list --agent type=bool
+FLAG usetix promo-codes list --api-url type=string
+FLAG usetix promo-codes list --count type=bool
+FLAG usetix promo-codes list --ids-only type=bool
+FLAG usetix promo-codes list --json type=bool
+FLAG usetix promo-codes list --profile type=string
+FLAG usetix promo-codes list --quiet type=bool
+FLAG usetix promo-codes list --styled type=bool
+FLAG usetix promo-codes reactivate --agent type=bool
+FLAG usetix promo-codes reactivate --api-url type=string
+FLAG usetix promo-codes reactivate --count type=bool
+FLAG usetix promo-codes reactivate --ids-only type=bool
+FLAG usetix promo-codes reactivate --json type=bool
+FLAG usetix promo-codes reactivate --profile type=string
+FLAG usetix promo-codes reactivate --quiet type=bool
+FLAG usetix promo-codes reactivate --styled type=bool
+FLAG usetix promo-codes reactivate --yes type=bool
+FLAG usetix promo-codes show --agent type=bool
+FLAG usetix promo-codes show --api-url type=string
+FLAG usetix promo-codes show --count type=bool
+FLAG usetix promo-codes show --ids-only type=bool
+FLAG usetix promo-codes show --json type=bool
+FLAG usetix promo-codes show --profile type=string
+FLAG usetix promo-codes show --quiet type=bool
+FLAG usetix promo-codes show --styled type=bool
+FLAG usetix promo-codes update --agent type=bool
+FLAG usetix promo-codes update --api-url type=string
+FLAG usetix promo-codes update --code type=string
+FLAG usetix promo-codes update --count type=bool
+FLAG usetix promo-codes update --discount-amount type=string
+FLAG usetix promo-codes update --discount-type type=string
+FLAG usetix promo-codes update --event type=string
+FLAG usetix promo-codes update --expires-at type=string
+FLAG usetix promo-codes update --ids-only type=bool
+FLAG usetix promo-codes update --json type=bool
+FLAG usetix promo-codes update --max-per-customer type=int
+FLAG usetix promo-codes update --profile type=string
+FLAG usetix promo-codes update --promoter type=int64
+FLAG usetix promo-codes update --quiet type=bool
+FLAG usetix promo-codes update --styled type=bool
+FLAG usetix promo-codes update --usage-limit type=int
+FLAG usetix promoters --agent type=bool
+FLAG usetix promoters --api-url type=string
+FLAG usetix promoters --count type=bool
+FLAG usetix promoters --ids-only type=bool
+FLAG usetix promoters --json type=bool
+FLAG usetix promoters --profile type=string
+FLAG usetix promoters --quiet type=bool
+FLAG usetix promoters --styled type=bool
+FLAG usetix promoters list --agent type=bool
+FLAG usetix promoters list --api-url type=string
+FLAG usetix promoters list --count type=bool
+FLAG usetix promoters list --event type=string
+FLAG usetix promoters list --ids-only type=bool
+FLAG usetix promoters list --json type=bool
+FLAG usetix promoters list --period type=string
+FLAG usetix promoters list --profile type=string
+FLAG usetix promoters list --quiet type=bool
+FLAG usetix promoters list --styled type=bool
 FLAG usetix tasks --agent type=bool
 FLAG usetix tasks --api-url type=string
 FLAG usetix tasks --count type=bool
@@ -543,6 +812,86 @@ FLAG usetix tasks update --quiet type=bool
 FLAG usetix tasks update --status type=string
 FLAG usetix tasks update --styled type=bool
 FLAG usetix tasks update --title type=string
+FLAG usetix team --agent type=bool
+FLAG usetix team --api-url type=string
+FLAG usetix team --count type=bool
+FLAG usetix team --ids-only type=bool
+FLAG usetix team --json type=bool
+FLAG usetix team --profile type=string
+FLAG usetix team --quiet type=bool
+FLAG usetix team --styled type=bool
+FLAG usetix team access --agent type=bool
+FLAG usetix team access --api-url type=string
+FLAG usetix team access --clear-events type=bool
+FLAG usetix team access --count type=bool
+FLAG usetix team access --event type=stringArray
+FLAG usetix team access --ids-only type=bool
+FLAG usetix team access --json type=bool
+FLAG usetix team access --profile type=string
+FLAG usetix team access --quiet type=bool
+FLAG usetix team access --role type=string
+FLAG usetix team access --styled type=bool
+FLAG usetix team access --yes type=bool
+FLAG usetix team deactivate --agent type=bool
+FLAG usetix team deactivate --api-url type=string
+FLAG usetix team deactivate --count type=bool
+FLAG usetix team deactivate --ids-only type=bool
+FLAG usetix team deactivate --json type=bool
+FLAG usetix team deactivate --profile type=string
+FLAG usetix team deactivate --quiet type=bool
+FLAG usetix team deactivate --styled type=bool
+FLAG usetix team deactivate --yes type=bool
+FLAG usetix team invitations --agent type=bool
+FLAG usetix team invitations --api-url type=string
+FLAG usetix team invitations --count type=bool
+FLAG usetix team invitations --ids-only type=bool
+FLAG usetix team invitations --json type=bool
+FLAG usetix team invitations --profile type=string
+FLAG usetix team invitations --quiet type=bool
+FLAG usetix team invitations --styled type=bool
+FLAG usetix team invitations resend --agent type=bool
+FLAG usetix team invitations resend --api-url type=string
+FLAG usetix team invitations resend --count type=bool
+FLAG usetix team invitations resend --ids-only type=bool
+FLAG usetix team invitations resend --json type=bool
+FLAG usetix team invitations resend --profile type=string
+FLAG usetix team invitations resend --quiet type=bool
+FLAG usetix team invitations resend --styled type=bool
+FLAG usetix team invitations revoke --agent type=bool
+FLAG usetix team invitations revoke --api-url type=string
+FLAG usetix team invitations revoke --count type=bool
+FLAG usetix team invitations revoke --ids-only type=bool
+FLAG usetix team invitations revoke --json type=bool
+FLAG usetix team invitations revoke --profile type=string
+FLAG usetix team invitations revoke --quiet type=bool
+FLAG usetix team invitations revoke --styled type=bool
+FLAG usetix team invitations revoke --yes type=bool
+FLAG usetix team invite --agent type=bool
+FLAG usetix team invite --api-url type=string
+FLAG usetix team invite --count type=bool
+FLAG usetix team invite --event type=stringArray
+FLAG usetix team invite --ids-only type=bool
+FLAG usetix team invite --json type=bool
+FLAG usetix team invite --profile type=string
+FLAG usetix team invite --quiet type=bool
+FLAG usetix team invite --role type=string
+FLAG usetix team invite --styled type=bool
+FLAG usetix team list --agent type=bool
+FLAG usetix team list --api-url type=string
+FLAG usetix team list --count type=bool
+FLAG usetix team list --ids-only type=bool
+FLAG usetix team list --json type=bool
+FLAG usetix team list --profile type=string
+FLAG usetix team list --quiet type=bool
+FLAG usetix team list --styled type=bool
+FLAG usetix team reactivate --agent type=bool
+FLAG usetix team reactivate --api-url type=string
+FLAG usetix team reactivate --count type=bool
+FLAG usetix team reactivate --ids-only type=bool
+FLAG usetix team reactivate --json type=bool
+FLAG usetix team reactivate --profile type=string
+FLAG usetix team reactivate --quiet type=bool
+FLAG usetix team reactivate --styled type=bool
 FLAG usetix version --agent type=bool
 FLAG usetix version --api-url type=string
 FLAG usetix version --count type=bool
@@ -740,12 +1089,26 @@ SUB usetix auth status
 SUB usetix completion
 SUB usetix customers
 SUB usetix customers contacts
+SUB usetix customers contacts delete
 SUB usetix customers contacts list
 SUB usetix customers contacts log
 SUB usetix customers contacts show
+SUB usetix customers contacts update
 SUB usetix events
+SUB usetix events arrivals
 SUB usetix events create
 SUB usetix events delete
+SUB usetix events duplicate
+SUB usetix events guest-list
+SUB usetix events guest-list approve
+SUB usetix events guest-list configure
+SUB usetix events guest-list create
+SUB usetix events guest-list form
+SUB usetix events guest-list forms
+SUB usetix events guest-list reject
+SUB usetix events guest-list requests
+SUB usetix events guest-list rotate
+SUB usetix events invite-co-organizer
 SUB usetix events list
 SUB usetix events open-answers
 SUB usetix events publish
@@ -764,6 +1127,15 @@ SUB usetix profile create
 SUB usetix profile delete
 SUB usetix profile list
 SUB usetix profile use
+SUB usetix promo-codes
+SUB usetix promo-codes create
+SUB usetix promo-codes deactivate
+SUB usetix promo-codes list
+SUB usetix promo-codes reactivate
+SUB usetix promo-codes show
+SUB usetix promo-codes update
+SUB usetix promoters
+SUB usetix promoters list
 SUB usetix tasks
 SUB usetix tasks archive
 SUB usetix tasks comment
@@ -776,6 +1148,15 @@ SUB usetix tasks people
 SUB usetix tasks restore
 SUB usetix tasks show
 SUB usetix tasks update
+SUB usetix team
+SUB usetix team access
+SUB usetix team deactivate
+SUB usetix team invitations
+SUB usetix team invitations resend
+SUB usetix team invitations revoke
+SUB usetix team invite
+SUB usetix team list
+SUB usetix team reactivate
 SUB usetix version
 SUB usetix vouchers
 SUB usetix vouchers adjust

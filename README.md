@@ -66,11 +66,15 @@ usetix events show summer-festival
 usetix events create --title "Summer Festival" --venue-id 7 \
   --starts-at 2026-07-01T18:00:00Z --ends-at 2026-07-01T23:00:00Z \
   --sales-ends-at 2026-07-01T18:00:00Z
+usetix events update summer-festival --attendee-note "Bring your ID to the entrance"
+usetix events update summer-festival --attendee-note "" # Clear the note
 usetix events update summer-festival --listed=false
 usetix events publish summer-festival
 usetix events unpublish summer-festival
 usetix events delete summer-festival --yes
 usetix events open-answers summer-festival --status uncontacted
+usetix events guest-list form summer-festival
+usetix events guest-list requests summer-festival
 
 usetix customers contacts list 17
 usetix customers contacts show 17 91
@@ -119,7 +123,10 @@ or `failed`.
 
 `orders show` prints commercial product lines separately from ticket admissions,
 so mixed ticket and voucher orders remain understandable. Order search also
-accepts voucher-purchase IDs and voucher codes.
+accepts voucher-purchase IDs and voucher codes. The detail output also shows the
+customer order link. JSON order objects include `shop_url` in both list and
+detail responses when provided by the server. This link opens that entire
+order without login; share it only with the buyer.
 
 `events open-answers` is the follow-up worklist for required checkout answers.
 Customer interactions use `customers contacts`; an internal `note` stays in the
@@ -186,6 +193,44 @@ authorization, rate-limit, network, and API failures.
 
 Generate shell completion with `usetix completion bash`, `zsh`, `fish`, or
 `powershell`.
+
+## Guest-list signup links
+
+Use one shared link for an account-free form with name, email, optional company
+and companions. Inspect eligible ticket IDs and standing pools with
+`usetix api GET /admin/events/summer-festival/guest_list`, then configure the link:
+
+```sh
+usetix events guest-list create summer-festival \
+  --ticket-id 42 --enabled --approval-mode manual --max-companions 2 --capacity 50
+usetix events guest-list forms summer-festival --json
+usetix events guest-list form summer-festival --form-id FORM_ID --json
+usetix events guest-list requests summer-festival
+usetix events guest-list requests summer-festival --status approved --page 2 --json
+usetix events guest-list approve summer-festival REQUEST_ID --yes
+usetix events guest-list reject summer-festival REQUEST_ID --yes
+usetix events guest-list configure summer-festival --form-id FORM_ID --enabled=false
+usetix events guest-list rotate summer-festival FORM_ID --yes
+```
+
+Use `create` for another link with its own ticket and quota; new links are enabled by default. Pass `--name Press` for an internal label or `--enabled=false` to create a closed link. `forms` returns stable IDs; select one with `--form-id` for `form`, `configure` and optionally `requests`. `rotate SLUG FORM_ID --yes` invalidates only that public URL and returns its replacement; settings, requests and issued tickets remain valid. Without `--form-id`, legacy `form`/`configure` work only while an event has at most one link; multiple links return `409`.
+
+`manual` requires organizer review; `automatic` emails complimentary QR tickets
+for new valid signups immediately. Pending requests reserve no places. Approval
+checks the link capacity and real ticket inventory, and sends one ticket per
+person. Repeating approval does not resend tickets. Rejection sends no email.
+
+Only supplied configuration flags are changed. `--enabled=false` stops new
+signups while preserving requests and tickets. `--max-companions 0` removes
+companions; `--standing-pool-id 0` clears the standing pool. The event and shop
+must be published. Signup links support standard GA and standing tickets;
+numbered seats use the existing manual guest-list workflow.
+
+Requests return 25 per page. Pass the numeric `next_page` value to `--page` until
+it is null. `--count` and `--ids-only` describe the current page; JSON also
+includes the `pending_count` for the selected link (or the whole event without a filter). Review uses the exact `public_id` from
+the request list. Reads require a read token; configuration and review need a
+write token and follow current co-organizer event assignments.
 
 ## Development
 
@@ -282,3 +327,81 @@ Usetix Bearer token to storage. Embed the returned `attachable_sgid` in
 `tasks update --description` or `tasks comment --body`.
 
 See the [Tasks API](https://www.usetix.io/docs/api/tasks/) for the upload contract.
+
+## Correcting customer interactions
+
+Correct or remove manually recorded interactions:
+
+```sh
+usetix customers contacts update 17 91 --note "Corrected call summary"
+usetix customers contacts update 17 91 --kind phone_call_received --occurred-at 2026-09-08T12:00:00Z
+usetix customers contacts delete 17 91 --yes
+```
+
+Updates preserve omitted fields. Automatically recorded announcement deliveries
+are read-only (`editable: false`). `updated_at` records the last change.
+
+Co-organizers supply `--event SLUG --order ORDER_CODE` on update and delete commands.
+
+## Team and external co-organizers
+
+```sh
+usetix events invite-co-organizer friday-night promoter@example.com
+usetix team list
+usetix team invite promoter@example.com --event friday-night --event saturday-night
+usetix team access 42 --event saturday-night
+usetix team access 42 --clear-events --yes
+usetix team deactivate 42 --yes
+usetix team reactivate 42
+usetix team invitations resend 81
+usetix team invitations revoke 81 --yes
+usetix events duplicate friday-night
+```
+
+`team access` replaces the complete event assignment. Roles are `scanner`, `manager`, `co_organizer`, or `promoter`. Team commands require venue access; external co-organizers create personal tokens under API Tokens in their dashboard sidebar and use the existing `usetix auth login`. Event commands and direct API requests then follow their current event assignments. Personal tokens cannot access the account-wide team, customer directory, refunds, shop/payment settings, or scanner.
+
+The event JSON includes `media` with gallery IDs and order. Upload files through the existing direct-upload API and use `usetix api PATCH /admin/events/SLUG --data @event.json` for gallery, artwork, video and document changes.
+
+### Promoters and promo codes
+
+```sh
+usetix team invite lisa@example.com --role promoter
+usetix team list
+# After Lisa accepts, use her membership ID:
+usetix promo-codes create --code LISA --promoter 42 --event summer-night
+usetix promo-codes list
+usetix promo-codes show 17
+usetix promo-codes update 17 --discount-amount 10
+usetix promoters list --event summer-night --period month
+usetix promoters list --json
+usetix promo-codes deactivate 17 --yes
+usetix promo-codes reactivate 17 --yes
+```
+
+New codes default to 0%: sales are attributed without changing the ticket price.
+Omit `--event` for a shop-wide code. Updates preserve omitted fields; use
+`--promoter 0` or `--event ''` to clear an unused assignment. Once a code has a
+reservation or sale, the server locks its event and promoter assignment.
+`--expires-at ''`, `--usage-limit 0`, and `--max-per-customer 0` clear those limits.
+
+Promoter reports support `today`, `week`, `month`, `year`, and `all` (default),
+based on purchase time in the account timezone. Revenue reflects completed
+refunds and follows the event report; no commissions or payouts are calculated.
+Owners/managers manage promoters and assignments through their existing tokens.
+Promoters themselves use their read-only web dashboard and receive no API/CLI
+or MCP access. Invite promoters without `--event`; events belong on their codes.
+
+## Admission and arrivals
+
+Read event check-ins from the local admission day onwards, including historical reports:
+
+```sh
+usetix events arrivals club-night
+usetix events arrivals club-night --intervals
+usetix events arrivals club-night --json
+usetix events arrivals club-night --count
+```
+
+The summary includes redemption rate, recorded check-ins, outstanding admissions and the busiest interval. `--intervals` adds chronological buckets to human-readable output in the venue timezone, with UTC offsets. `--json` always includes all intervals in the normal `data` envelope; `--count` prints recorded check-ins. Each invocation reads once. Read tokens work, including personal co-organizer tokens for currently assigned events. Group members and guest-list admissions are counted individually. This is check-in history, not current occupancy or an attendance forecast.
+
+See the [event arrivals API reference](https://usetix.io/docs/api/event-arrivals/).
