@@ -18,6 +18,7 @@ Typed coverage will grow where it materially improves daily use.
 | Documented area | Typed command | Direct access | Status |
 |---|---|---|---|
 | Authentication | `auth login`, `auth status`, `auth logout` | n/a | Local token validation and storage are typed; server token creation/revocation remains in Settings |
+| Shared tasks | `tasks list/show/people/create/update/move/comments/comment/archive/restore/delete` | `api ... /admin/tasks...`, `/admin/task_assignees`, `/admin/task_uploads...` | Typed for board filters, assignments, due dates, rich text, comments, ordering, versions and archives; private upload metadata/downloads are direct, storage PUT is an external HTTP step |
 | Events | `events list/show/open-answers/create/update/delete/publish/unpublish` | `api ... /admin/events...` | Typed for event lifecycle, post-purchase attendee notes, and missing-answer follow-up; fee policy and image attachments are direct |
 | Admission and arrivals | `events arrivals SLUG` | `api GET /admin/events/:slug/arrivals` | Typed totals, redemption rate, peak and chronological intervals; read-only, including assigned events for co-organizers |
 | Venues | — | `api ... /admin/venues...` | Direct |

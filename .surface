@@ -65,6 +65,18 @@ CMD usetix promo-codes show
 CMD usetix promo-codes update
 CMD usetix promoters
 CMD usetix promoters list
+CMD usetix tasks
+CMD usetix tasks archive
+CMD usetix tasks comment
+CMD usetix tasks comments
+CMD usetix tasks create
+CMD usetix tasks delete
+CMD usetix tasks list
+CMD usetix tasks move
+CMD usetix tasks people
+CMD usetix tasks restore
+CMD usetix tasks show
+CMD usetix tasks update
 CMD usetix team
 CMD usetix team access
 CMD usetix team deactivate
@@ -748,6 +760,127 @@ FLAG usetix promoters list --period type=string
 FLAG usetix promoters list --profile type=string
 FLAG usetix promoters list --quiet type=bool
 FLAG usetix promoters list --styled type=bool
+FLAG usetix tasks --agent type=bool
+FLAG usetix tasks --api-url type=string
+FLAG usetix tasks --count type=bool
+FLAG usetix tasks --ids-only type=bool
+FLAG usetix tasks --json type=bool
+FLAG usetix tasks --profile type=string
+FLAG usetix tasks --quiet type=bool
+FLAG usetix tasks --styled type=bool
+FLAG usetix tasks archive --agent type=bool
+FLAG usetix tasks archive --api-url type=string
+FLAG usetix tasks archive --count type=bool
+FLAG usetix tasks archive --ids-only type=bool
+FLAG usetix tasks archive --json type=bool
+FLAG usetix tasks archive --lock-version type=int
+FLAG usetix tasks archive --profile type=string
+FLAG usetix tasks archive --quiet type=bool
+FLAG usetix tasks archive --styled type=bool
+FLAG usetix tasks comment --agent type=bool
+FLAG usetix tasks comment --api-url type=string
+FLAG usetix tasks comment --body type=string
+FLAG usetix tasks comment --count type=bool
+FLAG usetix tasks comment --ids-only type=bool
+FLAG usetix tasks comment --json type=bool
+FLAG usetix tasks comment --profile type=string
+FLAG usetix tasks comment --quiet type=bool
+FLAG usetix tasks comment --styled type=bool
+FLAG usetix tasks comments --agent type=bool
+FLAG usetix tasks comments --api-url type=string
+FLAG usetix tasks comments --count type=bool
+FLAG usetix tasks comments --ids-only type=bool
+FLAG usetix tasks comments --json type=bool
+FLAG usetix tasks comments --profile type=string
+FLAG usetix tasks comments --quiet type=bool
+FLAG usetix tasks comments --styled type=bool
+FLAG usetix tasks create --agent type=bool
+FLAG usetix tasks create --api-url type=string
+FLAG usetix tasks create --assignee type=string
+FLAG usetix tasks create --count type=bool
+FLAG usetix tasks create --description type=string
+FLAG usetix tasks create --due type=string
+FLAG usetix tasks create --event type=string
+FLAG usetix tasks create --ids-only type=bool
+FLAG usetix tasks create --json type=bool
+FLAG usetix tasks create --profile type=string
+FLAG usetix tasks create --quiet type=bool
+FLAG usetix tasks create --status type=string
+FLAG usetix tasks create --styled type=bool
+FLAG usetix tasks create --title type=string
+FLAG usetix tasks delete --agent type=bool
+FLAG usetix tasks delete --api-url type=string
+FLAG usetix tasks delete --count type=bool
+FLAG usetix tasks delete --ids-only type=bool
+FLAG usetix tasks delete --json type=bool
+FLAG usetix tasks delete --profile type=string
+FLAG usetix tasks delete --quiet type=bool
+FLAG usetix tasks delete --styled type=bool
+FLAG usetix tasks delete --yes type=bool
+FLAG usetix tasks list --agent type=bool
+FLAG usetix tasks list --api-url type=string
+FLAG usetix tasks list --archived type=bool
+FLAG usetix tasks list --assignee type=string
+FLAG usetix tasks list --count type=bool
+FLAG usetix tasks list --event type=string
+FLAG usetix tasks list --hide-done type=bool
+FLAG usetix tasks list --ids-only type=bool
+FLAG usetix tasks list --json type=bool
+FLAG usetix tasks list --profile type=string
+FLAG usetix tasks list --quiet type=bool
+FLAG usetix tasks list --styled type=bool
+FLAG usetix tasks move --agent type=bool
+FLAG usetix tasks move --api-url type=string
+FLAG usetix tasks move --before type=string
+FLAG usetix tasks move --count type=bool
+FLAG usetix tasks move --ids-only type=bool
+FLAG usetix tasks move --json type=bool
+FLAG usetix tasks move --lock-version type=int
+FLAG usetix tasks move --profile type=string
+FLAG usetix tasks move --quiet type=bool
+FLAG usetix tasks move --status type=string
+FLAG usetix tasks move --styled type=bool
+FLAG usetix tasks people --agent type=bool
+FLAG usetix tasks people --api-url type=string
+FLAG usetix tasks people --count type=bool
+FLAG usetix tasks people --event type=string
+FLAG usetix tasks people --ids-only type=bool
+FLAG usetix tasks people --json type=bool
+FLAG usetix tasks people --profile type=string
+FLAG usetix tasks people --quiet type=bool
+FLAG usetix tasks people --styled type=bool
+FLAG usetix tasks restore --agent type=bool
+FLAG usetix tasks restore --api-url type=string
+FLAG usetix tasks restore --count type=bool
+FLAG usetix tasks restore --ids-only type=bool
+FLAG usetix tasks restore --json type=bool
+FLAG usetix tasks restore --lock-version type=int
+FLAG usetix tasks restore --profile type=string
+FLAG usetix tasks restore --quiet type=bool
+FLAG usetix tasks restore --styled type=bool
+FLAG usetix tasks show --agent type=bool
+FLAG usetix tasks show --api-url type=string
+FLAG usetix tasks show --count type=bool
+FLAG usetix tasks show --ids-only type=bool
+FLAG usetix tasks show --json type=bool
+FLAG usetix tasks show --profile type=string
+FLAG usetix tasks show --quiet type=bool
+FLAG usetix tasks show --styled type=bool
+FLAG usetix tasks update --agent type=bool
+FLAG usetix tasks update --api-url type=string
+FLAG usetix tasks update --assignee type=string
+FLAG usetix tasks update --count type=bool
+FLAG usetix tasks update --description type=string
+FLAG usetix tasks update --due type=string
+FLAG usetix tasks update --event type=string
+FLAG usetix tasks update --ids-only type=bool
+FLAG usetix tasks update --json type=bool
+FLAG usetix tasks update --lock-version type=int
+FLAG usetix tasks update --profile type=string
+FLAG usetix tasks update --quiet type=bool
+FLAG usetix tasks update --status type=string
+FLAG usetix tasks update --styled type=bool
+FLAG usetix tasks update --title type=string
 FLAG usetix team --agent type=bool
 FLAG usetix team --api-url type=string
 FLAG usetix team --count type=bool
@@ -1079,6 +1212,18 @@ SUB usetix promo-codes show
 SUB usetix promo-codes update
 SUB usetix promoters
 SUB usetix promoters list
+SUB usetix tasks
+SUB usetix tasks archive
+SUB usetix tasks comment
+SUB usetix tasks comments
+SUB usetix tasks create
+SUB usetix tasks delete
+SUB usetix tasks list
+SUB usetix tasks move
+SUB usetix tasks people
+SUB usetix tasks restore
+SUB usetix tasks show
+SUB usetix tasks update
 SUB usetix team
 SUB usetix team access
 SUB usetix team deactivate
