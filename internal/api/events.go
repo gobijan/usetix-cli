@@ -12,9 +12,12 @@ type Money struct {
 }
 
 type Event struct {
-	ID    int64  `json:"id"`
-	Slug  string `json:"slug"`
-	Title string `json:"title"`
+	LoungesEnabled    *bool             `json:"lounges_enabled,omitempty"`
+	LoungeBookingMode string            `json:"lounge_booking_mode,omitempty"`
+	LoungeBookingFee  *LoungeBookingFee `json:"lounge_booking_fee,omitempty"`
+	ID                int64             `json:"id"`
+	Slug              string            `json:"slug"`
+	Title             string            `json:"title"`
 	// Description is raw for compatibility with older Usetix servers that
 	// serialized Action Text as an object instead of the documented string.
 	Description   json.RawMessage `json:"description"`

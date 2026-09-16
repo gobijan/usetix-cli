@@ -73,3 +73,12 @@ confirmation for destructive actions, and a direct mapping to an existing
 documented endpoint.
 
 Personal co-organizer tokens use the same authentication and event commands. They follow current membership/event access and cannot call account-wide team, scanner, refund or settings endpoints.
+
+## Lounge reservations
+
+Typed commands: `events lounges list`, `bookings`, `configure`, `accept`, `reject`, and `cancel`.
+Reviews require `--yes`; acceptance charges Credit immediately. The fee preview uses the current account price.
+Venue catalog CRUD, images and per-event price overrides use `usetix api` with the documented venue/event routes.
+See https://www.usetix.io/docs/api/lounges/. Lounge bookings do not issue admission tickets.
+
+Booking questions are configured in the dashboard.
