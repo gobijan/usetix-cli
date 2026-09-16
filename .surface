@@ -32,6 +32,13 @@ CMD usetix events guest-list requests
 CMD usetix events guest-list rotate
 CMD usetix events invite-co-organizer
 CMD usetix events list
+CMD usetix events lounges
+CMD usetix events lounges accept
+CMD usetix events lounges bookings
+CMD usetix events lounges cancel
+CMD usetix events lounges configure
+CMD usetix events lounges list
+CMD usetix events lounges reject
 CMD usetix events open-answers
 CMD usetix events publish
 CMD usetix events show
@@ -434,6 +441,68 @@ FLAG usetix events list --period type=string
 FLAG usetix events list --profile type=string
 FLAG usetix events list --quiet type=bool
 FLAG usetix events list --styled type=bool
+FLAG usetix events lounges --agent type=bool
+FLAG usetix events lounges --api-url type=string
+FLAG usetix events lounges --count type=bool
+FLAG usetix events lounges --ids-only type=bool
+FLAG usetix events lounges --json type=bool
+FLAG usetix events lounges --profile type=string
+FLAG usetix events lounges --quiet type=bool
+FLAG usetix events lounges --styled type=bool
+FLAG usetix events lounges accept --agent type=bool
+FLAG usetix events lounges accept --api-url type=string
+FLAG usetix events lounges accept --count type=bool
+FLAG usetix events lounges accept --ids-only type=bool
+FLAG usetix events lounges accept --json type=bool
+FLAG usetix events lounges accept --profile type=string
+FLAG usetix events lounges accept --quiet type=bool
+FLAG usetix events lounges accept --styled type=bool
+FLAG usetix events lounges accept --yes type=bool
+FLAG usetix events lounges bookings --agent type=bool
+FLAG usetix events lounges bookings --api-url type=string
+FLAG usetix events lounges bookings --count type=bool
+FLAG usetix events lounges bookings --ids-only type=bool
+FLAG usetix events lounges bookings --json type=bool
+FLAG usetix events lounges bookings --profile type=string
+FLAG usetix events lounges bookings --quiet type=bool
+FLAG usetix events lounges bookings --styled type=bool
+FLAG usetix events lounges cancel --agent type=bool
+FLAG usetix events lounges cancel --api-url type=string
+FLAG usetix events lounges cancel --count type=bool
+FLAG usetix events lounges cancel --ids-only type=bool
+FLAG usetix events lounges cancel --json type=bool
+FLAG usetix events lounges cancel --profile type=string
+FLAG usetix events lounges cancel --quiet type=bool
+FLAG usetix events lounges cancel --styled type=bool
+FLAG usetix events lounges cancel --yes type=bool
+FLAG usetix events lounges configure --agent type=bool
+FLAG usetix events lounges configure --api-url type=string
+FLAG usetix events lounges configure --booking-mode type=string
+FLAG usetix events lounges configure --count type=bool
+FLAG usetix events lounges configure --enabled type=bool
+FLAG usetix events lounges configure --ids-only type=bool
+FLAG usetix events lounges configure --json type=bool
+FLAG usetix events lounges configure --profile type=string
+FLAG usetix events lounges configure --quiet type=bool
+FLAG usetix events lounges configure --styled type=bool
+FLAG usetix events lounges configure --yes type=bool
+FLAG usetix events lounges list --agent type=bool
+FLAG usetix events lounges list --api-url type=string
+FLAG usetix events lounges list --count type=bool
+FLAG usetix events lounges list --ids-only type=bool
+FLAG usetix events lounges list --json type=bool
+FLAG usetix events lounges list --profile type=string
+FLAG usetix events lounges list --quiet type=bool
+FLAG usetix events lounges list --styled type=bool
+FLAG usetix events lounges reject --agent type=bool
+FLAG usetix events lounges reject --api-url type=string
+FLAG usetix events lounges reject --count type=bool
+FLAG usetix events lounges reject --ids-only type=bool
+FLAG usetix events lounges reject --json type=bool
+FLAG usetix events lounges reject --profile type=string
+FLAG usetix events lounges reject --quiet type=bool
+FLAG usetix events lounges reject --styled type=bool
+FLAG usetix events lounges reject --yes type=bool
 FLAG usetix events open-answers --agent type=bool
 FLAG usetix events open-answers --api-url type=string
 FLAG usetix events open-answers --count type=bool
@@ -1110,6 +1179,13 @@ SUB usetix events guest-list requests
 SUB usetix events guest-list rotate
 SUB usetix events invite-co-organizer
 SUB usetix events list
+SUB usetix events lounges
+SUB usetix events lounges accept
+SUB usetix events lounges bookings
+SUB usetix events lounges cancel
+SUB usetix events lounges configure
+SUB usetix events lounges list
+SUB usetix events lounges reject
 SUB usetix events open-answers
 SUB usetix events publish
 SUB usetix events show

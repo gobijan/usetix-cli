@@ -409,3 +409,19 @@ usetix events arrivals club-night --count
 The summary includes redemption rate, recorded check-ins, outstanding admissions and the busiest interval. `--intervals` adds chronological buckets to human-readable output in the venue timezone, with UTC offsets. `--json` always includes all intervals in the normal `data` envelope; `--count` prints recorded check-ins. Each invocation reads once. Read tokens work, including personal co-organizer tokens for currently assigned events. Group members and guest-list admissions are counted individually. This is check-in history, not current occupancy or an attendance forecast.
 
 See the [event arrivals API reference](https://usetix.io/docs/api/event-arrivals/).
+
+### Lounge bookings
+
+```sh
+usetix events lounges list club-night
+usetix events lounges bookings club-night --json
+usetix events lounges accept club-night BOOKING_ID   # previews the fee; no write
+usetix events lounges accept club-night BOOKING_ID --yes
+usetix events lounges configure club-night --enabled --booking-mode instant --yes
+usetix events lounges cancel club-night BOOKING_ID --yes
+```
+
+Confirmation immediately deducts the account's lounge fee plus VAT from Usetix Credit.
+The default is EUR 8 before VAT for euro accounts; account pricing may differ.
+Cancellations and no-shows never refund the fee. Minimum spend is paid at the venue; admission is separate.
+`--json` includes the current `booking_fee` and original booking `credit_fee`.
