@@ -2,10 +2,14 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strconv"
 )
 
+// GuestListForm is a signup link. CompanyField, PhoneField and
+// CompanionNamesField are hidden, optional or required; they and AsksQuestions
+// are omitted when a server predates them, so JSON output mirrors the response.
 type GuestListForm struct {
 	PublicID            *string `json:"public_id"`
 	Name                *string `json:"name"`
@@ -15,6 +19,10 @@ type GuestListForm struct {
 	EventCapacityPoolID *int64  `json:"event_capacity_pool_id"`
 	MaxCompanions       int     `json:"max_companions"`
 	Capacity            int     `json:"capacity"`
+	CompanyField        string  `json:"company_field,omitempty"`
+	PhoneField          string  `json:"phone_field,omitempty"`
+	CompanionNamesField string  `json:"companion_names_field,omitempty"`
+	AsksQuestions       *bool   `json:"asks_questions,omitempty"`
 	AdmissionCount      int     `json:"admission_count"`
 	RemainingCapacity   int     `json:"remaining_capacity"`
 	PublicURL           *string `json:"public_url"`
@@ -24,17 +32,50 @@ type GuestListFormsResponse struct {
 	Forms []GuestListForm `json:"forms"`
 }
 
+// GuestRequest is a signup. PartySize is the guest plus the companions of the
+// original signup; TotalPartySize also counts approved additions and is
+// omitted when a server predates it.
 type GuestRequest struct {
-	FormID        string  `json:"form_id"`
-	PublicID      string  `json:"public_id"`
-	Name          string  `json:"name"`
-	Email         string  `json:"email"`
-	Company       *string `json:"company"`
+	FormID          string                       `json:"form_id"`
+	PublicID        string                       `json:"public_id"`
+	Name            string                       `json:"name"`
+	Email           string                       `json:"email"`
+	Company         *string                      `json:"company"`
+	Phone           *string                      `json:"phone"`
+	Companions      int                          `json:"companions"`
+	CompanionNames  []string                     `json:"companion_names"`
+	Answers         []GuestRequestAnswer         `json:"answers"`
+	PartySize       int                          `json:"party_size"`
+	TotalPartySize  int                          `json:"total_party_size,omitempty"`
+	Status          string                       `json:"status"`
+	CreatedAt       string                       `json:"created_at"`
+	ReviewedAt      *string                      `json:"reviewed_at"`
+	OrderPublicID   *string                      `json:"order_public_id"`
+	PendingAddition *GuestRequestPendingAddition `json:"pending_addition"`
+	Additions       []GuestRequestAddition       `json:"additions"`
+}
+
+// GuestRequestAnswer is an order-level checkout answer. Value is kept as raw
+// JSON because its type follows the question: text, a checkbox boolean, a
+// number or a list of choices.
+type GuestRequestAnswer struct {
+	ID    int64           `json:"id"`
+	Label string          `json:"label"`
+	Type  string          `json:"type"`
+	Value json.RawMessage `json:"value"`
+}
+
+// GuestRequestPendingAddition holds companions a guest added after approval
+// that still await review.
+type GuestRequestPendingAddition struct {
+	Companions     int      `json:"companions"`
+	CompanionNames []string `json:"companion_names"`
+	CreatedAt      string   `json:"created_at"`
+}
+
+// GuestRequestAddition is an approved addition with its own complimentary order.
+type GuestRequestAddition struct {
 	Companions    int     `json:"companions"`
-	PartySize     int     `json:"party_size"`
-	Status        string  `json:"status"`
-	CreatedAt     string  `json:"created_at"`
-	ReviewedAt    *string `json:"reviewed_at"`
 	OrderPublicID *string `json:"order_public_id"`
 }
 

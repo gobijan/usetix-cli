@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/gobijan/usetix-cli/internal/api"
 	"github.com/gobijan/usetix-cli/internal/appctx"
@@ -42,14 +43,16 @@ func newGuestListForm(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newGuestListConfigure(runtime *appctx.Runtime, create bool) *cobra.Command {
-	var enabled bool
-	var mode, formID, name string
+	var enabled, asksQuestions bool
+	var mode, formID, name, company, phone, companionNames string
 	var ticketID, poolID int64
 	var companions, capacity int
 	command := &cobra.Command{
 		Use: "configure SLUG", Short: "Create or update a signup link", Args: cobra.ExactArgs(1),
-		Long: "Only supplied flags change settings. New links are enabled by default; --enabled=false closes a link and preserves existing requests and tickets. Select --form-id when several links exist. The shop and event must be published. Automatic mode sends tickets for new signups, without approving older pending requests.",
+		Long: "Only supplied flags change settings. New links are enabled by default; --enabled=false closes a link and preserves existing requests and tickets. Select --form-id when several links exist. The shop and event must be published. Automatic mode sends tickets for new signups, without approving older pending requests.\n\nName and email are always asked. --company, --phone and --companion-names choose hidden, optional or required (new links ask for the company optionally and hide the others); companions' names are only asked while --max-companions is above 0. --ask-checkout-questions adds the event's order-level checkout questions; --ask-checkout-questions=false stops asking them.",
 		Example: `  usetix events guest-list configure club-night --ticket-id 42 --enabled --approval-mode manual --max-companions 2 --capacity 50
+  usetix events guest-list configure club-night --phone required --companion-names optional --ask-checkout-questions
+  usetix events guest-list configure club-night --company hidden --ask-checkout-questions=false
   usetix events guest-list configure club-night --enabled=false`,
 		RunE: func(command *cobra.Command, args []string) error {
 			attributes := map[string]any{}
@@ -96,6 +99,20 @@ func newGuestListConfigure(runtime *appctx.Runtime, create bool) *cobra.Command 
 				}
 				attributes["capacity"] = capacity
 			}
+			for _, field := range []struct{ flag, attribute, value string }{
+				{"company", "company_field", company}, {"phone", "phone_field", phone}, {"companion-names", "companion_names_field", companionNames},
+			} {
+				if !flags.Changed(field.flag) {
+					continue
+				}
+				if field.value != "hidden" && field.value != "optional" && field.value != "required" {
+					return output.ErrUsage("--" + field.flag + " must be hidden, optional, or required")
+				}
+				attributes[field.attribute] = field.value
+			}
+			if flags.Changed("ask-checkout-questions") {
+				attributes["asks_questions"] = asksQuestions
+			}
 			if len(attributes) == 0 {
 				return output.ErrUsageHint("no settings to update", "Pass at least one flag, for example --enabled=false")
 			}
@@ -118,7 +135,8 @@ func newGuestListConfigure(runtime *appctx.Runtime, create bool) *cobra.Command 
 	if create {
 		command.Use = "create SLUG"
 		command.Short = "Create another signup link, enabled by default"
-		command.Example = "  usetix events guest-list create club-night --ticket-id 42 --name Press --capacity 50"
+		command.Example = `  usetix events guest-list create club-night --ticket-id 42 --name Press --capacity 50
+  usetix events guest-list create club-night --ticket-id 42 --max-companions 2 --companion-names required --phone optional`
 	} else {
 		command.Flags().StringVar(&formID, "form-id", "", "stable link ID from forms; required when several links exist")
 	}
@@ -129,6 +147,10 @@ func newGuestListConfigure(runtime *appctx.Runtime, create bool) *cobra.Command 
 	command.Flags().Int64Var(&poolID, "standing-pool-id", 0, "standing capacity pool ID; 0 clears the selection")
 	command.Flags().IntVar(&companions, "max-companions", 0, "maximum companions per guest (0-19)")
 	command.Flags().IntVar(&capacity, "capacity", 0, "maximum active admissions through the link, including companions")
+	command.Flags().StringVar(&company, "company", "", "ask for the guest's company: hidden, optional, or required")
+	command.Flags().StringVar(&phone, "phone", "", "ask for a phone number: hidden, optional, or required")
+	command.Flags().StringVar(&companionNames, "companion-names", "", "ask for companions' names: hidden, optional, or required; applies while --max-companions is above 0")
+	command.Flags().BoolVar(&asksQuestions, "ask-checkout-questions", false, "also ask the event's order-level checkout questions; false stops asking them")
 	return command
 }
 
@@ -137,7 +159,7 @@ func newGuestListRequests(runtime *appctx.Runtime) *cobra.Command {
 	var page int
 	command := &cobra.Command{
 		Use: "requests SLUG", Short: "List signup requests to review", Args: cobra.ExactArgs(1),
-		Long: "List requests newest first, 25 per page. Pass next_page to --page to continue. --count and --ids-only apply to the returned page; pending_count in JSON is the pending total within the selected link, or the whole event when no --form-id is given.",
+		Long: "List requests newest first, 25 per page. Pass next_page to --page to continue. --count and --ids-only apply to the returned page; pending_count in JSON is the pending total within the selected link, or the whole event when no --form-id is given.\n\npending lists everything awaiting review: new signups and approved signups whose guest has since added companions. Such a request keeps status approved and shows the added companions as pending_addition; approve or reject then decides only those companions. total_party_size counts approved additions, party_size only the original signup.",
 		RunE: func(command *cobra.Command, args []string) error {
 			if status != "pending" && status != "approved" && status != "rejected" {
 				return output.ErrUsage("--status must be pending, approved, or rejected")
@@ -171,13 +193,14 @@ func newGuestListRequests(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newGuestListReview(runtime *appctx.Runtime, approve bool) *cobra.Command {
-	verb, help := "reject", "Decline a pending signup without sending email"
+	verb, help := "reject", "Decline a pending signup or added companions without sending email"
 	if approve {
-		verb, help = "approve", "Approve a signup and email complimentary QR tickets"
+		verb, help = "approve", "Approve a signup or added companions and email complimentary QR tickets"
 	}
 	var yes bool
 	command := &cobra.Command{
 		Use: verb + " SLUG REQUEST_ID", Short: help, Args: cobra.ExactArgs(2),
+		Long: help + ". When an approved signup has a pending_addition, only the added companions are decided: approval issues them a separate complimentary party and the request's order_public_id stays unchanged.",
 		RunE: func(command *cobra.Command, args []string) error {
 			if !yes {
 				return output.ErrUsageHint("guest-list review requires explicit confirmation", "Review the request with events guest-list requests, then re-run with --yes")
@@ -196,8 +219,8 @@ func newGuestListReview(runtime *appctx.Runtime, approve bool) *cobra.Command {
 				return NormalizeError(err)
 			}
 			return runtime.Output().OK(request, func(w io.Writer) error {
-				_, err := fmt.Fprintf(w, "%s · %s · %s · %d people\n", terminal.SanitizeLine(request.PublicID),
-					terminal.SanitizeLine(request.Name), terminal.SanitizeLine(request.Status), request.PartySize)
+				_, err := fmt.Fprintf(w, "%s · %s · %s · %s\n", terminal.SanitizeLine(request.PublicID),
+					terminal.SanitizeLine(request.Name), terminal.SanitizeLine(request.Status), guestPartySize(request))
 				return err
 			}, output.WithSummary("Guest-list request reviewed"))
 		},
@@ -208,9 +231,18 @@ func newGuestListReview(runtime *appctx.Runtime, approve bool) *cobra.Command {
 
 func renderGuestListForm(form api.GuestListForm) output.StyledRenderer {
 	return func(w io.Writer) error {
-		_, err := fmt.Fprintf(w, "Link ID: %s\nName: %s\nSignup link enabled: %t\nConfirmation: %s\n%d / %d places confirmed · %d remaining\nMaximum companions: %d\nLink: %s\n",
+		companionNames := optionalString(&form.CompanionNamesField)
+		if form.MaxCompanions == 0 && form.CompanionNamesField != "" && form.CompanionNamesField != "hidden" {
+			companionNames += " (not asked without companions)"
+		}
+		checkoutQuestions := "—"
+		if form.AsksQuestions != nil {
+			checkoutQuestions = fmt.Sprint(*form.AsksQuestions)
+		}
+		_, err := fmt.Fprintf(w, "Link ID: %s\nName: %s\nSignup link enabled: %t\nConfirmation: %s\n%d / %d places confirmed · %d remaining\nMaximum companions: %d\nCompany: %s\nPhone: %s\nCompanions' names: %s\nCheckout questions asked: %s\nLink: %s\n",
 			optionalString(form.PublicID), optionalString(form.Name), form.Enabled, terminal.SanitizeLine(form.ApprovalMode), form.AdmissionCount, form.Capacity,
-			form.RemainingCapacity, form.MaxCompanions, optionalString(form.PublicURL))
+			form.RemainingCapacity, form.MaxCompanions, optionalString(&form.CompanyField), optionalString(&form.PhoneField), companionNames, checkoutQuestions,
+			optionalString(form.PublicURL))
 		return err
 	}
 }
@@ -218,10 +250,31 @@ func renderGuestListForm(form api.GuestListForm) output.StyledRenderer {
 func renderGuestListRequests(response api.GuestRequestsResponse) output.StyledRenderer {
 	return func(w io.Writer) error {
 		for _, request := range response.Requests {
-			if _, err := fmt.Fprintf(w, "%s  %s <%s>  %s  %d people  %s  Link: %s\n", terminal.SanitizeLine(request.PublicID),
+			if _, err := fmt.Fprintf(w, "%s  %s <%s>  %s  %s  %s  Link: %s\n", terminal.SanitizeLine(request.PublicID),
 				terminal.SanitizeLine(request.Name), terminal.SanitizeLine(request.Email), optionalString(request.Company),
-				request.PartySize, terminal.SanitizeLine(request.Status), terminal.SanitizeLine(request.FormID)); err != nil {
+				guestPartySize(request), terminal.SanitizeLine(request.Status), terminal.SanitizeLine(request.FormID)); err != nil {
 				return err
+			}
+			var details []string
+			if request.Phone != nil {
+				if phone := terminal.SanitizeLine(*request.Phone); phone != "" {
+					details = append(details, "Phone: "+phone)
+				}
+			}
+			if names := guestNames(request.CompanionNames); names != "" {
+				details = append(details, "Companions: "+names)
+			}
+			if addition := request.PendingAddition; addition != nil {
+				waiting := fmt.Sprintf("+%d waiting", addition.Companions)
+				if names := guestNames(addition.CompanionNames); names != "" {
+					waiting += ": " + names
+				}
+				details = append(details, waiting)
+			}
+			if len(details) > 0 {
+				if _, err := fmt.Fprintf(w, "  %s\n", strings.Join(details, " · ")); err != nil {
+					return err
+				}
 			}
 		}
 		if _, err := fmt.Fprintf(w, "%d requests on this page · %d pending in total\n", len(response.Requests), response.PendingCount); err != nil {
@@ -233,6 +286,26 @@ func renderGuestListRequests(response api.GuestRequestsResponse) output.StyledRe
 		}
 		return nil
 	}
+}
+
+// guestPartySize describes the original party and, once additions were
+// approved, the total the signup now brings.
+func guestPartySize(request api.GuestRequest) string {
+	size := fmt.Sprintf("%d people", request.PartySize)
+	if request.TotalPartySize > 0 && request.TotalPartySize != request.PartySize {
+		size += fmt.Sprintf(" (%d in total)", request.TotalPartySize)
+	}
+	return size
+}
+
+func guestNames(names []string) string {
+	safe := make([]string, 0, len(names))
+	for _, name := range names {
+		if name = terminal.SanitizeLine(name); name != "" {
+			safe = append(safe, name)
+		}
+	}
+	return strings.Join(safe, ", ")
 }
 
 func newGuestListForms(runtime *appctx.Runtime) *cobra.Command {
