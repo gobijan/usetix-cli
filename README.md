@@ -247,8 +247,8 @@ Generate shell completion with `usetix completion bash`, `zsh`, `fish`, or
 
 ## Guest-list signup links
 
-Use one shared link for an account-free form with name, email, optional company
-and companions. Inspect eligible ticket IDs and standing pools with
+Use one shared link for an account-free form with name, email, companions and
+the details you choose to ask. Inspect eligible ticket IDs and standing pools with
 `usetix api GET /admin/events/summer-festival/guest_list`, then configure the link:
 
 ```sh
@@ -261,10 +261,22 @@ usetix events guest-list requests summer-festival --status approved --page 2 --j
 usetix events guest-list approve summer-festival REQUEST_ID --yes
 usetix events guest-list reject summer-festival REQUEST_ID --yes
 usetix events guest-list configure summer-festival --form-id FORM_ID --enabled=false
+usetix events guest-list configure summer-festival --form-id FORM_ID \
+  --company required --phone optional --companion-names required --ask-checkout-questions
+usetix events guest-list configure summer-festival --form-id FORM_ID --ask-checkout-questions=false
 usetix events guest-list rotate summer-festival FORM_ID --yes
 ```
 
 Use `create` for another link with its own ticket and quota; new links are enabled by default. Pass `--name Press` for an internal label or `--enabled=false` to create a closed link. `forms` returns stable IDs; select one with `--form-id` for `form`, `configure` and optionally `requests`. `rotate SLUG FORM_ID --yes` invalidates only that public URL and returns its replacement; settings, requests and issued tickets remain valid. Without `--form-id`, legacy `form`/`configure` work only while an event has at most one link; multiple links return `409`.
+
+Name and email are always asked. `--company`, `--phone` and `--companion-names`
+each take `hidden`, `optional` or `required` (`company_field`, `phone_field`,
+`companion_names_field`); new links ask for the company optionally and hide the
+others. Companions' names are only asked while `--max-companions` is above 0.
+`--ask-checkout-questions` adds the event's order-level checkout questions
+(`asks_questions`); `--ask-checkout-questions=false` stops asking them. `form`
+shows these settings; approval hands the collected details to the issued guest
+party.
 
 `manual` requires organizer review; `automatic` emails complimentary QR tickets
 for new valid signups immediately. Pending requests reserve no places. Approval
@@ -276,6 +288,18 @@ signups while preserving requests and tickets. `--max-companions 0` removes
 companions; `--standing-pool-id 0` clears the standing pool. The event and shop
 must be published. Signup links support standard GA and standing tickets;
 numbered seats use the existing manual guest-list workflow.
+
+Guests can add companions from their own signup page. Before approval the
+signup itself grows. After approval the companions wait as a `pending_addition`
+on the still-`approved` request (automatic links approve them at once), and the
+default `--status pending` lists these alongside new signups, shown as
+`+2 waiting: Ben, Cleo`. `approve` and `reject` then decide only the added
+companions: approval emails them a separate complimentary party, the request's
+`order_public_id` stays unchanged, and approved additions appear in `additions`.
+`party_size` counts the original signup; `total_party_size` includes approved
+additions and is shown in styled output when it differs. JSON requests also
+carry `phone`, `companion_names` and checkout `answers` (`id`, `label`, `type`,
+`value`; the value is text, or `true`/`false` for checkboxes).
 
 Requests return 25 per page. Pass the numeric `next_page` value to `--page` until
 it is null. `--count` and `--ids-only` describe the current page; JSON also
