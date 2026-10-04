@@ -273,36 +273,41 @@ func orderIDs(orders []api.Order) []map[string]any {
 	return projection
 }
 
+// ordersTable lists orders as rows; the orders list and a customer's orders share it.
+func ordersTable(orders []api.Order) *table.Table {
+	header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
+	view := table.New().
+		Headers("ORDER", "STATUS", "CUSTOMER", "TOTAL", "ITEMS", "PUBLIC ID").
+		Border(lipgloss.HiddenBorder()).
+		BorderTop(false).
+		BorderBottom(false).
+		BorderLeft(false).
+		BorderRight(false).
+		BorderHeader(false).
+		BorderColumn(false).
+		StyleFunc(func(row, _ int) lipgloss.Style {
+			style := lipgloss.NewStyle().PaddingRight(2)
+			if row == table.HeaderRow {
+				return style.Inherit(header)
+			}
+			return style
+		})
+	for _, order := range orders {
+		view.Row(
+			terminal.SanitizeLine(order.DisplayNumber),
+			order.Status,
+			terminal.SanitizeLine(order.CustomerName),
+			order.Total.Amount+" "+order.Total.Currency,
+			fmt.Sprintf("%d", orderProductCount(order)),
+			terminal.SanitizeLine(order.PublicID),
+		)
+	}
+	return view
+}
+
 func renderOrders(response api.OrdersResponse) output.StyledRenderer {
 	return func(destination io.Writer) error {
-		header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
-		view := table.New().
-			Headers("ORDER", "STATUS", "CUSTOMER", "TOTAL", "ITEMS", "PUBLIC ID").
-			Border(lipgloss.HiddenBorder()).
-			BorderTop(false).
-			BorderBottom(false).
-			BorderLeft(false).
-			BorderRight(false).
-			BorderHeader(false).
-			BorderColumn(false).
-			StyleFunc(func(row, _ int) lipgloss.Style {
-				style := lipgloss.NewStyle().PaddingRight(2)
-				if row == table.HeaderRow {
-					return style.Inherit(header)
-				}
-				return style
-			})
-		for _, order := range response.Orders {
-			view.Row(
-				terminal.SanitizeLine(order.DisplayNumber),
-				order.Status,
-				terminal.SanitizeLine(order.CustomerName),
-				order.Total.Amount+" "+order.Total.Currency,
-				fmt.Sprintf("%d", orderProductCount(order)),
-				terminal.SanitizeLine(order.PublicID),
-			)
-		}
-		if _, err := fmt.Fprintln(destination, view.String()); err != nil {
+		if _, err := fmt.Fprintln(destination, ordersTable(response.Orders).String()); err != nil {
 			return err
 		}
 		_, err := fmt.Fprintf(destination, "\n%d orders · %s %s revenue\n",
