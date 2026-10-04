@@ -80,6 +80,9 @@ usetix events open-answers summer-festival --status uncontacted
 usetix events guest-list form summer-festival
 usetix events guest-list requests summer-festival
 
+usetix customers list --query acme --marketing-only
+usetix customers show 17
+usetix customers update 17 --salutation ms --title Dr. --company "Acme GmbH"
 usetix customers contacts list 17
 usetix customers contacts show 17 91
 usetix customers contacts log 17 --kind email_sent --note "Asked for the missing menu choice" \
@@ -135,6 +138,11 @@ order without login; share it only with the buyer.
 `events open-answers` is the follow-up worklist for required checkout answers.
 Customer interactions use `customers contacts`; an internal `note` stays in the
 timeline but does not mark the customer as contacted.
+
+`customers update` corrects a customer's salutation (`ms`, `mr`, `mx`, or
+`none`), title, name, company and phone. Only the flags you pass change, and an
+empty value clears a field. The email address stays as it is: it signs the
+customer in to the shop and ties their orders together.
 
 Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, and applied voucher imports always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes

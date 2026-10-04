@@ -32,7 +32,7 @@ Typed coverage will grow where it materially improves daily use.
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
 | Guest-list signup links and review | `events guest-list forms/create/form/configure/rotate/requests/approve/reject` | `api ... /admin/events/:slug/guest_list_forms`, `/guest_list_forms/:public_id/rotation`, `/guest_requests...` | Multiple active-by-default links, exact link selection, confirmed URL rotation, manual/automatic approval, asked details (company, phone and companions' names as hidden/optional/required, order-level checkout questions), numeric request pagination, confirmed review including companions added after approval; existing parties and seat moves remain direct |
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
-| Customers | `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Interaction timelines are typed; customer list/show/export remain direct |
+| Customers | `customers list/show/update`, `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Typed for the cursor-paginated directory with event, search, period and marketing filters, details with orders, correcting salutation/title/name/company/phone, and interaction timelines; CSV/XLSX export remains direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | Advertising (limited beta) | — | `api GET /admin/advertising` | Direct for enabled accounts; Meta connection summary and cursor-paginated campaigns |
@@ -42,7 +42,7 @@ Typed coverage will grow where it materially improves daily use.
 | Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
 | Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation; venue only |
 | Event duplication | `events duplicate SLUG` | `api POST /admin/events/SLUG/duplication` | Draft copy; co-organizers receive access to their copy |
-| Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents, video and artwork; same editor validations |
+| Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents and their shop names (`document_titles`, `new_document_titles`, and the private equivalents), video and artwork; same editor validations |
 | Scanner | — | `api ... /scanner/...` | Direct |
 | Public event feed | — | `api GET /events --no-auth --api-url SHOP_URL` | Direct; lives on the shop host (`shop_url` from shop settings), not on `app.usetix.io` |
 | Active Storage direct-upload metadata | — | `api POST /rails/active_storage/direct_uploads ...` | Direct; uploading bytes to the returned storage URL remains an external HTTP step |
@@ -63,7 +63,7 @@ API mechanically:
 
 1. ~~Event show/create/update/publication.~~ Done.
 2. ~~Orders read and refund workflows.~~ Done.
-3. General customer list/show workflows. Interaction timelines are already typed.
+3. ~~Customer list/show/update workflows.~~ Done.
 4. Tickets and manual guest-list parties/seat moves. Signup links, request reviews, gift vouchers, promo codes, and promoter reports are already typed.
 5. Venues, performers, analytics, and account settings.
 6. Scanner workflows if terminal scanning proves useful alongside the native

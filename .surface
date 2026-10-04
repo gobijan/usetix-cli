@@ -16,6 +16,9 @@ CMD usetix customers contacts list
 CMD usetix customers contacts log
 CMD usetix customers contacts show
 CMD usetix customers contacts update
+CMD usetix customers list
+CMD usetix customers show
+CMD usetix customers update
 CMD usetix events
 CMD usetix events arrivals
 CMD usetix events create
@@ -274,6 +277,42 @@ FLAG usetix customers contacts update --order type=string
 FLAG usetix customers contacts update --profile type=string
 FLAG usetix customers contacts update --quiet type=bool
 FLAG usetix customers contacts update --styled type=bool
+FLAG usetix customers list --agent type=bool
+FLAG usetix customers list --all type=bool
+FLAG usetix customers list --api-url type=string
+FLAG usetix customers list --count type=bool
+FLAG usetix customers list --event type=string
+FLAG usetix customers list --ids-only type=bool
+FLAG usetix customers list --json type=bool
+FLAG usetix customers list --limit type=int
+FLAG usetix customers list --marketing-only type=bool
+FLAG usetix customers list --page type=string
+FLAG usetix customers list --period type=string
+FLAG usetix customers list --profile type=string
+FLAG usetix customers list --query type=string
+FLAG usetix customers list --quiet type=bool
+FLAG usetix customers list --styled type=bool
+FLAG usetix customers show --agent type=bool
+FLAG usetix customers show --api-url type=string
+FLAG usetix customers show --count type=bool
+FLAG usetix customers show --ids-only type=bool
+FLAG usetix customers show --json type=bool
+FLAG usetix customers show --profile type=string
+FLAG usetix customers show --quiet type=bool
+FLAG usetix customers show --styled type=bool
+FLAG usetix customers update --agent type=bool
+FLAG usetix customers update --api-url type=string
+FLAG usetix customers update --company type=string
+FLAG usetix customers update --count type=bool
+FLAG usetix customers update --ids-only type=bool
+FLAG usetix customers update --json type=bool
+FLAG usetix customers update --name type=string
+FLAG usetix customers update --phone type=string
+FLAG usetix customers update --profile type=string
+FLAG usetix customers update --quiet type=bool
+FLAG usetix customers update --salutation type=string
+FLAG usetix customers update --styled type=bool
+FLAG usetix customers update --title type=string
 FLAG usetix events --agent type=bool
 FLAG usetix events --api-url type=string
 FLAG usetix events --count type=bool
@@ -1171,6 +1210,9 @@ SUB usetix customers contacts list
 SUB usetix customers contacts log
 SUB usetix customers contacts show
 SUB usetix customers contacts update
+SUB usetix customers list
+SUB usetix customers show
+SUB usetix customers update
 SUB usetix events
 SUB usetix events arrivals
 SUB usetix events create
