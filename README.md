@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, and applied voucher imports always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, and ticket-upgrade removal always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -457,3 +457,34 @@ Confirmation immediately deducts the account's lounge fee plus VAT from Usetix C
 The default is EUR 8 before VAT for euro accounts; account pricing may differ.
 Cancellations and no-shows never refund the fee. Minimum spend is paid at the venue; admission is separate.
 `--json` includes the current `booking_fee` and original booking `credit_fee`.
+
+### Ticket upgrades
+
+Offer an event's dearer ticket to buyers of a cheaper one at checkout, for
+example "+4 € Fastlane". Take ticket IDs from the suggestions `list` prints or
+from `usetix api GET /admin/events/summer-festival/tickets`.
+
+```sh
+usetix ticket-upgrades status
+usetix ticket-upgrades activate         # shows the fee; no change
+usetix ticket-upgrades activate --yes
+usetix events upgrades list summer-festival
+usetix events upgrades offer summer-festival --from 11 --to 12 --benefit "No queue at the door"
+usetix events upgrades update summer-festival 7 --layout compare
+usetix events upgrades update summer-festival 7 --benefit ""   # remove the benefit line
+usetix events upgrades pause summer-festival 7
+usetix events upgrades resume summer-festival 7
+usetix events upgrades remove summer-festival 7 --yes
+usetix ticket-upgrades deactivate --yes
+```
+
+Upgrades are off until an owner or manager activates them for the account.
+Activation agrees to Usetix's fee per switched ticket (EUR 0.30 plus VAT on the
+standard per-ticket plan), paid from Usetix Credit; buyers never pay it, they
+only pay the difference. Usetix Credit must be active to activate, and the
+checkout offers upgrades only while it covers the fee. `list` shows each
+upgrade's state (live, paused, or why it is off for now) and its results;
+`--json` returns the API response unchanged. Layouts are `card` (default),
+`compact`, `spotlight` and `compare`. Pausing keeps an upgrade and its results;
+removing deletes both. See the
+[ticket upgrades API reference](https://www.usetix.io/docs/api/ticket-upgrades/).

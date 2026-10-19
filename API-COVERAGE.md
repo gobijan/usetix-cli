@@ -24,6 +24,7 @@ Typed coverage will grow where it materially improves daily use.
 | Venues | — | `api ... /admin/venues...` | Direct |
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |
+| Ticket upgrades | `events upgrades list/offer/update/pause/resume/remove`, `ticket-upgrades status/activate/deactivate` | `api ... /admin/events/:slug/ticket_upgrades...`, `/admin/account_settings/ticket_upgrade_activation` | Typed; see [Ticket upgrades](#ticket-upgrades) |
 | Event FAQs | — | `api ... /admin/events/:slug/faq_items...` | Direct |
 | Custom checkout fields | — | `api ... /admin/events/:slug/custom_fields...` | Direct |
 | Promo codes | `promo-codes list/show/create/update/deactivate/reactivate` | `api ... /admin/promo_codes...` | Typed codes, zero discounts, share links, limits and promoter assignments; deletion remains direct |
@@ -83,3 +84,15 @@ Venue catalog CRUD, images and per-event price overrides use `usetix api` with t
 See https://www.usetix.io/docs/api/lounges/. Lounge bookings do not issue admission tickets.
 
 Booking questions are configured in the dashboard.
+
+## Ticket upgrades
+
+Typed commands: `events upgrades list`, `offer`, `update`, `pause`, `resume` and
+`remove` for an event's upgrades, and `ticket-upgrades status`, `activate` and
+`deactivate` for the account-wide activation.
+`activate` without `--yes` reads the activation and shows the account's fee per
+switched ticket and whether Usetix Credit covers it; `--yes` activates and
+agrees to the fee. `deactivate` and `remove` also require `--yes`; removing an
+upgrade deletes its results. Personal co-organizer tokens manage their assigned
+events' upgrades but cannot change the activation (`403`).
+See https://www.usetix.io/docs/api/ticket-upgrades/.
