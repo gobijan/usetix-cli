@@ -47,6 +47,13 @@ CMD usetix events publish
 CMD usetix events show
 CMD usetix events unpublish
 CMD usetix events update
+CMD usetix events upgrades
+CMD usetix events upgrades list
+CMD usetix events upgrades offer
+CMD usetix events upgrades pause
+CMD usetix events upgrades remove
+CMD usetix events upgrades resume
+CMD usetix events upgrades update
 CMD usetix orders
 CMD usetix orders archive
 CMD usetix orders cancel
@@ -89,6 +96,10 @@ CMD usetix team invitations revoke
 CMD usetix team invite
 CMD usetix team list
 CMD usetix team reactivate
+CMD usetix ticket-upgrades
+CMD usetix ticket-upgrades activate
+CMD usetix ticket-upgrades deactivate
+CMD usetix ticket-upgrades status
 CMD usetix version
 CMD usetix vouchers
 CMD usetix vouchers adjust
@@ -607,6 +618,69 @@ FLAG usetix events update --starts-at type=string
 FLAG usetix events update --styled type=bool
 FLAG usetix events update --title type=string
 FLAG usetix events update --venue-id type=int64
+FLAG usetix events upgrades --agent type=bool
+FLAG usetix events upgrades --api-url type=string
+FLAG usetix events upgrades --count type=bool
+FLAG usetix events upgrades --ids-only type=bool
+FLAG usetix events upgrades --json type=bool
+FLAG usetix events upgrades --profile type=string
+FLAG usetix events upgrades --quiet type=bool
+FLAG usetix events upgrades --styled type=bool
+FLAG usetix events upgrades list --agent type=bool
+FLAG usetix events upgrades list --api-url type=string
+FLAG usetix events upgrades list --count type=bool
+FLAG usetix events upgrades list --ids-only type=bool
+FLAG usetix events upgrades list --json type=bool
+FLAG usetix events upgrades list --profile type=string
+FLAG usetix events upgrades list --quiet type=bool
+FLAG usetix events upgrades list --styled type=bool
+FLAG usetix events upgrades offer --agent type=bool
+FLAG usetix events upgrades offer --api-url type=string
+FLAG usetix events upgrades offer --benefit type=string
+FLAG usetix events upgrades offer --count type=bool
+FLAG usetix events upgrades offer --from type=int64
+FLAG usetix events upgrades offer --ids-only type=bool
+FLAG usetix events upgrades offer --json type=bool
+FLAG usetix events upgrades offer --layout type=string
+FLAG usetix events upgrades offer --profile type=string
+FLAG usetix events upgrades offer --quiet type=bool
+FLAG usetix events upgrades offer --styled type=bool
+FLAG usetix events upgrades offer --to type=int64
+FLAG usetix events upgrades pause --agent type=bool
+FLAG usetix events upgrades pause --api-url type=string
+FLAG usetix events upgrades pause --count type=bool
+FLAG usetix events upgrades pause --ids-only type=bool
+FLAG usetix events upgrades pause --json type=bool
+FLAG usetix events upgrades pause --profile type=string
+FLAG usetix events upgrades pause --quiet type=bool
+FLAG usetix events upgrades pause --styled type=bool
+FLAG usetix events upgrades remove --agent type=bool
+FLAG usetix events upgrades remove --api-url type=string
+FLAG usetix events upgrades remove --count type=bool
+FLAG usetix events upgrades remove --ids-only type=bool
+FLAG usetix events upgrades remove --json type=bool
+FLAG usetix events upgrades remove --profile type=string
+FLAG usetix events upgrades remove --quiet type=bool
+FLAG usetix events upgrades remove --styled type=bool
+FLAG usetix events upgrades remove --yes type=bool
+FLAG usetix events upgrades resume --agent type=bool
+FLAG usetix events upgrades resume --api-url type=string
+FLAG usetix events upgrades resume --count type=bool
+FLAG usetix events upgrades resume --ids-only type=bool
+FLAG usetix events upgrades resume --json type=bool
+FLAG usetix events upgrades resume --profile type=string
+FLAG usetix events upgrades resume --quiet type=bool
+FLAG usetix events upgrades resume --styled type=bool
+FLAG usetix events upgrades update --agent type=bool
+FLAG usetix events upgrades update --api-url type=string
+FLAG usetix events upgrades update --benefit type=string
+FLAG usetix events upgrades update --count type=bool
+FLAG usetix events upgrades update --ids-only type=bool
+FLAG usetix events upgrades update --json type=bool
+FLAG usetix events upgrades update --layout type=string
+FLAG usetix events upgrades update --profile type=string
+FLAG usetix events upgrades update --quiet type=bool
+FLAG usetix events upgrades update --styled type=bool
 FLAG usetix orders --agent type=bool
 FLAG usetix orders --api-url type=string
 FLAG usetix orders --count type=bool
@@ -1008,6 +1082,40 @@ FLAG usetix team reactivate --json type=bool
 FLAG usetix team reactivate --profile type=string
 FLAG usetix team reactivate --quiet type=bool
 FLAG usetix team reactivate --styled type=bool
+FLAG usetix ticket-upgrades --agent type=bool
+FLAG usetix ticket-upgrades --api-url type=string
+FLAG usetix ticket-upgrades --count type=bool
+FLAG usetix ticket-upgrades --ids-only type=bool
+FLAG usetix ticket-upgrades --json type=bool
+FLAG usetix ticket-upgrades --profile type=string
+FLAG usetix ticket-upgrades --quiet type=bool
+FLAG usetix ticket-upgrades --styled type=bool
+FLAG usetix ticket-upgrades activate --agent type=bool
+FLAG usetix ticket-upgrades activate --api-url type=string
+FLAG usetix ticket-upgrades activate --count type=bool
+FLAG usetix ticket-upgrades activate --ids-only type=bool
+FLAG usetix ticket-upgrades activate --json type=bool
+FLAG usetix ticket-upgrades activate --profile type=string
+FLAG usetix ticket-upgrades activate --quiet type=bool
+FLAG usetix ticket-upgrades activate --styled type=bool
+FLAG usetix ticket-upgrades activate --yes type=bool
+FLAG usetix ticket-upgrades deactivate --agent type=bool
+FLAG usetix ticket-upgrades deactivate --api-url type=string
+FLAG usetix ticket-upgrades deactivate --count type=bool
+FLAG usetix ticket-upgrades deactivate --ids-only type=bool
+FLAG usetix ticket-upgrades deactivate --json type=bool
+FLAG usetix ticket-upgrades deactivate --profile type=string
+FLAG usetix ticket-upgrades deactivate --quiet type=bool
+FLAG usetix ticket-upgrades deactivate --styled type=bool
+FLAG usetix ticket-upgrades deactivate --yes type=bool
+FLAG usetix ticket-upgrades status --agent type=bool
+FLAG usetix ticket-upgrades status --api-url type=string
+FLAG usetix ticket-upgrades status --count type=bool
+FLAG usetix ticket-upgrades status --ids-only type=bool
+FLAG usetix ticket-upgrades status --json type=bool
+FLAG usetix ticket-upgrades status --profile type=string
+FLAG usetix ticket-upgrades status --quiet type=bool
+FLAG usetix ticket-upgrades status --styled type=bool
 FLAG usetix version --agent type=bool
 FLAG usetix version --api-url type=string
 FLAG usetix version --count type=bool
@@ -1241,6 +1349,13 @@ SUB usetix events publish
 SUB usetix events show
 SUB usetix events unpublish
 SUB usetix events update
+SUB usetix events upgrades
+SUB usetix events upgrades list
+SUB usetix events upgrades offer
+SUB usetix events upgrades pause
+SUB usetix events upgrades remove
+SUB usetix events upgrades resume
+SUB usetix events upgrades update
 SUB usetix orders
 SUB usetix orders archive
 SUB usetix orders cancel
@@ -1283,6 +1398,10 @@ SUB usetix team invitations revoke
 SUB usetix team invite
 SUB usetix team list
 SUB usetix team reactivate
+SUB usetix ticket-upgrades
+SUB usetix ticket-upgrades activate
+SUB usetix ticket-upgrades deactivate
+SUB usetix ticket-upgrades status
 SUB usetix version
 SUB usetix vouchers
 SUB usetix vouchers adjust
