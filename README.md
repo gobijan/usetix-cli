@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, emailing a hold's buy link, and booking tickets always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, emailing a hold's buy link, booking tickets, and archiving, settling or unsettling a sales point always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -573,3 +573,44 @@ its sale window; purchase limits don't apply.
 work on box-office orders too: you pay the money back the way it came in, and
 the refund is recorded as paid back outside Usetix and settles at once. See the
 [orders API reference](https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings).
+
+### Sales points
+
+A sales point (Vorverkaufsstelle) sells your tickets at its own counter: its
+people sell in the Usetix box office app and take the money in their own till.
+Every sale is an order with origin `box_office` paid at the sales point; its
+Usetix fee comes from your Usetix Credit.
+
+```sh
+usetix sales-points list
+usetix sales-points create --name "Ticketshop Altstadt" --contact-name "Anna Weber" \
+  --email info@altstadt.example --event spring-showcase --event club-night
+usetix sales-points show SALES_POINT_ID
+usetix sales-points update SALES_POINT_ID --all-events --sells-open-inventory=false
+usetix sales-points invite SALES_POINT_ID counter@altstadt.example
+usetix events holds create spring-showcase --place 5501,5502 --sales-point SALES_POINT_ID   # its allotment
+usetix sales-points settle SALES_POINT_ID                  # shows the open period; records nothing
+usetix sales-points settle SALES_POINT_ID --note "Transfer of 12 Nov" --yes
+usetix sales-points unsettle SALES_POINT_ID 7 --yes        # takes the latest settlement back
+usetix sales-points export SALES_POINT_ID --output altstadt-sales.csv
+usetix sales-points archive SALES_POINT_ID --yes
+```
+
+A sales point sells every event, or with `--event` only the events you name
+(slugs; `update --event` replaces the list, `--all-events` sells every event
+again). It sells its allotments and, unless `--sells-open-inventory=false`,
+every free place. `list` and `show` give what it sold since its last
+settlement (`open_since`, `open_sales`): sales, refunds, what it owes you and,
+for information, the Usetix fees these sales took from your credit.
+Commission is between you and the sales point and not part of Usetix.
+
+`settle` records what it sold up to now; the next period starts where the
+settlement ends, and a later refund counts in the next one. Without `--yes`
+it shows the open period's figures. `unsettle` takes the latest settlement
+back by the ID `settle` printed. `invite` emails an invitation to sell at the
+sales point; people who accept see only the box office app and appear in
+`team list` with their sales point. Archiving ends their access; sales and
+settlements stay. `export` saves its sales as CSV, `--output -` writes to
+stdout, and nothing is saved when Usetix answers with anything but CSV.
+Sales point commands need a venue token. See the
+[sales points API reference](https://www.usetix.io/docs/api/sales-points/).

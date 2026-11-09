@@ -43,7 +43,8 @@ Typed coverage will grow where it materially improves daily use.
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
 | Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
-| Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation; venue only |
+| Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation, sales point members named by their sales point; venue only |
+| Sales points | `sales-points list/show/create/update/archive/invite/settle/unsettle/export` | `api ... /admin/sales_points...` | Typed; see [Sales points](#sales-points) |
 | Event duplication | `events duplicate SLUG` | `api POST /admin/events/SLUG/duplication` | Draft copy; co-organizers receive access to their copy |
 | Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents and their shop names (`document_titles`, `new_document_titles`, and the private equivalents), video and artwork; same editor validations |
 | Scanner | — | `api ... /scanner/...` | Direct |
@@ -125,3 +126,15 @@ does not preview; missing credit returns `422` naming the fee. Personal
 co-organizer tokens get `403` for paid bookings. The CLI sends no
 `Idempotency-Key`. See
 https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings.
+
+## Sales points
+
+Typed commands: `sales-points list`, `show`, `create`, `update`, `archive`,
+`invite`, `settle`, `unsettle` and `export`. `--event` takes event slugs and
+sends their numeric IDs. `settle` without `--yes` reads the sales point and
+shows the open period it would settle; `archive`, `settle` and `unsettle`
+require `--yes`. The API lists no settlements, so `unsettle` takes the ID
+`settle` printed. `export` saves `GET /admin/sales_points/:id.csv` and refuses
+any answer that isn't `text/csv`. Sales points need a venue token; personal
+co-organizer tokens and Usetix support get `403`. See
+https://www.usetix.io/docs/api/sales-points/.

@@ -87,6 +87,16 @@ CMD usetix promo-codes show
 CMD usetix promo-codes update
 CMD usetix promoters
 CMD usetix promoters list
+CMD usetix sales-points
+CMD usetix sales-points archive
+CMD usetix sales-points create
+CMD usetix sales-points export
+CMD usetix sales-points invite
+CMD usetix sales-points list
+CMD usetix sales-points settle
+CMD usetix sales-points show
+CMD usetix sales-points unsettle
+CMD usetix sales-points update
 CMD usetix tasks
 CMD usetix tasks archive
 CMD usetix tasks comment
@@ -1030,6 +1040,107 @@ FLAG usetix promoters list --period type=string
 FLAG usetix promoters list --profile type=string
 FLAG usetix promoters list --quiet type=bool
 FLAG usetix promoters list --styled type=bool
+FLAG usetix sales-points --agent type=bool
+FLAG usetix sales-points --api-url type=string
+FLAG usetix sales-points --count type=bool
+FLAG usetix sales-points --ids-only type=bool
+FLAG usetix sales-points --json type=bool
+FLAG usetix sales-points --profile type=string
+FLAG usetix sales-points --quiet type=bool
+FLAG usetix sales-points --styled type=bool
+FLAG usetix sales-points archive --agent type=bool
+FLAG usetix sales-points archive --api-url type=string
+FLAG usetix sales-points archive --count type=bool
+FLAG usetix sales-points archive --ids-only type=bool
+FLAG usetix sales-points archive --json type=bool
+FLAG usetix sales-points archive --profile type=string
+FLAG usetix sales-points archive --quiet type=bool
+FLAG usetix sales-points archive --styled type=bool
+FLAG usetix sales-points archive --yes type=bool
+FLAG usetix sales-points create --agent type=bool
+FLAG usetix sales-points create --all-events type=bool
+FLAG usetix sales-points create --api-url type=string
+FLAG usetix sales-points create --contact-name type=string
+FLAG usetix sales-points create --count type=bool
+FLAG usetix sales-points create --email type=string
+FLAG usetix sales-points create --event type=stringArray
+FLAG usetix sales-points create --ids-only type=bool
+FLAG usetix sales-points create --json type=bool
+FLAG usetix sales-points create --name type=string
+FLAG usetix sales-points create --note type=string
+FLAG usetix sales-points create --phone type=string
+FLAG usetix sales-points create --profile type=string
+FLAG usetix sales-points create --quiet type=bool
+FLAG usetix sales-points create --sells-open-inventory type=bool
+FLAG usetix sales-points create --styled type=bool
+FLAG usetix sales-points export --agent type=bool
+FLAG usetix sales-points export --api-url type=string
+FLAG usetix sales-points export --count type=bool
+FLAG usetix sales-points export --ids-only type=bool
+FLAG usetix sales-points export --json type=bool
+FLAG usetix sales-points export --output type=string
+FLAG usetix sales-points export --profile type=string
+FLAG usetix sales-points export --quiet type=bool
+FLAG usetix sales-points export --styled type=bool
+FLAG usetix sales-points invite --agent type=bool
+FLAG usetix sales-points invite --api-url type=string
+FLAG usetix sales-points invite --count type=bool
+FLAG usetix sales-points invite --ids-only type=bool
+FLAG usetix sales-points invite --json type=bool
+FLAG usetix sales-points invite --profile type=string
+FLAG usetix sales-points invite --quiet type=bool
+FLAG usetix sales-points invite --styled type=bool
+FLAG usetix sales-points list --agent type=bool
+FLAG usetix sales-points list --api-url type=string
+FLAG usetix sales-points list --count type=bool
+FLAG usetix sales-points list --ids-only type=bool
+FLAG usetix sales-points list --json type=bool
+FLAG usetix sales-points list --profile type=string
+FLAG usetix sales-points list --quiet type=bool
+FLAG usetix sales-points list --styled type=bool
+FLAG usetix sales-points settle --agent type=bool
+FLAG usetix sales-points settle --api-url type=string
+FLAG usetix sales-points settle --count type=bool
+FLAG usetix sales-points settle --ids-only type=bool
+FLAG usetix sales-points settle --json type=bool
+FLAG usetix sales-points settle --note type=string
+FLAG usetix sales-points settle --profile type=string
+FLAG usetix sales-points settle --quiet type=bool
+FLAG usetix sales-points settle --styled type=bool
+FLAG usetix sales-points settle --yes type=bool
+FLAG usetix sales-points show --agent type=bool
+FLAG usetix sales-points show --api-url type=string
+FLAG usetix sales-points show --count type=bool
+FLAG usetix sales-points show --ids-only type=bool
+FLAG usetix sales-points show --json type=bool
+FLAG usetix sales-points show --profile type=string
+FLAG usetix sales-points show --quiet type=bool
+FLAG usetix sales-points show --styled type=bool
+FLAG usetix sales-points unsettle --agent type=bool
+FLAG usetix sales-points unsettle --api-url type=string
+FLAG usetix sales-points unsettle --count type=bool
+FLAG usetix sales-points unsettle --ids-only type=bool
+FLAG usetix sales-points unsettle --json type=bool
+FLAG usetix sales-points unsettle --profile type=string
+FLAG usetix sales-points unsettle --quiet type=bool
+FLAG usetix sales-points unsettle --styled type=bool
+FLAG usetix sales-points unsettle --yes type=bool
+FLAG usetix sales-points update --agent type=bool
+FLAG usetix sales-points update --all-events type=bool
+FLAG usetix sales-points update --api-url type=string
+FLAG usetix sales-points update --contact-name type=string
+FLAG usetix sales-points update --count type=bool
+FLAG usetix sales-points update --email type=string
+FLAG usetix sales-points update --event type=stringArray
+FLAG usetix sales-points update --ids-only type=bool
+FLAG usetix sales-points update --json type=bool
+FLAG usetix sales-points update --name type=string
+FLAG usetix sales-points update --note type=string
+FLAG usetix sales-points update --phone type=string
+FLAG usetix sales-points update --profile type=string
+FLAG usetix sales-points update --quiet type=bool
+FLAG usetix sales-points update --sells-open-inventory type=bool
+FLAG usetix sales-points update --styled type=bool
 FLAG usetix tasks --agent type=bool
 FLAG usetix tasks --api-url type=string
 FLAG usetix tasks --count type=bool
@@ -1538,6 +1649,16 @@ SUB usetix promo-codes show
 SUB usetix promo-codes update
 SUB usetix promoters
 SUB usetix promoters list
+SUB usetix sales-points
+SUB usetix sales-points archive
+SUB usetix sales-points create
+SUB usetix sales-points export
+SUB usetix sales-points invite
+SUB usetix sales-points list
+SUB usetix sales-points settle
+SUB usetix sales-points show
+SUB usetix sales-points unsettle
+SUB usetix sales-points update
 SUB usetix tasks
 SUB usetix tasks archive
 SUB usetix tasks comment
