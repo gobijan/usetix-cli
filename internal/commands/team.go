@@ -33,12 +33,12 @@ func newTeamList(runtime *appctx.Runtime) *cobra.Command {
 		}
 		return runtime.Output().OK(team, func(w io.Writer) error {
 			for _, member := range append(team.Active, team.Deactivated...) {
-				if _, err := fmt.Fprintf(w, "%d  %s <%s>  %s  %s  events %v\n", member.ID, terminal.SanitizeLine(member.User.Name), terminal.SanitizeLine(member.User.Email), terminal.SanitizeLine(member.Role), terminal.SanitizeLine(member.State), teamEventIDs(member.EventIDs)); err != nil {
+				if _, err := fmt.Fprintf(w, "%d  %s <%s>  %s  %s  events %v\n", member.ID, terminal.SanitizeLine(member.User.Name), terminal.SanitizeLine(member.User.Email), teamRole(member.Role, member.SalesPoint), terminal.SanitizeLine(member.State), teamEventIDs(member.EventIDs)); err != nil {
 					return err
 				}
 			}
 			for _, invitation := range team.PendingInvitations {
-				if _, err := fmt.Fprintf(w, "Invitation %d  %s  %s  events %v\n", invitation.ID, terminal.SanitizeLine(invitation.Email), terminal.SanitizeLine(invitation.Role), teamEventIDs(invitation.EventIDs)); err != nil {
+				if _, err := fmt.Fprintf(w, "Invitation %d  %s  %s  events %v\n", invitation.ID, terminal.SanitizeLine(invitation.Email), teamRole(invitation.Role, invitation.SalesPoint), teamEventIDs(invitation.EventIDs)); err != nil {
 					return err
 				}
 			}
@@ -212,6 +212,15 @@ func resolveTeamEvents(command *cobra.Command, client *api.Client, slugs []strin
 		ids = append(ids, event.ID)
 	}
 	return ids, nil
+}
+
+// teamRole names the sales point a sales_point member or invitee sells for.
+func teamRole(role string, salesPoint *api.SalesPointReference) string {
+	role = terminal.SanitizeLine(role)
+	if salesPoint != nil {
+		role += " (" + terminal.SanitizeLine(salesPoint.Name) + ")"
+	}
+	return role
 }
 
 func teamEventIDs(ids *[]int64) []int64 {
