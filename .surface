@@ -569,6 +569,7 @@ FLAG usetix events holds list --ids-only type=bool
 FLAG usetix events holds list --json type=bool
 FLAG usetix events holds list --profile type=string
 FLAG usetix events holds list --quiet type=bool
+FLAG usetix events holds list --status type=string
 FLAG usetix events holds list --styled type=bool
 FLAG usetix events holds release --agent type=bool
 FLAG usetix events holds release --api-url type=string

@@ -143,6 +143,22 @@ func (client *Client) GetOccupancy(ctx context.Context, slug string) (Occupancy,
 	return occupancy, err
 }
 
+type EventHoldsResponse struct {
+	Holds []EventHold `json:"holds"`
+}
+
+// ListEventHolds lists the event's holds, the open ones unless status is
+// fulfilled, released, expired or all.
+func (client *Client) ListEventHolds(ctx context.Context, slug, status string) (EventHoldsResponse, error) {
+	path := eventPath(slug) + "/holds.json"
+	if status != "" {
+		path += "?" + url.Values{"status": {status}}.Encode()
+	}
+	var response EventHoldsResponse
+	err := client.get(ctx, path, &response)
+	return response, err
+}
+
 func (client *Client) GetEventHold(ctx context.Context, slug string, id int64) (EventHold, error) {
 	var hold EventHold
 	err := client.get(ctx, eventHoldPath(slug, id)+".json", &hold)

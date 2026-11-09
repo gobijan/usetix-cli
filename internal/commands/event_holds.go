@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -18,6 +19,10 @@ import (
 var occupancyStates = []string{"free", "cart", "held", "blocked", "sold"}
 
 const occupancyStateChoices = "free, cart, held, blocked, or sold"
+
+var holdStatuses = []string{"open", "fulfilled", "released", "expired", "all"}
+
+const holdStatusChoices = "open, fulfilled, released, expired, or all"
 
 // placeSelection is what the hold and booking endpoints take from the seat
 // map: numbered places, whole tables and places in standing areas.
@@ -154,7 +159,7 @@ by their seats, standing areas by quantity.
 			}
 			occupancy, err := client.GetOccupancy(command.Context(), args[0])
 			if err != nil {
-				return NormalizeError(err)
+				return occupancyError(err)
 			}
 			data := any(occupancy)
 			if format := runtime.OutputFormat(); format == output.FormatIDs || format == output.FormatCount {
@@ -169,30 +174,43 @@ by their seats, standing areas by quantity.
 }
 
 func newEventHoldsList(runtime *appctx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	var status string
+	command := &cobra.Command{
 		Use:   "list SLUG",
-		Short: "List the event's open holds",
-		Long: `List the open holds of a seated event from its seat map: reservations,
-sales point allotments and blocks, with how many places each keeps. Ended
-holds are not listed; read one with "show".`,
+		Short: "List the event's holds, the open ones unless --status says otherwise",
+		Long: `List the event's holds: reservations, sales point allotments and blocks, with
+how many places each keeps. Open holds by default; --status fulfilled,
+released or expired lists the holds that ended that way, --status all every
+hold.`,
+		Example: `  usetix events holds list spring-showcase
+  usetix events holds list spring-showcase --status all --json`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
+			if status != "" && !slices.Contains(holdStatuses, status) {
+				return output.ErrUsage("--status must be " + holdStatusChoices)
+			}
 			client, _, err := runtime.APIClient()
 			if err != nil {
 				return err
 			}
-			occupancy, err := client.GetOccupancy(command.Context(), args[0])
+			response, err := client.ListEventHolds(command.Context(), args[0], status)
 			if err != nil {
 				return NormalizeError(err)
 			}
-			holds := occupancy.Holds
-			if holds == nil {
-				holds = []api.OccupancyHold{}
+			data := any(response)
+			if format := runtime.OutputFormat(); format == output.FormatIDs || format == output.FormatCount {
+				data = response.Holds
 			}
-			return runtime.Output().OK(holds, renderOccupancyHolds(holds),
-				output.WithSummary(summaryCount(len(holds), "open hold", "open holds")))
+			noun, nouns := "hold", "holds"
+			if status == "" || status == "open" {
+				noun, nouns = "open hold", "open holds"
+			}
+			return runtime.Output().OK(data, renderEventHolds(response.Holds, nouns),
+				output.WithSummary(summaryCount(len(response.Holds), noun, nouns)))
 		},
 	}
+	command.Flags().StringVar(&status, "status", "", "list holds by status: "+holdStatusChoices+"; open by default")
+	return command
 }
 
 func newEventHoldShow(runtime *appctx.Runtime) *cobra.Command {
@@ -511,6 +529,17 @@ func holdLinkNotice(slug string, hold api.EventHold) string {
 	return notice + " Re-run with --yes"
 }
 
+// occupancyError explains a 404: an event without a seat map has no
+// occupancy, and neither has an unknown slug.
+func occupancyError(err error) error {
+	normalized := NormalizeError(err)
+	var structured *output.Error
+	if errors.As(normalized, &structured) && structured.Code == "not_found" {
+		structured.Hint = "Only an event with a seat map has an occupancy. Check the slug with: usetix events list"
+	}
+	return normalized
+}
+
 func placesInState(places []api.OccupancyPlace, state string) []api.OccupancyPlace {
 	matching := make([]api.OccupancyPlace, 0, len(places))
 	for _, place := range places {
@@ -529,6 +558,7 @@ func occupancySummary(occupancy api.Occupancy) string {
 func renderOccupancy(slug string, occupancy api.Occupancy, state string) output.StyledRenderer {
 	return func(w io.Writer) error {
 		heading := lipgloss.NewStyle().Bold(true)
+		// Servers before the 404 answered an event without a seat map with an empty one
 		if occupancy.RevisionID == nil && len(occupancy.Places)+len(occupancy.Tables)+len(occupancy.Standing) == 0 {
 			_, err := fmt.Fprintf(w, "%s has no seat map: it sells tickets without places.\n", terminal.SanitizeLine(slug))
 			return err
@@ -657,14 +687,27 @@ func occupancyOwner(occupancy api.Occupancy, holds map[int64]string, holdID *int
 	return owner
 }
 
-func renderOccupancyHolds(holds []api.OccupancyHold) output.StyledRenderer {
+func renderEventHolds(holds []api.EventHold, nouns string) output.StyledRenderer {
 	return func(w io.Writer) error {
 		if len(holds) == 0 {
-			_, err := fmt.Fprintln(w, "No open holds.")
+			_, err := fmt.Fprintf(w, "No %s.\n", nouns)
 			return err
 		}
 		for _, hold := range holds {
-			if _, err := fmt.Fprintln(w, occupancyHoldLine(hold)); err != nil {
+			line := fmt.Sprintf("%d  %s  %s  %s  %s", hold.ID, holdName(hold), terminal.SanitizeLine(hold.Kind),
+				terminal.SanitizeLine(hold.Status), summaryCount(hold.AttendeeCount, "place", "places"))
+			if hold.Email != nil && *hold.Email != "" && holdName(hold) != terminal.SanitizeLine(*hold.Email) {
+				line += "  " + terminal.SanitizeLine(*hold.Email)
+			}
+			if hold.SalesPoint != nil && holdName(hold) != terminal.SanitizeLine(hold.SalesPoint.Name) {
+				line += "  for " + terminal.SanitizeLine(hold.SalesPoint.Name)
+			}
+			if hold.ClosedAt != nil {
+				line += "  ended " + terminal.SanitizeLine(*hold.ClosedAt)
+			} else if hold.ExpiresAt != nil {
+				line += "  until " + terminal.SanitizeLine(*hold.ExpiresAt)
+			}
+			if _, err := fmt.Fprintln(w, line); err != nil {
 				return err
 			}
 		}

@@ -502,6 +502,7 @@ usetix events occupancy spring-showcase
 usetix events occupancy spring-showcase --state free            # lists the free places and tables
 usetix events occupancy spring-showcase --state free --ids-only # free place IDs, one per line
 usetix events holds list spring-showcase
+usetix events holds list spring-showcase --status all --json
 usetix events holds create spring-showcase --place 5501,5502 --name "Erika Muster" \
   --email erika@example.com --expires-at 2026-11-14T17:00:00Z --send-link
 usetix events holds create spring-showcase --standing-area 90 --quantity 10 --sales-point SALES_POINT_ID
@@ -525,10 +526,14 @@ stay theirs. A held place is never on sale in the shop. A hold ends when
 everything is bought, when you release it or at its `--expires-at`, and its
 places then go back on sale; removing a hold's last places releases it.
 
-`holds list` shows the open holds from the seat map; `show` reads any hold,
-ended ones included, with its buy link (share it only with the person).
-`occupancy --json` returns the complete seat map unchanged; `--ids-only` and
-`--count` describe its numbered places, filtered by `--state`. Personal
+`holds list` shows the open holds; `--status fulfilled`, `released` or
+`expired` lists the ones that ended that way and `--status all` every hold.
+`show` reads any hold with its buy link (share it only with the person). An
+`--expires-at` that doesn't read as a time or an unknown `--sales-point` is
+refused with that field named. `occupancy --json` returns the complete seat
+map unchanged; `--ids-only` and `--count` describe its numbered places,
+filtered by `--state`. An event without a seat map has no occupancy (`404`).
+Personal
 co-organizer tokens work with holds of their assigned events; allotments are
 the venue's. See the
 [seat map and holds API reference](https://www.usetix.io/docs/api/holds/).

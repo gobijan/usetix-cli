@@ -106,8 +106,8 @@ Typed commands: `events occupancy` for the seat map's counts, open holds,
 standing areas and, with `--state`, the places in one state, and
 `events holds list`, `show`, `create`, `update`, `add-places`,
 `remove-places`, `send-link`, `release` and `release-places`.
-`holds list` reads the open holds from the occupancy; the API has no list of
-ended holds. `send-link` without `--yes` reads the hold and names the
+`holds list` lists the open holds, or by `--status` (`fulfilled`, `released`,
+`expired`, `all`). `send-link` without `--yes` reads the hold and names the
 recipient; `--yes` emails the buy link. `release`, `remove-places` and
 `release-places` put places back on sale and require `--yes`. The CLI reads
 the occupancy afresh each time and sends no `If-None-Match` or

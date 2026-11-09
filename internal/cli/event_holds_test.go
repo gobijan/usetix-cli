@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"reflect"
@@ -125,26 +124,40 @@ func TestOccupancyCountsPlacesAndListsThoseInAState(t *testing.T) {
 }
 
 func TestOccupancyOfAnEventWithoutSeatMap(t *testing.T) {
+	empty := false
 	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, _ *http.Request, _ map[string]any) {
-		_, _ = io.WriteString(w, `{"counts":{"free":0,"cart":0,"sold":0,"held":0,"blocked":0},"categories":[],"holds":[],"orders":{},"places":[],"tables":[],"standing":[]}`)
+		if empty {
+			_, _ = io.WriteString(w, `{"counts":{"free":0,"cart":0,"sold":0,"held":0,"blocked":0},"categories":[],"holds":[],"orders":{},"places":[],"tables":[],"standing":[]}`)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = io.WriteString(w, `{"error":"This event has no seat map yet."}`)
 	})
-	stdout, _, code := runCLI(t, []string{"--styled", "events", "occupancy", "club-night"}, "", env, nil)
-	if code != 0 || stdout != "club-night has no seat map: it sells tickets without places.\n" {
-		t.Fatalf("no seat map: %d %q", code, stdout)
+	stdout, _, code := runCLI(t, []string{"events", "occupancy", "club-night", "--json"}, "", env, nil)
+	if code == 0 || !strings.Contains(stdout, `"code": "not_found"`) || !strings.Contains(stdout, "Only an event with a seat map has an occupancy. Check the slug with: usetix events list") {
+		t.Fatalf("no seat map: %d %s", code, stdout)
 	}
-	stdout, _, code = runCLI(t, []string{"events", "occupancy", "club-night", "--json"}, "", env, nil)
-	if code != 0 || strings.Contains(stdout, "revision_id") || !strings.Contains(stdout, `"orders": {}`) {
-		t.Fatalf("no seat map json: %d %s", code, stdout)
+
+	// Servers before the 404 answered with an empty seat map
+	empty = true
+	stdout, _, code = runCLI(t, []string{"--styled", "events", "occupancy", "club-night"}, "", env, nil)
+	if code != 0 || stdout != "club-night has no seat map: it sells tickets without places.\n" {
+		t.Fatalf("empty seat map: %d %q", code, stdout)
 	}
 }
 
 func TestEventHoldsListAndShow(t *testing.T) {
 	var requests []string
+	holds := `{"holds":[` + eventHoldJSON + `,` + allotmentJSON + `]}`
 	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, r *http.Request, _ map[string]any) {
-		requests = append(requests, r.Method+" "+r.URL.Path)
+		request := r.Method + " " + r.URL.Path
+		if r.URL.RawQuery != "" {
+			request += "?" + r.URL.RawQuery
+		}
+		requests = append(requests, request)
 		switch r.URL.Path {
-		case "/admin/events/spring-showcase/occupancy.json":
-			_, _ = io.WriteString(w, occupancyJSON)
+		case "/admin/events/spring-showcase/holds.json":
+			_, _ = io.WriteString(w, holds)
 		case "/admin/events/spring-showcase/holds/41.json":
 			_, _ = io.WriteString(w, eventHoldJSON)
 		case "/admin/events/spring-showcase/holds/43.json":
@@ -155,20 +168,40 @@ func TestEventHoldsListAndShow(t *testing.T) {
 	})
 
 	stdout, _, code := runCLI(t, []string{"events", "holds", "list", "spring-showcase", "--json"}, "", env, nil)
-	if code != 0 || len(requests) != 1 || requests[0] != "GET /admin/events/spring-showcase/occupancy.json" {
+	if code != 0 || len(requests) != 1 || requests[0] != "GET /admin/events/spring-showcase/holds.json" {
 		t.Fatalf("list: %d %v %s", code, requests, stdout)
 	}
-	var occupancy struct {
-		Holds json.RawMessage `json:"holds"`
-	}
-	if err := json.Unmarshal([]byte(occupancyJSON), &occupancy); err != nil {
-		t.Fatal(err)
-	}
-	assertGuestListJSON(t, stdout, string(occupancy.Holds))
+	assertGuestListJSON(t, stdout, holds)
 
 	stdout, _, code = runCLI(t, []string{"events", "holds", "list", "spring-showcase", "--ids-only"}, "", env, nil)
-	if code != 0 || stdout != "41\n42\n" {
+	if code != 0 || stdout != "41\n43\n" {
 		t.Fatalf("list ids: %d %q", code, stdout)
+	}
+
+	stdout, _, code = runCLI(t, []string{"--styled", "events", "holds", "list", "spring-showcase"}, "", env, nil)
+	if code != 0 || !strings.Contains(stdout, "41  Erika Muster  reservation  open  12 places  erika@example.com  until 2026-11-14T17:00:00Z\n") ||
+		!strings.Contains(stdout, "43  Ticketshop Altstadt  allotment  open  1 place\n") {
+		t.Fatalf("list styled: %d %q", code, stdout)
+	}
+
+	requests = nil
+	holds = `{"holds":[` + strings.NewReplacer(`"status":"open"`, `"status":"released"`, `"closed_at":null`, `"closed_at":"2026-11-10T08:00:00Z"`).Replace(eventHoldJSON) + `]}`
+	stdout, _, code = runCLI(t, []string{"--styled", "events", "holds", "list", "spring-showcase", "--status", "released"}, "", env, nil)
+	if code != 0 || len(requests) != 1 || requests[0] != "GET /admin/events/spring-showcase/holds.json?status=released" ||
+		!strings.Contains(stdout, "41  Erika Muster  reservation  released  12 places  erika@example.com  ended 2026-11-10T08:00:00Z\n") {
+		t.Fatalf("released: %d %v %q", code, requests, stdout)
+	}
+
+	holds = `{"holds":[]}`
+	stdout, _, code = runCLI(t, []string{"--styled", "events", "holds", "list", "spring-showcase"}, "", env, nil)
+	if code != 0 || stdout != "No open holds.\n" {
+		t.Fatalf("no holds: %d %q", code, stdout)
+	}
+
+	requests = nil
+	stdout, _, code = runCLI(t, []string{"events", "holds", "list", "spring-showcase", "--status", "ended", "--json"}, "", env, nil)
+	if code != 1 || len(requests) != 0 || !strings.Contains(stdout, "--status must be open, fulfilled, released, expired, or all") {
+		t.Fatalf("invalid status: %d %v %s", code, requests, stdout)
 	}
 
 	stdout, _, code = runCLI(t, []string{"events", "holds", "show", "spring-showcase", "41", "--json"}, "", env, nil)
@@ -264,14 +297,21 @@ func TestEventHoldCreateSendsTheSelectionAndAttributesFlat(t *testing.T) {
 	}
 }
 
-func TestEventHoldCreateReportsWhenNothingCanBeHeld(t *testing.T) {
+func TestEventHoldCreateReportsWhatTheServerRefuses(t *testing.T) {
+	refusal := `{"errors":{"base":["None of these places can be held any more."]}}`
 	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, _ *http.Request, _ map[string]any) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		_, _ = io.WriteString(w, `{"errors":{"base":["None of these places can be held any more."]}}`)
+		_, _ = io.WriteString(w, refusal)
 	})
 	stdout, _, code := runCLI(t, []string{"events", "holds", "create", "spring-showcase", "--place", "5505", "--name", "Technik", "--json"}, "", env, nil)
 	if code == 0 || !strings.Contains(stdout, `"code": "validation"`) || !strings.Contains(stdout, "None of these places can be held any more.") {
-		t.Fatalf("validation: %d %s", code, stdout)
+		t.Fatalf("nothing to hold: %d %s", code, stdout)
+	}
+
+	refusal = `{"errors":{"expires_at":["doesn't read as a time"],"sales_point_id":["is not a sales point of yours"]}}`
+	stdout, _, code = runCLI(t, []string{"events", "holds", "create", "spring-showcase", "--place", "5503", "--expires-at", "tomorrow", "--sales-point", "nope", "--json"}, "", env, nil)
+	if code == 0 || !strings.Contains(stdout, "expires_at: doesn't read as a time; sales_point_id: is not a sales point of yours") {
+		t.Fatalf("unreadable fields: %d %s", code, stdout)
 	}
 }
 
