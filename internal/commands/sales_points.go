@@ -42,8 +42,8 @@ its Usetix fee comes from your Usetix Credit.
 A sales point sells every event or the ones you choose with --event, the
 places held for it as an allotment ("usetix events holds create
 --sales-point") and, unless --sells-open-inventory=false, every free place.
-"settle" records what it sold up to now; commission is between you and the
-sales point and not part of Usetix.
+"settle" records what it sold up to now and "settlements" lists what was
+settled; commission is between you and the sales point and not part of Usetix.
 
 Sales points are identified by the ID "list" prints. These commands need a
 venue token (owner or manager); personal co-organizer tokens can't use them.`,
@@ -59,6 +59,7 @@ venue token (owner or manager); personal co-organizer tokens can't use them.`,
 		newSalesPointArchive(runtime),
 		newSalesPointInvite(runtime),
 		newSalesPointSettle(runtime),
+		newSalesPointSettlements(runtime),
 		newSalesPointUnsettle(runtime),
 		newSalesPointExport(runtime),
 	)
@@ -92,7 +93,7 @@ func newSalesPointsList(runtime *appctx.Runtime) *cobra.Command {
 func newSalesPointShow(runtime *appctx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show SALES_POINT_ID",
-		Short: "Show a sales point, archived ones included, with its open period's figures",
+		Short: "Show a sales point, archived ones included, with its open period's figures and note",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
 			id, err := salesPointID(args[0])
@@ -198,7 +199,10 @@ func newSalesPointArchive(runtime *appctx.Runtime) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "archive SALES_POINT_ID",
 		Short: "Archive a sales point that no longer sells",
-		Args:  cobra.ExactArgs(1),
+		Long: `Archive a sales point that no longer sells: its people can no longer sign in
+to the box office app. Its sales and settlements stay. Archiving it again
+changes nothing.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, args []string) error {
 			id, err := salesPointID(args[0])
 			if err != nil {
@@ -297,6 +301,40 @@ figures and records nothing. The latest settlement can be taken back with
 	return command
 }
 
+func newSalesPointSettlements(runtime *appctx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use:   "settlements SALES_POINT_ID",
+		Short: "List the sales point's latest settlements, newest first",
+		Long: `List the sales point's latest 24 settlements, newest first, with the figures
+each kept and its note. Only the newest can be taken back with "unsettle".`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(command *cobra.Command, args []string) error {
+			id, err := salesPointID(args[0])
+			if err != nil {
+				return err
+			}
+			client, _, err := runtime.APIClient()
+			if err != nil {
+				return err
+			}
+			salesPoint, err := client.GetSalesPoint(command.Context(), id)
+			if err != nil {
+				return NormalizeError(err)
+			}
+			response := api.SalesPointSettlements{Settlements: []api.SalesPointSettlement{}}
+			if salesPoint.Settlements != nil {
+				response.Settlements = *salesPoint.Settlements
+			}
+			data := any(response)
+			if format := runtime.OutputFormat(); format == output.FormatIDs || format == output.FormatCount {
+				data = response.Settlements
+			}
+			return runtime.Output().OK(data, renderSettlements(salesPoint, response.Settlements),
+				output.WithSummary(summaryCount(len(response.Settlements), "settlement", "settlements")))
+		},
+	}
+}
+
 func newSalesPointUnsettle(runtime *appctx.Runtime) *cobra.Command {
 	var yes bool
 	command := &cobra.Command{
@@ -304,7 +342,7 @@ func newSalesPointUnsettle(runtime *appctx.Runtime) *cobra.Command {
 		Short: "Take the latest settlement back",
 		Long: `Take the sales point's latest settlement back, for example after settling by
 mistake: its sales count in the open period again. Only the latest settlement
-can be taken back; "settle" prints its ID.`,
+can be taken back; "settle" prints its ID and "settlements" lists it first.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(command *cobra.Command, args []string) error {
 			id, err := salesPointID(args[0])
@@ -546,8 +584,15 @@ func renderSalesPoint(action string, salesPoint api.SalesPoint) output.StyledRen
 			lines = append(lines, "  Contact      "+strings.Join(contact, " · "))
 		}
 		lines = append(lines, "  Sells        "+salesPointSells(salesPoint))
+		if salesPoint.Note != nil && *salesPoint.Note != "" {
+			lines = append(lines, "  Note         "+terminal.SanitizeLine(*salesPoint.Note))
+		}
 		if salesPoint.ArchivedAt != nil {
 			lines = append(lines, "  Archived     "+terminal.SanitizeLine(*salesPoint.ArchivedAt))
+		}
+		if salesPoint.Settlements != nil && len(*salesPoint.Settlements) > 0 {
+			latest := (*salesPoint.Settlements)[0]
+			lines = append(lines, fmt.Sprintf("  Settled      up to %s (settlement %d)", terminal.SanitizeLine(latest.PeriodEnd), latest.ID))
 		}
 		sales := salesPoint.OpenSales
 		lines = append(lines,
@@ -575,14 +620,66 @@ func renderSettlement(salesPointID string, settlement api.SalesPointSettlement) 
 			fmt.Sprintf("  Sold      %s · %s · %s", summaryCount(settlement.OrderCount, "order", "orders"), summaryCount(settlement.TicketCount, "ticket", "tickets"), formatMoney(settlement.Sales)),
 			"  Refunded  " + formatMoney(settlement.Refunded),
 			"  Net       " + formatMoney(settlement.Net),
+		}
+		if settlement.Note != nil && *settlement.Note != "" {
+			lines = append(lines, "  Note      "+terminal.SanitizeLine(*settlement.Note))
+		}
+		lines = append(lines,
 			"",
 			lipgloss.NewStyle().Faint(true).Render(fmt.Sprintf("Take it back with: usetix sales-points unsettle %s %d --yes", terminal.SanitizeLine(salesPointID), settlement.ID)),
-		}
+		)
 		for _, line := range lines {
 			if _, err := fmt.Fprintln(w, line); err != nil {
 				return err
 			}
 		}
 		return nil
+	}
+}
+
+func renderSettlements(salesPoint api.SalesPoint, settlements []api.SalesPointSettlement) output.StyledRenderer {
+	return func(w io.Writer) error {
+		if len(settlements) == 0 {
+			_, err := fmt.Fprintf(w, "%s has no settlements yet. Settle with: usetix sales-points settle %s\n",
+				terminal.SanitizeLine(salesPoint.Name), terminal.SanitizeLine(salesPoint.ID))
+			return err
+		}
+		header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("8"))
+		view := table.New().
+			Headers("ID", "FROM", "TO", "ORDERS", "TICKETS", "SALES", "REFUNDED", "NET", "NOTE").
+			Border(lipgloss.HiddenBorder()).
+			BorderTop(false).
+			BorderBottom(false).
+			BorderLeft(false).
+			BorderRight(false).
+			BorderHeader(false).
+			BorderColumn(false).
+			StyleFunc(func(row, _ int) lipgloss.Style {
+				style := lipgloss.NewStyle().PaddingRight(2)
+				if row == table.HeaderRow {
+					return style.Inherit(header)
+				}
+				return style
+			})
+		for _, settlement := range settlements {
+			view.Row(
+				strconv.FormatInt(settlement.ID, 10),
+				terminal.SanitizeLine(settlement.PeriodStart),
+				terminal.SanitizeLine(settlement.PeriodEnd),
+				strconv.Itoa(settlement.OrderCount),
+				strconv.Itoa(settlement.TicketCount),
+				formatMoney(settlement.Sales),
+				formatMoney(settlement.Refunded),
+				formatMoney(settlement.Net),
+				optionalString(settlement.Note),
+			)
+		}
+		if _, err := fmt.Fprintln(w, view.String()); err != nil {
+			return err
+		}
+		hint := fmt.Sprintf("The latest, %d, can be taken back with: usetix sales-points unsettle %s %d --yes",
+			settlements[0].ID, terminal.SanitizeLine(salesPoint.ID), settlements[0].ID)
+		_, err := fmt.Fprintln(w, lipgloss.NewStyle().Faint(true).Render(hint))
+		return err
 	}
 }

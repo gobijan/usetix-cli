@@ -94,6 +94,7 @@ CMD usetix sales-points export
 CMD usetix sales-points invite
 CMD usetix sales-points list
 CMD usetix sales-points settle
+CMD usetix sales-points settlements
 CMD usetix sales-points show
 CMD usetix sales-points unsettle
 CMD usetix sales-points update
@@ -1109,6 +1110,14 @@ FLAG usetix sales-points settle --profile type=string
 FLAG usetix sales-points settle --quiet type=bool
 FLAG usetix sales-points settle --styled type=bool
 FLAG usetix sales-points settle --yes type=bool
+FLAG usetix sales-points settlements --agent type=bool
+FLAG usetix sales-points settlements --api-url type=string
+FLAG usetix sales-points settlements --count type=bool
+FLAG usetix sales-points settlements --ids-only type=bool
+FLAG usetix sales-points settlements --json type=bool
+FLAG usetix sales-points settlements --profile type=string
+FLAG usetix sales-points settlements --quiet type=bool
+FLAG usetix sales-points settlements --styled type=bool
 FLAG usetix sales-points show --agent type=bool
 FLAG usetix sales-points show --api-url type=string
 FLAG usetix sales-points show --count type=bool
@@ -1657,6 +1666,7 @@ SUB usetix sales-points export
 SUB usetix sales-points invite
 SUB usetix sales-points list
 SUB usetix sales-points settle
+SUB usetix sales-points settlements
 SUB usetix sales-points show
 SUB usetix sales-points unsettle
 SUB usetix sales-points update

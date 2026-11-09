@@ -209,7 +209,8 @@ printf '%s' '{"listed":false}' | usetix api PATCH /admin/events/summer --data -
 usetix api DELETE /admin/performers/42 --yes
 ```
 
-Non-JSON responses — CSV, XLSX, and PDF exports — download with `--output`:
+Non-JSON responses — CSV, XLSX, and PDF exports — download with `--output`.
+A `GET` of an export authenticates with the same API token as JSON:
 
 ```sh
 usetix api GET /admin/orders.csv --output orders.csv
@@ -596,6 +597,7 @@ usetix sales-points invite SALES_POINT_ID counter@altstadt.example
 usetix events holds create spring-showcase --place 5501,5502 --sales-point SALES_POINT_ID   # its allotment
 usetix sales-points settle SALES_POINT_ID                  # shows the open period; records nothing
 usetix sales-points settle SALES_POINT_ID --note "Transfer of 12 Nov" --yes
+usetix sales-points settlements SALES_POINT_ID
 usetix sales-points unsettle SALES_POINT_ID 7 --yes        # takes the latest settlement back
 usetix sales-points export SALES_POINT_ID --output altstadt-sales.csv
 usetix sales-points archive SALES_POINT_ID --yes
@@ -606,16 +608,18 @@ A sales point sells every event, or with `--event` only the events you name
 again). It sells its allotments and, unless `--sells-open-inventory=false`,
 every free place. `list` and `show` give what it sold since its last
 settlement (`open_since`, `open_sales`): sales, refunds, what it owes you and,
-for information, the Usetix fees these sales took from your credit.
-Commission is between you and the sales point and not part of Usetix.
+for information, the Usetix fees these sales took from your credit; `show`
+also gives your team's note and when it was last settled. Commission is
+between you and the sales point and not part of Usetix.
 
 `settle` records what it sold up to now; the next period starts where the
 settlement ends, and a later refund counts in the next one. Without `--yes`
-it shows the open period's figures. `unsettle` takes the latest settlement
-back by the ID `settle` printed. `invite` emails an invitation to sell at the
-sales point; people who accept see only the box office app and appear in
-`team list` with their sales point. Archiving ends their access; sales and
-settlements stay. `export` saves its sales as CSV, `--output -` writes to
-stdout, and nothing is saved when Usetix answers with anything but CSV.
-Sales point commands need a venue token. See the
+it shows the open period's figures. `settlements` lists the latest 24,
+newest first, with the figures each kept and its note; `unsettle` takes the
+newest back. `invite` emails an invitation to sell at the sales point; people
+who accept see only the box office app and appear in `team list` with their
+sales point. Archiving ends their access, and archiving again changes nothing;
+sales and settlements stay. `export` saves its sales as CSV with the same API
+token, `--output -` writes to stdout, and nothing is saved when Usetix answers
+with anything but CSV. Sales point commands need a venue token. See the
 [sales points API reference](https://www.usetix.io/docs/api/sales-points/).

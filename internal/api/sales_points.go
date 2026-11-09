@@ -17,18 +17,22 @@ type SalesPointReference struct {
 // SalesPoint is a business that sells the account's tickets at its own
 // counter. ID is its public ID. OpenSales counts what it sold since
 // OpenSince, the end of its last settlement or when it was added.
+// Settlements, the latest 24 newest first, come only with a single sales
+// point, not in the list.
 type SalesPoint struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	ContactName        *string         `json:"contact_name"`
-	Email              *string         `json:"email"`
-	Phone              *string         `json:"phone"`
-	AllEvents          bool            `json:"all_events"`
-	EventIDs           []int64         `json:"event_ids"`
-	SellsOpenInventory bool            `json:"sells_open_inventory"`
-	ArchivedAt         *string         `json:"archived_at"`
-	OpenSince          string          `json:"open_since"`
-	OpenSales          SalesPointSales `json:"open_sales"`
+	ID                 string                  `json:"id"`
+	Name               string                  `json:"name"`
+	ContactName        *string                 `json:"contact_name"`
+	Email              *string                 `json:"email"`
+	Phone              *string                 `json:"phone"`
+	Note               *string                 `json:"note"`
+	AllEvents          bool                    `json:"all_events"`
+	EventIDs           []int64                 `json:"event_ids"`
+	SellsOpenInventory bool                    `json:"sells_open_inventory"`
+	ArchivedAt         *string                 `json:"archived_at"`
+	OpenSince          string                  `json:"open_since"`
+	OpenSales          SalesPointSales         `json:"open_sales"`
+	Settlements        *[]SalesPointSettlement `json:"settlements,omitempty"`
 }
 
 // SalesPointSales is the open period: Owed is Sales less Refunded, and
@@ -49,14 +53,22 @@ type SalesPointsResponse struct {
 // SalesPointSettlement keeps a sales point's figures for a period as they
 // were when it was settled.
 type SalesPointSettlement struct {
-	ID          int64  `json:"id"`
-	PeriodStart string `json:"period_start"`
-	PeriodEnd   string `json:"period_end"`
-	OrderCount  int    `json:"order_count"`
-	TicketCount int    `json:"ticket_count"`
-	Sales       Money  `json:"sales"`
-	Refunded    Money  `json:"refunded"`
-	Net         Money  `json:"net"`
+	ID          int64   `json:"id"`
+	PeriodStart string  `json:"period_start"`
+	PeriodEnd   string  `json:"period_end"`
+	OrderCount  int     `json:"order_count"`
+	TicketCount int     `json:"ticket_count"`
+	Sales       Money   `json:"sales"`
+	Refunded    Money   `json:"refunded"`
+	Net         Money   `json:"net"`
+	Note        *string `json:"note"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+// SalesPointSettlements is what "sales-points settlements" prints: the
+// settlements of one sales point, newest first.
+type SalesPointSettlements struct {
+	Settlements []SalesPointSettlement `json:"settlements"`
 }
 
 func (client *Client) ListSalesPoints(ctx context.Context) (SalesPointsResponse, error) {

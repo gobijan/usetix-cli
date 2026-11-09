@@ -39,12 +39,12 @@ Typed coverage will grow where it materially improves daily use.
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
 | Advertising (limited beta) | — | `api GET /admin/advertising` | Direct for enabled accounts; Meta connection summary and cursor-paginated campaigns |
-| CSV/XLSX/PDF exports | — | `api GET ...csv --output FILE` | Direct via `--output` (orders, customers, attendees, analytics) |
+| CSV/XLSX/PDF exports | `sales-points export` | `api GET ...csv --output FILE` | Direct via `--output` (orders, customers, attendees, analytics); a `GET` of an export authenticates with the API token, and an HTML page answers a token with `401` |
 | Shop settings | — | `api ... /admin/account_settings/shop` | Direct; exposes `shop_url` for the public feed host |
 | Checkout settings | — | `api ... /admin/account_settings/checkout` | Direct; buyer fields, ticket price display, and account fee defaults |
 | Checkout fees (compatibility) | — | `api ... /admin/account_settings/payments` | Direct; retained for existing clients |
 | Memberships and invitations | `team list/invite/access/deactivate/reactivate`, `team invitations resend/revoke`, `events invite-co-organizer` | `api ... /admin/memberships`, `/admin/invitations` | Team roles, complete event assignments, invitations and revocation, sales point members named by their sales point; venue only |
-| Sales points | `sales-points list/show/create/update/archive/invite/settle/unsettle/export` | `api ... /admin/sales_points...` | Typed; see [Sales points](#sales-points) |
+| Sales points | `sales-points list/show/create/update/archive/invite/settle/settlements/unsettle/export` | `api ... /admin/sales_points...` | Typed; see [Sales points](#sales-points) |
 | Event duplication | `events duplicate SLUG` | `api POST /admin/events/SLUG/duplication` | Draft copy; co-organizers receive access to their copy |
 | Event media and gallery | — | `api PATCH /admin/events/SLUG` | Signed upload IDs, gallery order/removal, documents and their shop names (`document_titles`, `new_document_titles`, and the private equivalents), video and artwork; same editor validations |
 | Scanner | — | `api ... /scanner/...` | Direct |
@@ -130,11 +130,12 @@ https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings.
 ## Sales points
 
 Typed commands: `sales-points list`, `show`, `create`, `update`, `archive`,
-`invite`, `settle`, `unsettle` and `export`. `--event` takes event slugs and
-sends their numeric IDs. `settle` without `--yes` reads the sales point and
-shows the open period it would settle; `archive`, `settle` and `unsettle`
-require `--yes`. The API lists no settlements, so `unsettle` takes the ID
-`settle` printed. `export` saves `GET /admin/sales_points/:id.csv` and refuses
-any answer that isn't `text/csv`. Sales points need a venue token; personal
+`invite`, `settle`, `settlements`, `unsettle` and `export`. `--event` takes
+event slugs and sends their numeric IDs. `settle` without `--yes` reads the
+sales point and shows the open period it would settle; `archive`, `settle` and
+`unsettle` require `--yes`. `settlements` prints the latest 24 settlements
+from the sales point's `show` response under `settlements`. `export` saves
+`GET /admin/sales_points/:id.csv` with the API token and refuses any answer
+that isn't `text/csv`. Sales points need a venue token; personal
 co-organizer tokens and Usetix support get `403`. See
 https://www.usetix.io/docs/api/sales-points/.
