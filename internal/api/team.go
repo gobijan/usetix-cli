@@ -13,20 +13,22 @@ type TeamUser struct {
 }
 
 type Membership struct {
-	ID        int64    `json:"id"`
-	Role      string   `json:"role"`
-	EventIDs  *[]int64 `json:"event_ids,omitempty"`
-	State     string   `json:"state"`
-	CreatedAt string   `json:"created_at"`
-	User      TeamUser `json:"user"`
+	ID         int64                `json:"id"`
+	Role       string               `json:"role"`
+	EventIDs   *[]int64             `json:"event_ids,omitempty"`
+	SalesPoint *SalesPointReference `json:"sales_point,omitempty"`
+	State      string               `json:"state"`
+	CreatedAt  string               `json:"created_at"`
+	User       TeamUser             `json:"user"`
 }
 
 type Invitation struct {
-	ID        int64    `json:"id"`
-	Email     string   `json:"email"`
-	Role      string   `json:"role"`
-	EventIDs  *[]int64 `json:"event_ids,omitempty"`
-	CreatedAt string   `json:"created_at"`
+	ID         int64                `json:"id"`
+	Email      string               `json:"email"`
+	Role       string               `json:"role"`
+	EventIDs   *[]int64             `json:"event_ids,omitempty"`
+	SalesPoint *SalesPointReference `json:"sales_point,omitempty"`
+	CreatedAt  string               `json:"created_at"`
 }
 
 type Team struct {

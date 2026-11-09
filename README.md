@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, and ticket-upgrade removal always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, emailing a hold's buy link, booking tickets, and archiving, settling or unsettling a sales point always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -209,7 +209,8 @@ printf '%s' '{"listed":false}' | usetix api PATCH /admin/events/summer --data -
 usetix api DELETE /admin/performers/42 --yes
 ```
 
-Non-JSON responses — CSV, XLSX, and PDF exports — download with `--output`:
+Non-JSON responses — CSV, XLSX, and PDF exports — download with `--output`.
+A `GET` of an export authenticates with the same API token as JSON:
 
 ```sh
 usetix api GET /admin/orders.csv --output orders.csv
@@ -488,3 +489,141 @@ upgrade's state (live, paused, or why it is off for now) and its results;
 `compact`, `spotlight` and `compare`. Pausing keeps an upgrade and its results;
 removing deletes both. See the
 [ticket upgrades API reference](https://www.usetix.io/docs/api/ticket-upgrades/).
+
+### Seat map and holds
+
+A seated event's seat map says which places are free, in someone's checkout,
+held, blocked or sold. A hold keeps places back from the shop under a name:
+with `--email` a reservation the person buys through their own buy link, with
+`--sales-point` that sales point's allotment, with only `--name` a block the
+house keeps.
+
+```sh
+usetix events occupancy spring-showcase
+usetix events occupancy spring-showcase --state free            # lists the free places and tables
+usetix events occupancy spring-showcase --state free --ids-only # free place IDs, one per line
+usetix events holds list spring-showcase
+usetix events holds list spring-showcase --status all --json
+usetix events holds create spring-showcase --place 5501,5502 --name "Erika Muster" \
+  --email erika@example.com --expires-at 2026-11-14T17:00:00Z --send-link
+usetix events holds create spring-showcase --standing-area 90 --quantity 10 --sales-point SALES_POINT_ID
+usetix events holds create spring-showcase --place 5503 --name Technik
+usetix events holds show spring-showcase 41
+usetix events holds update spring-showcase 41 --expires-at ""   # no end
+usetix events holds add-places spring-showcase 41 --place 5504
+usetix events holds remove-places spring-showcase 41 --place 5502 --yes
+usetix events holds send-link spring-showcase 41                # shows the recipient; sends nothing
+usetix events holds send-link spring-showcase 41 --yes
+usetix events holds release spring-showcase 41 --yes
+usetix events holds release-places spring-showcase --place 5501 --yes
+```
+
+`--place`, `--table` and `--standing-area` take the IDs `occupancy --state`
+prints (`places[].id`, `tables[].id` and `standing[].id` in its JSON); repeat
+them or separate IDs with commas. `--quantity` is the number of places in each
+standing area. Places that are sold or in someone's checkout are left out of a
+hold; places the house keeps move over to it; places reserved for someone else
+stay theirs. A held place is never on sale in the shop. A hold ends when
+everything is bought, when you release it or at its `--expires-at`, and its
+places then go back on sale; removing a hold's last places releases it.
+
+`holds list` shows the open holds; `--status fulfilled`, `released` or
+`expired` lists the ones that ended that way and `--status all` every hold.
+`show` reads any hold with its buy link (share it only with the person). An
+`--expires-at` that doesn't read as a time or an unknown `--sales-point` is
+refused with that field named. `occupancy --json` returns the complete seat
+map unchanged; `--ids-only` and `--count` describe its numbered places,
+filtered by `--state`. An event without a seat map has no occupancy (`404`).
+Personal
+co-organizer tokens work with holds of their assigned events; allotments are
+the venue's. See the
+[seat map and holds API reference](https://www.usetix.io/docs/api/holds/).
+
+### Booking tickets
+
+Book tickets for someone straight away, without the shop's checkout: free, or
+as paid outside Usetix.
+
+```sh
+usetix events book club-night --ticket 12=2 --payment till --reference K-0042   # says what happens; books nothing
+usetix events book club-night --ticket 12=2 --payment till --reference K-0042 --yes
+usetix events book spring-showcase --place 5501,5502 --category 3=101 --payment bank_transfer \
+  --reference RE-2026-17 --name "Lumivo GmbH" --email einkauf@lumivo.example --yes
+usetix events book spring-showcase --place 5503 --category 3=104 --payment complimentary \
+  --name "Erika Muster" --email erika@example.com --yes
+usetix events book club-night --ticket 12=3 --payment complimentary --name "Lumivo Crew" --yes
+usetix events book spring-showcase --standing-area 90 --standing-ticket 105 --quantity 4 --payment other --yes
+```
+
+`--payment complimentary` books a free guest-list party with no fee. It needs
+`--name`, the name the door checks in, and takes one kind of selection:
+numbered places, a standing area, or one `--ticket` on an event without a seat
+map; whole tables are booked as paid only. The tickets go to `--email` when
+given. `till` (your own till), `bank_transfer`,
+`invoice` and `other` book an order with origin `box_office` at the tickets'
+prices, with no fees passed on to the buyer. Usetix takes its usual fee for
+these tickets from your Usetix Credit; without enough credit nothing is booked
+and the error names the fee. `bank_transfer` and `invoice` need `--name` and
+`--email`: the buyer gets an invoice from Usetix. Usetix records only where the
+money was paid, never cash. Paid bookings need a venue token; personal
+co-organizer tokens book free tickets only.
+
+For an event without a seat map, pass quantities with `--ticket
+TICKET_ID=QUANTITY` (IDs from `usetix api GET /admin/events/SLUG/tickets`). For
+a seated event, pass `--place` or `--table` IDs from `usetix events occupancy
+SLUG --state free` with `--category CATEGORY_ID=TICKET_ID` for each price
+category the occupancy lists; standing places take `--standing-area` with
+`--standing-ticket` and `--quantity`. Places a hold keeps go straight from the
+hold to the buyer and fulfil it once nothing is left. Your own bookings may use
+any ticket that isn't archived, hidden and internal tickets included, and pass
+its sale window; purchase limits don't apply.
+
+`--json` returns the order as `orders show` does, with `outside_payment`
+(`method`, `reference`) and `sales_point`. `orders refund` and `orders cancel`
+work on box-office orders too: you pay the money back the way it came in, and
+the refund is recorded as paid back outside Usetix and settles at once. See the
+[orders API reference](https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings).
+
+### Sales points
+
+A sales point (Vorverkaufsstelle) sells your tickets at its own counter: its
+people sell in the Usetix box office app and take the money in their own till.
+Every sale is an order with origin `box_office` paid at the sales point; its
+Usetix fee comes from your Usetix Credit.
+
+```sh
+usetix sales-points list
+usetix sales-points create --name "Ticketshop Altstadt" --contact-name "Anna Weber" \
+  --email info@altstadt.example --event spring-showcase --event club-night
+usetix sales-points show SALES_POINT_ID
+usetix sales-points update SALES_POINT_ID --all-events --sells-open-inventory=false
+usetix sales-points invite SALES_POINT_ID counter@altstadt.example
+usetix events holds create spring-showcase --place 5501,5502 --sales-point SALES_POINT_ID   # its allotment
+usetix sales-points settle SALES_POINT_ID                  # shows the open period; records nothing
+usetix sales-points settle SALES_POINT_ID --note "Transfer of 12 Nov" --yes
+usetix sales-points settlements SALES_POINT_ID
+usetix sales-points unsettle SALES_POINT_ID 7 --yes        # takes the latest settlement back
+usetix sales-points export SALES_POINT_ID --output altstadt-sales.csv
+usetix sales-points archive SALES_POINT_ID --yes
+```
+
+A sales point sells every event, or with `--event` only the events you name
+(slugs; `update --event` replaces the list, `--all-events` sells every event
+again). It sells its allotments and, unless `--sells-open-inventory=false`,
+every free place. `list` and `show` give what it sold since its last
+settlement (`open_since`, `open_sales`): sales, refunds, what it owes you and,
+for information, the Usetix fees these sales took from your credit; `show`
+also gives your team's note and when it was last settled. Commission is
+between you and the sales point and not part of Usetix.
+
+`settle` records what it sold up to now; the next period starts where the
+settlement ends, and a later refund counts in the next one. Without `--yes`
+it shows the open period's figures. `settlements` lists the latest 24,
+newest first, with the figures each kept and its note; `unsettle` takes the
+newest back. `invite` emails an invitation to sell at the sales point; people
+who accept see only the box office app and appear in `team list` with their
+sales point. Archiving ends their access, and archiving again changes nothing;
+sales and settlements stay. `export` saves its sales as CSV with the same API
+token, `--output -` writes to stdout, and nothing is saved when Usetix answers
+with anything but CSV. Sales point commands need a venue token. See the
+[sales points API reference](https://www.usetix.io/docs/api/sales-points/).
