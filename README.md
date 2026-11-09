@@ -551,11 +551,15 @@ usetix events book spring-showcase --place 5501,5502 --category 3=101 --payment 
   --reference RE-2026-17 --name "Lumivo GmbH" --email einkauf@lumivo.example --yes
 usetix events book spring-showcase --place 5503 --category 3=104 --payment complimentary \
   --name "Erika Muster" --email erika@example.com --yes
+usetix events book club-night --ticket 12=3 --payment complimentary --name "Lumivo Crew" --yes
 usetix events book spring-showcase --standing-area 90 --standing-ticket 105 --quantity 4 --payment other --yes
 ```
 
-`--payment complimentary` books a free guest-list party with no fee; the
-tickets go to `--email` when given. `till` (your own till), `bank_transfer`,
+`--payment complimentary` books a free guest-list party with no fee. It needs
+`--name`, the name the door checks in, and takes one kind of selection:
+numbered places, a standing area, or one `--ticket` on an event without a seat
+map; whole tables are booked as paid only. The tickets go to `--email` when
+given. `till` (your own till), `bank_transfer`,
 `invoice` and `other` book an order with origin `box_office` at the tickets'
 prices, with no fees passed on to the buyer. Usetix takes its usual fee for
 these tickets from your Usetix Credit; without enough credit nothing is booked
@@ -568,7 +572,7 @@ For an event without a seat map, pass quantities with `--ticket
 TICKET_ID=QUANTITY` (IDs from `usetix api GET /admin/events/SLUG/tickets`). For
 a seated event, pass `--place` or `--table` IDs from `usetix events occupancy
 SLUG --state free` with `--category CATEGORY_ID=TICKET_ID` for each price
-category the occupancy lists; standing places take `--standing-area`,
+category the occupancy lists; standing places take `--standing-area` with
 `--standing-ticket` and `--quantity`. Places a hold keeps go straight from the
 hold to the buyer and fulfil it once nothing is left. Your own bookings may use
 any ticket that isn't archived, hidden and internal tickets included, and pass

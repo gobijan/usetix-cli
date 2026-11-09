@@ -31,8 +31,11 @@ func newEventsBook(runtime *appctx.Runtime) *cobra.Command {
 		Short: "Book tickets straight away: free, or paid outside Usetix",
 		Long: `Book tickets for someone without the shop's checkout.
 
---payment complimentary books them free, as a guest-list party with no fee;
-the tickets go to --email when given. till (your own till), bank_transfer,
+--payment complimentary books them free, as a guest-list party with no fee.
+It needs --name, the name the door checks in, and takes one kind of
+selection: numbered places, a standing area, or one --ticket on an event
+without a seat map. Whole tables are booked as paid only. The tickets go to
+--email when given. till (your own till), bank_transfer,
 invoice and other book them as paid outside Usetix: an order with origin
 box_office at the tickets' prices, with no fees passed on to the buyer. Usetix
 takes its usual fee for these tickets from your Usetix Credit; without enough
@@ -87,6 +90,13 @@ only.`,
 					return output.ErrUsage("--standing-ticket takes the positive ID of the ticket the --standing-area places are booked as")
 				}
 				body["standing_ticket_id"] = standingTicket
+			} else if len(selection.standingAreas) > 0 {
+				return output.ErrUsage("--standing-area needs --standing-ticket, the ticket its places are booked as")
+			}
+			if payment == "complimentary" {
+				if err := checkFreeBooking(*selection, tickets, name); err != nil {
+					return err
+				}
 			}
 			if len(tickets) > 0 {
 				body["tickets"] = tickets
@@ -125,7 +135,7 @@ only.`,
 	}
 	command.Flags().StringVar(&payment, "payment", "", "how it was paid: "+bookingPaymentChoices)
 	command.Flags().StringVar(&reference, "reference", "", "receipt or invoice number, up to 100 characters")
-	command.Flags().StringVar(&name, "name", "", "who the tickets are for; required for bank_transfer and invoice")
+	command.Flags().StringVar(&name, "name", "", "who the tickets are for; required for complimentary, bank_transfer and invoice")
 	command.Flags().StringVar(&email, "email", "", "where the tickets go; required for bank_transfer and invoice")
 	command.Flags().StringArrayVar(&ticketSpecs, "ticket", nil, "TICKET_ID=QUANTITY for an event without a seat map; repeat for more tickets")
 	command.Flags().StringArrayVar(&categorySpecs, "category", nil, "CATEGORY_ID=TICKET_ID: the ticket a price category's places are booked as; repeat per category")
@@ -154,6 +164,31 @@ func idPairs(specs []string, flag, form string) (map[string]int64, error) {
 		pairs[key] = number
 	}
 	return pairs, nil
+}
+
+// checkFreeBooking holds a free booking to the shape of one guest-list
+// party: a name for the door and one kind of selection with one ticket.
+func checkFreeBooking(selection placeSelection, tickets map[string]int64, name string) error {
+	if strings.TrimSpace(name) == "" {
+		return output.ErrUsage("a free booking needs --name: the name the door checks in")
+	}
+	if len(selection.tables) > 0 {
+		return output.ErrUsageHint("whole tables are booked as paid only",
+			"Book a table with --payment till, bank_transfer, invoice or other, or its seats as --place for free")
+	}
+	if len(tickets) > 1 {
+		return output.ErrUsage("a free booking takes one --ticket: it is one guest-list party with one ticket")
+	}
+	kinds := 0
+	for _, chosen := range []bool{len(selection.places) > 0, len(selection.standingAreas) > 0, len(tickets) > 0} {
+		if chosen {
+			kinds++
+		}
+	}
+	if kinds > 1 {
+		return output.ErrUsage("a free booking takes numbered places, a standing area or one --ticket, not several of them")
+	}
+	return nil
 }
 
 func bookingNotice(payment, email string) string {

@@ -137,6 +137,19 @@ func TestEventsBookPlacesOnTheSeatMap(t *testing.T) {
 		t.Fatalf("standing body: %d %#v", code, body)
 	}
 
+	_, _, code = runCLI(t, []string{"events", "book", "club-night", "--ticket", "12=3", "--payment", "complimentary", "--name", "Lumivo Crew", "--yes", "--json"}, "", env, nil)
+	want = map[string]any{"tickets": map[string]any{"12": float64(3)}, "booking": map[string]any{"payment_method": "complimentary", "customer_name": "Lumivo Crew"}}
+	if code != 0 || !reflect.DeepEqual(body, want) {
+		t.Fatalf("free ticket body: %d %#v", code, body)
+	}
+
+	_, _, code = runCLI(t, []string{"events", "book", "spring-showcase", "--standing-area", "90", "--standing-ticket", "105", "--quantity", "2", "--payment", "complimentary", "--name", "Lumivo Crew", "--yes", "--json"}, "", env, nil)
+	want = map[string]any{"event_capacity_pool_ids": []any{float64(90)}, "standing_ticket_id": float64(105), "quantity": float64(2),
+		"booking": map[string]any{"payment_method": "complimentary", "customer_name": "Lumivo Crew"}}
+	if code != 0 || !reflect.DeepEqual(body, want) {
+		t.Fatalf("free standing body: %d %#v", code, body)
+	}
+
 	_, _, code = runCLI(t, []string{"events", "book", "spring-showcase", "--place", "5503", "--category", "3=104", "--payment", "complimentary", "--name", "Erika Muster", "--email", "erika@example.com", "--yes", "--json"}, "", env, nil)
 	want = map[string]any{
 		"event_place_ids": []any{float64(5503)}, "category_tickets": map[string]any{"3": float64(104)},
@@ -159,7 +172,7 @@ func TestEventsBookRequiresConfirmationAndAClearSelection(t *testing.T) {
 		!strings.Contains(stderr, "takes Usetix's usual fee for them from your Usetix Credit; without enough credit nothing is booked. Re-run with --yes") {
 		t.Fatalf("unconfirmed paid: %d %v %q %q", code, requests, stdout, stderr)
 	}
-	_, stderr, code = runCLI(t, []string{"--styled", "events", "book", "spring-showcase", "--place", "5503", "--category", "3=104", "--payment", "complimentary", "--email", "erika@example.com"}, "", env, nil)
+	_, stderr, code = runCLI(t, []string{"--styled", "events", "book", "spring-showcase", "--place", "5503", "--category", "3=104", "--payment", "complimentary", "--name", "Erika Muster", "--email", "erika@example.com"}, "", env, nil)
 	if code != 1 || len(requests) != 0 || !strings.Contains(stderr, "Books the tickets free, as a guest-list party with no fee, and emails them to erika@example.com. Re-run with --yes") {
 		t.Fatalf("unconfirmed free: %d %v %q", code, requests, stderr)
 	}
@@ -179,6 +192,12 @@ func TestEventsBookRequiresConfirmationAndAClearSelection(t *testing.T) {
 		{[]string{"--place", "5503", "--category", "3", "--payment", "till", "--yes"}, "--category takes CATEGORY_ID=TICKET_ID"},
 		{[]string{"--standing-area", "90", "--payment", "till", "--yes"}, "--standing-area needs --quantity"},
 		{[]string{"--ticket", "12=2", "--standing-ticket", "105", "--payment", "till", "--yes"}, "--standing-ticket takes the positive ID"},
+		{[]string{"--standing-area", "90", "--quantity", "2", "--payment", "till", "--yes"}, "--standing-area needs --standing-ticket"},
+		{[]string{"--ticket", "12=2", "--payment", "complimentary", "--yes"}, "a free booking needs --name"},
+		{[]string{"--ticket", "12=2", "--payment", "complimentary", "--name", " ", "--yes"}, "a free booking needs --name"},
+		{[]string{"--table", "310", "--category", "4=102", "--payment", "complimentary", "--name", "Lumivo Crew", "--yes"}, "whole tables are booked as paid only"},
+		{[]string{"--ticket", "12=2", "--ticket", "13=1", "--payment", "complimentary", "--name", "Lumivo Crew", "--yes"}, "a free booking takes one --ticket"},
+		{[]string{"--place", "5503", "--category", "3=104", "--ticket", "12=1", "--payment", "complimentary", "--name", "Lumivo Crew", "--yes"}, "not several of them"},
 	} {
 		stdout, _, code = runCLI(t, append([]string{"events", "book", "spring-showcase", "--json"}, check.args...), "", env, nil)
 		if code != 1 || len(requests) != 0 || !strings.Contains(stdout, check.want) {

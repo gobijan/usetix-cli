@@ -119,8 +119,9 @@ Typed command: `events book SLUG` with `--payment` (`complimentary`, `till`,
 `bank_transfer`, `invoice` or `other`), `--ticket TICKET_ID=QUANTITY` for
 events without a seat map, or `--place`/`--table` with
 `--category CATEGORY_ID=TICKET_ID` and `--standing-area` with
-`--standing-ticket` and `--quantity` for seated events. Booking always
-requires `--yes`; without it the command says what would happen and books
+`--standing-ticket` and `--quantity` for seated events. Free bookings need
+`--name` and one kind of selection with one ticket, never whole tables; the
+CLI checks that before asking. Booking always requires `--yes`; without it the command says what would happen and books
 nothing. Paid bookings take Usetix's fee from Usetix Credit, which the API
 does not preview; missing credit returns `422` naming the fee. Personal
 co-organizer tokens get `403` for paid bookings. The CLI sends no
