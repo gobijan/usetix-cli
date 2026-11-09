@@ -33,7 +33,8 @@ Typed coverage will grow where it materially improves daily use.
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
 | Seat map and holds | `events occupancy`, `events holds list/show/create/update/add-places/remove-places/send-link/release/release-places` | `api ... /admin/events/:slug/occupancy`, `/holds...`, `/place_release` | Typed; see [Seat map and holds](#seat-map-and-holds) |
 | Guest-list signup links and review | `events guest-list forms/create/form/configure/rotate/requests/approve/reject` | `api ... /admin/events/:slug/guest_list_forms`, `/guest_list_forms/:public_id/rotation`, `/guest_requests...` | Multiple active-by-default links, exact link selection, confirmed URL rotation, manual/automatic approval, asked details (company, phone and companions' names as hidden/optional/required, order-level checkout questions), numeric request pagination, confirmed review including companions added after approval; existing parties and seat moves remain direct |
-| Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
+| Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, where box-office orders were paid (`outside_payment`, `sales_point`), refunds, booking cancellation, and archival |
+| Booking tickets (box office) | `events book` | `api POST /admin/events/:slug/bookings` | Typed for free guest-list bookings and bookings paid outside Usetix, by ticket quantities or by places, tables and standing areas; see [Booking tickets](#booking-tickets) |
 | Customers | `customers list/show/update`, `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Typed for the cursor-paginated directory with event, search, period and marketing filters, details with orders, correcting salutation/title/name/company/phone, and interaction timelines; CSV/XLSX export remains direct |
 | Analytics and Live View | `analytics shares/share/revoke` for expiring report links | `api GET /admin/analytics...` | Report sharing is typed; full historical and Live View data remain direct |
 | Analytics settings | — | `api ... /admin/account_settings/analytics` | Direct; controls collection and consent-gated external tracking identifiers |
@@ -110,3 +111,17 @@ recipient; `--yes` emails the buy link. `release`, `remove-places` and
 `release-places` put places back on sale and require `--yes`. The CLI reads
 the occupancy afresh each time and sends no `If-None-Match` or
 `Idempotency-Key` header. See https://www.usetix.io/docs/api/holds/.
+
+## Booking tickets
+
+Typed command: `events book SLUG` with `--payment` (`complimentary`, `till`,
+`bank_transfer`, `invoice` or `other`), `--ticket TICKET_ID=QUANTITY` for
+events without a seat map, or `--place`/`--table` with
+`--category CATEGORY_ID=TICKET_ID` and `--standing-area` with
+`--standing-ticket` and `--quantity` for seated events. Booking always
+requires `--yes`; without it the command says what would happen and books
+nothing. Paid bookings take Usetix's fee from Usetix Credit, which the API
+does not preview; missing credit returns `422` naming the fee. Personal
+co-organizer tokens get `403` for paid bookings. The CLI sends no
+`Idempotency-Key`. See
+https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings.

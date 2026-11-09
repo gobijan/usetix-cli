@@ -74,6 +74,7 @@ func TestOccupancyCountsPlacesAndListsThoseInAState(t *testing.T) {
 	for _, want := range []string{
 		"Seat map of spring-showcase",
 		"Free      76", "In carts  3", "Held      2", "Blocked   11", "Sold      122",
+		"Price categories", "\n  3  Parkett\n  4  Loge\n",
 		"41  Erika Muster  reservation  2 places  erika@example.com  until 2026-11-14T17:00:00Z\n",
 		"42  Technik  block  2 places  · someone is paying now\n",
 		"90  68 free of 200 · 120 sold · 2 in carts · 10 held",

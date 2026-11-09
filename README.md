@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, and emailing a hold's buy link always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, emailing a hold's buy link, and booking tickets always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -532,3 +532,44 @@ ended ones included, with its buy link (share it only with the person).
 co-organizer tokens work with holds of their assigned events; allotments are
 the venue's. See the
 [seat map and holds API reference](https://www.usetix.io/docs/api/holds/).
+
+### Booking tickets
+
+Book tickets for someone straight away, without the shop's checkout: free, or
+as paid outside Usetix.
+
+```sh
+usetix events book club-night --ticket 12=2 --payment till --reference K-0042   # says what happens; books nothing
+usetix events book club-night --ticket 12=2 --payment till --reference K-0042 --yes
+usetix events book spring-showcase --place 5501,5502 --category 3=101 --payment bank_transfer \
+  --reference RE-2026-17 --name "Lumivo GmbH" --email einkauf@lumivo.example --yes
+usetix events book spring-showcase --place 5503 --category 3=104 --payment complimentary \
+  --name "Erika Muster" --email erika@example.com --yes
+usetix events book spring-showcase --standing-area 90 --standing-ticket 105 --quantity 4 --payment other --yes
+```
+
+`--payment complimentary` books a free guest-list party with no fee; the
+tickets go to `--email` when given. `till` (your own till), `bank_transfer`,
+`invoice` and `other` book an order with origin `box_office` at the tickets'
+prices, with no fees passed on to the buyer. Usetix takes its usual fee for
+these tickets from your Usetix Credit; without enough credit nothing is booked
+and the error names the fee. `bank_transfer` and `invoice` need `--name` and
+`--email`: the buyer gets an invoice from Usetix. Usetix records only where the
+money was paid, never cash. Paid bookings need a venue token; personal
+co-organizer tokens book free tickets only.
+
+For an event without a seat map, pass quantities with `--ticket
+TICKET_ID=QUANTITY` (IDs from `usetix api GET /admin/events/SLUG/tickets`). For
+a seated event, pass `--place` or `--table` IDs from `usetix events occupancy
+SLUG --state free` with `--category CATEGORY_ID=TICKET_ID` for each price
+category the occupancy lists; standing places take `--standing-area`,
+`--standing-ticket` and `--quantity`. Places a hold keeps go straight from the
+hold to the buyer and fulfil it once nothing is left. Your own bookings may use
+any ticket that isn't archived, hidden and internal tickets included, and pass
+its sale window; purchase limits don't apply.
+
+`--json` returns the order as `orders show` does, with `outside_payment`
+(`method`, `reference`) and `sales_point`. `orders refund` and `orders cancel`
+work on box-office orders too: you pay the money back the way it came in, and
+the refund is recorded as paid back outside Usetix and settles at once. See the
+[orders API reference](https://www.usetix.io/docs/api/orders/#post-admineventsevent_slugbookings).

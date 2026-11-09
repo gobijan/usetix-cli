@@ -542,6 +542,12 @@ func renderOccupancy(slug string, occupancy api.Occupancy, state string) output.
 			fmt.Sprintf("  Blocked   %d", counts.Blocked),
 			fmt.Sprintf("  Sold      %d", counts.Sold),
 		}
+		if len(occupancy.Categories) > 0 {
+			lines = append(lines, "", heading.Render("Price categories"))
+			for _, category := range occupancy.Categories {
+				lines = append(lines, fmt.Sprintf("  %d  %s", category.ID, terminal.SanitizeLine(category.Name)))
+			}
+		}
 		if len(occupancy.Holds) > 0 {
 			lines = append(lines, "", heading.Render("Open holds"))
 			for _, hold := range occupancy.Holds {

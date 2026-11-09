@@ -51,6 +51,7 @@ func NewEvents(runtime *appctx.Runtime) *cobra.Command {
 		newEventsUpgrades(runtime),
 		newEventsOccupancy(runtime),
 		newEventsHolds(runtime),
+		newEventsBook(runtime),
 		newEventsCreate(runtime),
 		newEventsUpdate(runtime),
 		newEventsDelete(runtime),
