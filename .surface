@@ -33,6 +33,16 @@ CMD usetix events guest-list forms
 CMD usetix events guest-list reject
 CMD usetix events guest-list requests
 CMD usetix events guest-list rotate
+CMD usetix events holds
+CMD usetix events holds add-places
+CMD usetix events holds create
+CMD usetix events holds list
+CMD usetix events holds release
+CMD usetix events holds release-places
+CMD usetix events holds remove-places
+CMD usetix events holds send-link
+CMD usetix events holds show
+CMD usetix events holds update
 CMD usetix events invite-co-organizer
 CMD usetix events list
 CMD usetix events lounges
@@ -42,6 +52,7 @@ CMD usetix events lounges cancel
 CMD usetix events lounges configure
 CMD usetix events lounges list
 CMD usetix events lounges reject
+CMD usetix events occupancy
 CMD usetix events open-answers
 CMD usetix events publish
 CMD usetix events show
@@ -482,6 +493,114 @@ FLAG usetix events guest-list rotate --profile type=string
 FLAG usetix events guest-list rotate --quiet type=bool
 FLAG usetix events guest-list rotate --styled type=bool
 FLAG usetix events guest-list rotate --yes type=bool
+FLAG usetix events holds --agent type=bool
+FLAG usetix events holds --api-url type=string
+FLAG usetix events holds --count type=bool
+FLAG usetix events holds --ids-only type=bool
+FLAG usetix events holds --json type=bool
+FLAG usetix events holds --profile type=string
+FLAG usetix events holds --quiet type=bool
+FLAG usetix events holds --styled type=bool
+FLAG usetix events holds add-places --agent type=bool
+FLAG usetix events holds add-places --api-url type=string
+FLAG usetix events holds add-places --count type=bool
+FLAG usetix events holds add-places --ids-only type=bool
+FLAG usetix events holds add-places --json type=bool
+FLAG usetix events holds add-places --place type=int64Slice
+FLAG usetix events holds add-places --profile type=string
+FLAG usetix events holds add-places --quantity type=int
+FLAG usetix events holds add-places --quiet type=bool
+FLAG usetix events holds add-places --standing-area type=int64Slice
+FLAG usetix events holds add-places --styled type=bool
+FLAG usetix events holds add-places --table type=int64Slice
+FLAG usetix events holds create --agent type=bool
+FLAG usetix events holds create --api-url type=string
+FLAG usetix events holds create --count type=bool
+FLAG usetix events holds create --email type=string
+FLAG usetix events holds create --expires-at type=string
+FLAG usetix events holds create --ids-only type=bool
+FLAG usetix events holds create --json type=bool
+FLAG usetix events holds create --name type=string
+FLAG usetix events holds create --note type=string
+FLAG usetix events holds create --place type=int64Slice
+FLAG usetix events holds create --profile type=string
+FLAG usetix events holds create --quantity type=int
+FLAG usetix events holds create --quiet type=bool
+FLAG usetix events holds create --sales-point type=string
+FLAG usetix events holds create --send-link type=bool
+FLAG usetix events holds create --standing-area type=int64Slice
+FLAG usetix events holds create --styled type=bool
+FLAG usetix events holds create --table type=int64Slice
+FLAG usetix events holds list --agent type=bool
+FLAG usetix events holds list --api-url type=string
+FLAG usetix events holds list --count type=bool
+FLAG usetix events holds list --ids-only type=bool
+FLAG usetix events holds list --json type=bool
+FLAG usetix events holds list --profile type=string
+FLAG usetix events holds list --quiet type=bool
+FLAG usetix events holds list --styled type=bool
+FLAG usetix events holds release --agent type=bool
+FLAG usetix events holds release --api-url type=string
+FLAG usetix events holds release --count type=bool
+FLAG usetix events holds release --ids-only type=bool
+FLAG usetix events holds release --json type=bool
+FLAG usetix events holds release --profile type=string
+FLAG usetix events holds release --quiet type=bool
+FLAG usetix events holds release --styled type=bool
+FLAG usetix events holds release --yes type=bool
+FLAG usetix events holds release-places --agent type=bool
+FLAG usetix events holds release-places --api-url type=string
+FLAG usetix events holds release-places --count type=bool
+FLAG usetix events holds release-places --ids-only type=bool
+FLAG usetix events holds release-places --json type=bool
+FLAG usetix events holds release-places --place type=int64Slice
+FLAG usetix events holds release-places --profile type=string
+FLAG usetix events holds release-places --quiet type=bool
+FLAG usetix events holds release-places --standing-area type=int64Slice
+FLAG usetix events holds release-places --styled type=bool
+FLAG usetix events holds release-places --table type=int64Slice
+FLAG usetix events holds release-places --yes type=bool
+FLAG usetix events holds remove-places --agent type=bool
+FLAG usetix events holds remove-places --api-url type=string
+FLAG usetix events holds remove-places --count type=bool
+FLAG usetix events holds remove-places --ids-only type=bool
+FLAG usetix events holds remove-places --json type=bool
+FLAG usetix events holds remove-places --place type=int64Slice
+FLAG usetix events holds remove-places --profile type=string
+FLAG usetix events holds remove-places --quiet type=bool
+FLAG usetix events holds remove-places --standing-area type=int64Slice
+FLAG usetix events holds remove-places --styled type=bool
+FLAG usetix events holds remove-places --table type=int64Slice
+FLAG usetix events holds remove-places --yes type=bool
+FLAG usetix events holds send-link --agent type=bool
+FLAG usetix events holds send-link --api-url type=string
+FLAG usetix events holds send-link --count type=bool
+FLAG usetix events holds send-link --ids-only type=bool
+FLAG usetix events holds send-link --json type=bool
+FLAG usetix events holds send-link --profile type=string
+FLAG usetix events holds send-link --quiet type=bool
+FLAG usetix events holds send-link --styled type=bool
+FLAG usetix events holds send-link --yes type=bool
+FLAG usetix events holds show --agent type=bool
+FLAG usetix events holds show --api-url type=string
+FLAG usetix events holds show --count type=bool
+FLAG usetix events holds show --ids-only type=bool
+FLAG usetix events holds show --json type=bool
+FLAG usetix events holds show --profile type=string
+FLAG usetix events holds show --quiet type=bool
+FLAG usetix events holds show --styled type=bool
+FLAG usetix events holds update --agent type=bool
+FLAG usetix events holds update --api-url type=string
+FLAG usetix events holds update --count type=bool
+FLAG usetix events holds update --email type=string
+FLAG usetix events holds update --expires-at type=string
+FLAG usetix events holds update --ids-only type=bool
+FLAG usetix events holds update --json type=bool
+FLAG usetix events holds update --name type=string
+FLAG usetix events holds update --note type=string
+FLAG usetix events holds update --profile type=string
+FLAG usetix events holds update --quiet type=bool
+FLAG usetix events holds update --styled type=bool
 FLAG usetix events invite-co-organizer --agent type=bool
 FLAG usetix events invite-co-organizer --api-url type=string
 FLAG usetix events invite-co-organizer --count type=bool
@@ -561,6 +680,15 @@ FLAG usetix events lounges reject --profile type=string
 FLAG usetix events lounges reject --quiet type=bool
 FLAG usetix events lounges reject --styled type=bool
 FLAG usetix events lounges reject --yes type=bool
+FLAG usetix events occupancy --agent type=bool
+FLAG usetix events occupancy --api-url type=string
+FLAG usetix events occupancy --count type=bool
+FLAG usetix events occupancy --ids-only type=bool
+FLAG usetix events occupancy --json type=bool
+FLAG usetix events occupancy --profile type=string
+FLAG usetix events occupancy --quiet type=bool
+FLAG usetix events occupancy --state type=string
+FLAG usetix events occupancy --styled type=bool
 FLAG usetix events open-answers --agent type=bool
 FLAG usetix events open-answers --api-url type=string
 FLAG usetix events open-answers --count type=bool
@@ -1335,6 +1463,16 @@ SUB usetix events guest-list forms
 SUB usetix events guest-list reject
 SUB usetix events guest-list requests
 SUB usetix events guest-list rotate
+SUB usetix events holds
+SUB usetix events holds add-places
+SUB usetix events holds create
+SUB usetix events holds list
+SUB usetix events holds release
+SUB usetix events holds release-places
+SUB usetix events holds remove-places
+SUB usetix events holds send-link
+SUB usetix events holds show
+SUB usetix events holds update
 SUB usetix events invite-co-organizer
 SUB usetix events list
 SUB usetix events lounges
@@ -1344,6 +1482,7 @@ SUB usetix events lounges cancel
 SUB usetix events lounges configure
 SUB usetix events lounges list
 SUB usetix events lounges reject
+SUB usetix events occupancy
 SUB usetix events open-answers
 SUB usetix events publish
 SUB usetix events show

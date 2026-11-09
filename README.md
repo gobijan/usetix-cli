@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, and ticket-upgrade removal always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, releasing holds or putting held places on sale, and emailing a hold's buy link always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -488,3 +488,47 @@ upgrade's state (live, paused, or why it is off for now) and its results;
 `compact`, `spotlight` and `compare`. Pausing keeps an upgrade and its results;
 removing deletes both. See the
 [ticket upgrades API reference](https://www.usetix.io/docs/api/ticket-upgrades/).
+
+### Seat map and holds
+
+A seated event's seat map says which places are free, in someone's checkout,
+held, blocked or sold. A hold keeps places back from the shop under a name:
+with `--email` a reservation the person buys through their own buy link, with
+`--sales-point` that sales point's allotment, with only `--name` a block the
+house keeps.
+
+```sh
+usetix events occupancy spring-showcase
+usetix events occupancy spring-showcase --state free            # lists the free places and tables
+usetix events occupancy spring-showcase --state free --ids-only # free place IDs, one per line
+usetix events holds list spring-showcase
+usetix events holds create spring-showcase --place 5501,5502 --name "Erika Muster" \
+  --email erika@example.com --expires-at 2026-11-14T17:00:00Z --send-link
+usetix events holds create spring-showcase --standing-area 90 --quantity 10 --sales-point SALES_POINT_ID
+usetix events holds create spring-showcase --place 5503 --name Technik
+usetix events holds show spring-showcase 41
+usetix events holds update spring-showcase 41 --expires-at ""   # no end
+usetix events holds add-places spring-showcase 41 --place 5504
+usetix events holds remove-places spring-showcase 41 --place 5502 --yes
+usetix events holds send-link spring-showcase 41                # shows the recipient; sends nothing
+usetix events holds send-link spring-showcase 41 --yes
+usetix events holds release spring-showcase 41 --yes
+usetix events holds release-places spring-showcase --place 5501 --yes
+```
+
+`--place`, `--table` and `--standing-area` take the IDs `occupancy --state`
+prints (`places[].id`, `tables[].id` and `standing[].id` in its JSON); repeat
+them or separate IDs with commas. `--quantity` is the number of places in each
+standing area. Places that are sold or in someone's checkout are left out of a
+hold; places the house keeps move over to it; places reserved for someone else
+stay theirs. A held place is never on sale in the shop. A hold ends when
+everything is bought, when you release it or at its `--expires-at`, and its
+places then go back on sale; removing a hold's last places releases it.
+
+`holds list` shows the open holds from the seat map; `show` reads any hold,
+ended ones included, with its buy link (share it only with the person).
+`occupancy --json` returns the complete seat map unchanged; `--ids-only` and
+`--count` describe its numbered places, filtered by `--state`. Personal
+co-organizer tokens work with holds of their assigned events; allotments are
+the venue's. See the
+[seat map and holds API reference](https://www.usetix.io/docs/api/holds/).

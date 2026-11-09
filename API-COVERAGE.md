@@ -31,6 +31,7 @@ Typed coverage will grow where it materially improves daily use.
 | Promoter reports | `promoters list` | `api GET /admin/promoters` | Typed per-promoter/code sales and refund-adjusted revenue, with event and purchase-period filters; organizer only |
 | Gift vouchers | `vouchers list/report/show/issue/adjust/block/unblock/retry-delivery/import`, `vouchers products list/show/create/update/archive/remove-image` | `api ... /admin/vouchers...`, `/admin/voucher_deliveries/:id/retry`, `/admin/voucher_lookup`, `/admin/voucher_products...`, `/admin/voucher_imports...` | Typed for cursor pagination, bonus-priced products, common balance operations, delivery inspection/retry, product lifecycle/artwork removal, body-safe exact-code lookup, reporting, and atomic CSV imports; direct for CSV export and catalog reordering |
 | Guest list and seat moves | — | `api ... /admin/events/:slug/guest_...` | Direct |
+| Seat map and holds | `events occupancy`, `events holds list/show/create/update/add-places/remove-places/send-link/release/release-places` | `api ... /admin/events/:slug/occupancy`, `/holds...`, `/place_release` | Typed; see [Seat map and holds](#seat-map-and-holds) |
 | Guest-list signup links and review | `events guest-list forms/create/form/configure/rotate/requests/approve/reject` | `api ... /admin/events/:slug/guest_list_forms`, `/guest_list_forms/:public_id/rotation`, `/guest_requests...` | Multiple active-by-default links, exact link selection, confirmed URL rotation, manual/automatic approval, asked details (company, phone and companions' names as hidden/optional/required, order-level checkout questions), numeric request pagination, confirmed review including companions added after approval; existing parties and seat moves remain direct |
 | Orders | `orders list/show/refund/cancel/archive/unarchive` | `api ... /admin/orders...` | Fully typed, including customer order links (`shop_url`), mixed product lines, ticket admissions, refunds, booking cancellation, and archival |
 | Customers | `customers list/show/update`, `customers contacts list/show/log/update/delete` | `api ... /admin/customers...` | Typed for the cursor-paginated directory with event, search, period and marketing filters, details with orders, correcting salutation/title/name/company/phone, and interaction timelines; CSV/XLSX export remains direct |
@@ -96,3 +97,16 @@ agrees to the fee. `deactivate` and `remove` also require `--yes`; removing an
 upgrade deletes its results. Personal co-organizer tokens manage their assigned
 events' upgrades but cannot change the activation (`403`).
 See https://www.usetix.io/docs/api/ticket-upgrades/.
+
+## Seat map and holds
+
+Typed commands: `events occupancy` for the seat map's counts, open holds,
+standing areas and, with `--state`, the places in one state, and
+`events holds list`, `show`, `create`, `update`, `add-places`,
+`remove-places`, `send-link`, `release` and `release-places`.
+`holds list` reads the open holds from the occupancy; the API has no list of
+ended holds. `send-link` without `--yes` reads the hold and names the
+recipient; `--yes` emails the buy link. `release`, `remove-places` and
+`release-places` put places back on sale and require `--yes`. The CLI reads
+the occupancy afresh each time and sends no `If-None-Match` or
+`Idempotency-Key` header. See https://www.usetix.io/docs/api/holds/.
