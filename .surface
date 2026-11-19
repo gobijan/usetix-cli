@@ -19,6 +19,13 @@ CMD usetix customers contacts update
 CMD usetix customers list
 CMD usetix customers show
 CMD usetix customers update
+CMD usetix design-versions
+CMD usetix design-versions create
+CMD usetix design-versions delete
+CMD usetix design-versions list
+CMD usetix design-versions publish
+CMD usetix design-versions rename
+CMD usetix design-versions show
 CMD usetix events
 CMD usetix events arrivals
 CMD usetix events book
@@ -66,6 +73,20 @@ CMD usetix events upgrades pause
 CMD usetix events upgrades remove
 CMD usetix events upgrades resume
 CMD usetix events upgrades update
+CMD usetix free-pages
+CMD usetix free-pages blocks
+CMD usetix free-pages blocks hide
+CMD usetix free-pages blocks list
+CMD usetix free-pages blocks move
+CMD usetix free-pages blocks reword
+CMD usetix free-pages blocks unhide
+CMD usetix free-pages check
+CMD usetix free-pages design
+CMD usetix free-pages discard
+CMD usetix free-pages publish
+CMD usetix free-pages remove
+CMD usetix free-pages set
+CMD usetix free-pages show
 CMD usetix orders
 CMD usetix orders archive
 CMD usetix orders cancel
@@ -347,6 +368,66 @@ FLAG usetix customers update --quiet type=bool
 FLAG usetix customers update --salutation type=string
 FLAG usetix customers update --styled type=bool
 FLAG usetix customers update --title type=string
+FLAG usetix design-versions --agent type=bool
+FLAG usetix design-versions --api-url type=string
+FLAG usetix design-versions --count type=bool
+FLAG usetix design-versions --ids-only type=bool
+FLAG usetix design-versions --json type=bool
+FLAG usetix design-versions --profile type=string
+FLAG usetix design-versions --quiet type=bool
+FLAG usetix design-versions --styled type=bool
+FLAG usetix design-versions create --agent type=bool
+FLAG usetix design-versions create --api-url type=string
+FLAG usetix design-versions create --count type=bool
+FLAG usetix design-versions create --from type=int64
+FLAG usetix design-versions create --ids-only type=bool
+FLAG usetix design-versions create --json type=bool
+FLAG usetix design-versions create --name type=string
+FLAG usetix design-versions create --profile type=string
+FLAG usetix design-versions create --quiet type=bool
+FLAG usetix design-versions create --styled type=bool
+FLAG usetix design-versions delete --agent type=bool
+FLAG usetix design-versions delete --api-url type=string
+FLAG usetix design-versions delete --count type=bool
+FLAG usetix design-versions delete --ids-only type=bool
+FLAG usetix design-versions delete --json type=bool
+FLAG usetix design-versions delete --profile type=string
+FLAG usetix design-versions delete --quiet type=bool
+FLAG usetix design-versions delete --styled type=bool
+FLAG usetix design-versions delete --yes type=bool
+FLAG usetix design-versions list --agent type=bool
+FLAG usetix design-versions list --api-url type=string
+FLAG usetix design-versions list --count type=bool
+FLAG usetix design-versions list --ids-only type=bool
+FLAG usetix design-versions list --json type=bool
+FLAG usetix design-versions list --profile type=string
+FLAG usetix design-versions list --quiet type=bool
+FLAG usetix design-versions list --styled type=bool
+FLAG usetix design-versions publish --agent type=bool
+FLAG usetix design-versions publish --api-url type=string
+FLAG usetix design-versions publish --count type=bool
+FLAG usetix design-versions publish --ids-only type=bool
+FLAG usetix design-versions publish --json type=bool
+FLAG usetix design-versions publish --profile type=string
+FLAG usetix design-versions publish --quiet type=bool
+FLAG usetix design-versions publish --styled type=bool
+FLAG usetix design-versions publish --yes type=bool
+FLAG usetix design-versions rename --agent type=bool
+FLAG usetix design-versions rename --api-url type=string
+FLAG usetix design-versions rename --count type=bool
+FLAG usetix design-versions rename --ids-only type=bool
+FLAG usetix design-versions rename --json type=bool
+FLAG usetix design-versions rename --profile type=string
+FLAG usetix design-versions rename --quiet type=bool
+FLAG usetix design-versions rename --styled type=bool
+FLAG usetix design-versions show --agent type=bool
+FLAG usetix design-versions show --api-url type=string
+FLAG usetix design-versions show --count type=bool
+FLAG usetix design-versions show --ids-only type=bool
+FLAG usetix design-versions show --json type=bool
+FLAG usetix design-versions show --profile type=string
+FLAG usetix design-versions show --quiet type=bool
+FLAG usetix design-versions show --styled type=bool
 FLAG usetix events --agent type=bool
 FLAG usetix events --api-url type=string
 FLAG usetix events --count type=bool
@@ -842,6 +923,149 @@ FLAG usetix events upgrades update --layout type=string
 FLAG usetix events upgrades update --profile type=string
 FLAG usetix events upgrades update --quiet type=bool
 FLAG usetix events upgrades update --styled type=bool
+FLAG usetix free-pages --agent type=bool
+FLAG usetix free-pages --api-url type=string
+FLAG usetix free-pages --count type=bool
+FLAG usetix free-pages --ids-only type=bool
+FLAG usetix free-pages --json type=bool
+FLAG usetix free-pages --profile type=string
+FLAG usetix free-pages --quiet type=bool
+FLAG usetix free-pages --styled type=bool
+FLAG usetix free-pages blocks --agent type=bool
+FLAG usetix free-pages blocks --api-url type=string
+FLAG usetix free-pages blocks --count type=bool
+FLAG usetix free-pages blocks --ids-only type=bool
+FLAG usetix free-pages blocks --json type=bool
+FLAG usetix free-pages blocks --profile type=string
+FLAG usetix free-pages blocks --quiet type=bool
+FLAG usetix free-pages blocks --styled type=bool
+FLAG usetix free-pages blocks hide --agent type=bool
+FLAG usetix free-pages blocks hide --api-url type=string
+FLAG usetix free-pages blocks hide --count type=bool
+FLAG usetix free-pages blocks hide --event type=string
+FLAG usetix free-pages blocks hide --ids-only type=bool
+FLAG usetix free-pages blocks hide --json type=bool
+FLAG usetix free-pages blocks hide --profile type=string
+FLAG usetix free-pages blocks hide --quiet type=bool
+FLAG usetix free-pages blocks hide --styled type=bool
+FLAG usetix free-pages blocks hide --version type=int64
+FLAG usetix free-pages blocks list --agent type=bool
+FLAG usetix free-pages blocks list --api-url type=string
+FLAG usetix free-pages blocks list --count type=bool
+FLAG usetix free-pages blocks list --event type=string
+FLAG usetix free-pages blocks list --ids-only type=bool
+FLAG usetix free-pages blocks list --json type=bool
+FLAG usetix free-pages blocks list --profile type=string
+FLAG usetix free-pages blocks list --quiet type=bool
+FLAG usetix free-pages blocks list --styled type=bool
+FLAG usetix free-pages blocks list --version type=int64
+FLAG usetix free-pages blocks move --agent type=bool
+FLAG usetix free-pages blocks move --api-url type=string
+FLAG usetix free-pages blocks move --count type=bool
+FLAG usetix free-pages blocks move --event type=string
+FLAG usetix free-pages blocks move --ids-only type=bool
+FLAG usetix free-pages blocks move --json type=bool
+FLAG usetix free-pages blocks move --position type=int
+FLAG usetix free-pages blocks move --profile type=string
+FLAG usetix free-pages blocks move --quiet type=bool
+FLAG usetix free-pages blocks move --styled type=bool
+FLAG usetix free-pages blocks move --version type=int64
+FLAG usetix free-pages blocks reword --agent type=bool
+FLAG usetix free-pages blocks reword --api-url type=string
+FLAG usetix free-pages blocks reword --count type=bool
+FLAG usetix free-pages blocks reword --event type=string
+FLAG usetix free-pages blocks reword --ids-only type=bool
+FLAG usetix free-pages blocks reword --json type=bool
+FLAG usetix free-pages blocks reword --profile type=string
+FLAG usetix free-pages blocks reword --quiet type=bool
+FLAG usetix free-pages blocks reword --styled type=bool
+FLAG usetix free-pages blocks reword --text type=stringArray
+FLAG usetix free-pages blocks reword --version type=int64
+FLAG usetix free-pages blocks unhide --agent type=bool
+FLAG usetix free-pages blocks unhide --api-url type=string
+FLAG usetix free-pages blocks unhide --count type=bool
+FLAG usetix free-pages blocks unhide --event type=string
+FLAG usetix free-pages blocks unhide --ids-only type=bool
+FLAG usetix free-pages blocks unhide --json type=bool
+FLAG usetix free-pages blocks unhide --profile type=string
+FLAG usetix free-pages blocks unhide --quiet type=bool
+FLAG usetix free-pages blocks unhide --styled type=bool
+FLAG usetix free-pages blocks unhide --version type=int64
+FLAG usetix free-pages check --agent type=bool
+FLAG usetix free-pages check --api-url type=string
+FLAG usetix free-pages check --count type=bool
+FLAG usetix free-pages check --event type=string
+FLAG usetix free-pages check --ids-only type=bool
+FLAG usetix free-pages check --json type=bool
+FLAG usetix free-pages check --profile type=string
+FLAG usetix free-pages check --quiet type=bool
+FLAG usetix free-pages check --styled type=bool
+FLAG usetix free-pages check --version type=int64
+FLAG usetix free-pages design --agent type=bool
+FLAG usetix free-pages design --api-url type=string
+FLAG usetix free-pages design --change type=bool
+FLAG usetix free-pages design --count type=bool
+FLAG usetix free-pages design --event type=string
+FLAG usetix free-pages design --ids-only type=bool
+FLAG usetix free-pages design --json type=bool
+FLAG usetix free-pages design --profile type=string
+FLAG usetix free-pages design --prompt type=string
+FLAG usetix free-pages design --quiet type=bool
+FLAG usetix free-pages design --styled type=bool
+FLAG usetix free-pages design --yes type=bool
+FLAG usetix free-pages discard --agent type=bool
+FLAG usetix free-pages discard --api-url type=string
+FLAG usetix free-pages discard --count type=bool
+FLAG usetix free-pages discard --event type=string
+FLAG usetix free-pages discard --ids-only type=bool
+FLAG usetix free-pages discard --json type=bool
+FLAG usetix free-pages discard --profile type=string
+FLAG usetix free-pages discard --quiet type=bool
+FLAG usetix free-pages discard --styled type=bool
+FLAG usetix free-pages discard --yes type=bool
+FLAG usetix free-pages publish --agent type=bool
+FLAG usetix free-pages publish --api-url type=string
+FLAG usetix free-pages publish --count type=bool
+FLAG usetix free-pages publish --event type=string
+FLAG usetix free-pages publish --ids-only type=bool
+FLAG usetix free-pages publish --json type=bool
+FLAG usetix free-pages publish --profile type=string
+FLAG usetix free-pages publish --quiet type=bool
+FLAG usetix free-pages publish --styled type=bool
+FLAG usetix free-pages remove --agent type=bool
+FLAG usetix free-pages remove --api-url type=string
+FLAG usetix free-pages remove --count type=bool
+FLAG usetix free-pages remove --event type=string
+FLAG usetix free-pages remove --ids-only type=bool
+FLAG usetix free-pages remove --json type=bool
+FLAG usetix free-pages remove --profile type=string
+FLAG usetix free-pages remove --quiet type=bool
+FLAG usetix free-pages remove --styled type=bool
+FLAG usetix free-pages remove --version type=int64
+FLAG usetix free-pages remove --yes type=bool
+FLAG usetix free-pages set --agent type=bool
+FLAG usetix free-pages set --api-url type=string
+FLAG usetix free-pages set --count type=bool
+FLAG usetix free-pages set --event type=string
+FLAG usetix free-pages set --hold type=bool
+FLAG usetix free-pages set --ids-only type=bool
+FLAG usetix free-pages set --json type=bool
+FLAG usetix free-pages set --profile type=string
+FLAG usetix free-pages set --quiet type=bool
+FLAG usetix free-pages set --styled type=bool
+FLAG usetix free-pages set --stylesheet type=string
+FLAG usetix free-pages set --template type=string
+FLAG usetix free-pages set --version type=int64
+FLAG usetix free-pages show --agent type=bool
+FLAG usetix free-pages show --api-url type=string
+FLAG usetix free-pages show --count type=bool
+FLAG usetix free-pages show --event type=string
+FLAG usetix free-pages show --ids-only type=bool
+FLAG usetix free-pages show --json type=bool
+FLAG usetix free-pages show --profile type=string
+FLAG usetix free-pages show --quiet type=bool
+FLAG usetix free-pages show --styled type=bool
+FLAG usetix free-pages show --version type=int64
 FLAG usetix orders --agent type=bool
 FLAG usetix orders --api-url type=string
 FLAG usetix orders --count type=bool
@@ -1591,6 +1815,13 @@ SUB usetix customers contacts update
 SUB usetix customers list
 SUB usetix customers show
 SUB usetix customers update
+SUB usetix design-versions
+SUB usetix design-versions create
+SUB usetix design-versions delete
+SUB usetix design-versions list
+SUB usetix design-versions publish
+SUB usetix design-versions rename
+SUB usetix design-versions show
 SUB usetix events
 SUB usetix events arrivals
 SUB usetix events book
@@ -1638,6 +1869,20 @@ SUB usetix events upgrades pause
 SUB usetix events upgrades remove
 SUB usetix events upgrades resume
 SUB usetix events upgrades update
+SUB usetix free-pages
+SUB usetix free-pages blocks
+SUB usetix free-pages blocks hide
+SUB usetix free-pages blocks list
+SUB usetix free-pages blocks move
+SUB usetix free-pages blocks reword
+SUB usetix free-pages blocks unhide
+SUB usetix free-pages check
+SUB usetix free-pages design
+SUB usetix free-pages discard
+SUB usetix free-pages publish
+SUB usetix free-pages remove
+SUB usetix free-pages set
+SUB usetix free-pages show
 SUB usetix orders
 SUB usetix orders archive
 SUB usetix orders cancel

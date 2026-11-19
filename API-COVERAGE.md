@@ -25,6 +25,8 @@ Typed coverage will grow where it materially improves daily use.
 | Performers | — | `api ... /admin/performers...` | Direct |
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |
 | Ticket upgrades | `events upgrades list/offer/update/pause/resume/remove`, `ticket-upgrades status/activate/deactivate` | `api ... /admin/events/:slug/ticket_upgrades...`, `/admin/account_settings/ticket_upgrade_activation` | Typed; see [Ticket upgrades](#ticket-upgrades) |
+| Free pages | `free-pages show/set/check/publish/discard/remove/design`, `free-pages blocks list/hide/unhide/reword/move` | `api ... /admin/events/:slug/page/free_page...`, `/admin/website/free_pages/:key...` (`home`, `events` or a page's address) | Typed; see [Free pages and design versions](#free-pages-and-design-versions). Files (pictures, videos, fonts) and the check's pictures are direct |
+| Design versions | `design-versions list/show/create/rename/delete/publish`, `free-pages ... --version ID` | `api ... /admin/website/versions...` | Typed, with a version's own home and events designs; a version's look is direct |
 | Event FAQs | — | `api ... /admin/events/:slug/faq_items...` | Direct |
 | Custom checkout fields | — | `api ... /admin/events/:slug/custom_fields...` | Direct |
 | Promo codes | `promo-codes list/show/create/update/deactivate/reactivate` | `api ... /admin/promo_codes...` | Typed codes, zero discounts, share links, limits and promoter assignments; deletion remains direct |
@@ -142,3 +144,33 @@ from the sales point's `show` response under `settlements`. `export` saves
 that isn't `text/csv`. Sales points need a venue token; personal
 co-organizer tokens and Usetix support get `403`. See
 https://www.usetix.io/docs/api/sales-points/.
+
+## Free pages and design versions
+
+Typed commands: `free-pages show`, `set`, `check`, `publish`, `discard`,
+`remove` and `design`, `free-pages blocks list`, `hide`, `unhide`, `reword` and
+`move`, and `design-versions list`, `show`, `create`, `rename`, `delete` and
+`publish`.
+One naming reaches every address: `home`, `events` or a page's address for
+`/admin/website/free_pages/...`, `--event SLUG` for
+`/admin/events/:slug/page/free_page`, and `home` or `events` with
+`--version ID` for a design version's own designs
+(`/admin/website/versions/:id/free_pages/...`; no `publish`, `discard` or
+`design` there). `set` uses `PATCH` everywhere, which also sets an event's
+first free page.
+`design` requires `--yes`: Usetix's AI costs a fee from Usetix Credit once the
+page passed, the shop's first page free. Without `--yes` it reads the free page
+and shows the price of this design from `design_fee` (free, or the fee plus
+VAT) without asking; where a server doesn't name `design_fee`, it states the
+general terms. With `--yes` it prints the agreed `design.fee`. `discard`, `remove`, `design-versions delete` and
+`design-versions publish` require `--yes` too; `design-versions publish`
+without it reads the version and shows the look and designs that would go live.
+Direct: files as signed direct-upload IDs or removals (`files`,
+`remove_files`, a block's `files`), the check's pictures
+(`api GET .../pictures/desktop --output FILE`) and a version's look
+(`PATCH /admin/website/versions/:id/look`). Repairs by Usetix's AI and the
+repair brief have no JSON endpoint.
+Personal co-organizer tokens work on their assigned events' free pages, but
+can't ask for a design, and reach neither the website's free pages nor design
+versions.
+See https://www.usetix.io/docs/api/free-pages/.
