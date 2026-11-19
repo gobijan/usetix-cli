@@ -34,13 +34,15 @@ const freePageJSON = `{
   "parts":[` + freePagePartJSON + `,` + freePageSlidesPartJSON + `],
   "check":{"passed":true,"checked_at":"2026-11-17T12:00:00Z","problems":[],"violations":[],"unjudged":[],"render_error":null,
     "pictures":{"desktop":"https://app.usetix.io/admin/website/free_pages/home/pictures/desktop","phone":null,"narrow":null}},
+  "design_fee":{"amount":"3.00","currency":"EUR"},
   "design":null,
   "url":"https://app.usetix.io/admin/website/free_pages/home.json","updated_at":"2026-11-17T12:00:04Z"
 }`
 
 const noFreePageJSON = `{
   "kind":"event","title":"Summer Night","state":"none","shows":"shared_design","held":false,
-  "template":null,"stylesheet":null,"follows_look":false,"files":[],"parts":[],"check":null,"design":null,
+  "template":null,"stylesheet":null,"follows_look":false,"files":[],"parts":[],"check":null,
+  "design_fee":{"amount":"0.00","currency":"EUR"},"design":null,
   "url":"https://app.usetix.io/admin/events/summer-night/page/free_page.json","updated_at":null
 }`
 
@@ -51,6 +53,7 @@ const failedFreePageJSON = `{
     "problems":["phone: color-contrast (serious): Text must stand out — .title (2.1:1, needs 4.5:1)"],
     "violations":[{"rule":"color-contrast","impact":"serious","help":"Text must stand out","size":"phone","elements":[".title (2.1:1, needs 4.5:1)"]}],
     "unjudged":["desktop: .date"],"render_error":null,"pictures":{"desktop":null,"phone":null,"narrow":null}},
+  "design_fee":{"amount":"3.00","currency":"EUR"},
   "design":{"state":"failed","error":"The page did not pass its check","requested_at":"2026-11-19T10:12:00Z","fee":{"amount":"3.00","currency":"EUR"}},
   "url":"https://app.usetix.io/admin/website/free_pages/events.json","updated_at":"2026-11-17T12:00:04Z"
 }`
@@ -98,6 +101,7 @@ func TestFreePageShowNamesThePageTheSameWayAtEveryAddress(t *testing.T) {
 		"Files     poster.jpg",
 		"Blocks    2 blocks",
 		"Check     passed 2026-11-17T12:00:00Z",
+		"AI price  next design 3.00 EUR plus VAT from Usetix Credit, taken once the page passed its check\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Fatalf("styled output %q does not contain %q", stdout, want)
@@ -117,6 +121,7 @@ func TestFreePageShowSaysStateCheckAndDesignInWords(t *testing.T) {
 	stdout, _, code := runCLI(t, []string{"--styled", "free-pages", "show", "--event", "summer-night"}, "", env, nil)
 	for _, want := range []string{
 		"Summer Night (event page)", "State     no free page", "Visitors  the design all events wear",
+		"AI price  next design free: your shop's first page\n",
 		"usetix free-pages set --event summer-night --template FILE --stylesheet FILE",
 	} {
 		if code != 0 || !strings.Contains(stdout, want) {
@@ -132,7 +137,8 @@ func TestFreePageShowSaysStateCheckAndDesignInWords(t *testing.T) {
 		"All events (all event pages)", "State     failed its check", "Visitors  the usual page", "Look      keeps its own colors",
 		"Check     failed 2026-11-17T12:00:00Z · 1 text without a contrast verdict",
 		"    - phone: color-contrast (serious): Text must stand out — .title (2.1:1, needs 4.5:1)",
-		"AI        failed (The page did not pass its check) · asked 2026-11-19T10:12:00Z · fee EUR 3.00 plus VAT from Usetix Credit once the page passed its check",
+		"AI price  next design 3.00 EUR plus VAT from Usetix Credit, taken once the page passed its check\n",
+		"AI        failed (The page did not pass its check) · asked 2026-11-19T10:12:00Z · fee 3.00 EUR plus VAT from Usetix Credit once the page passed its check",
 	} {
 		if code != 0 || !strings.Contains(stdout, want) {
 			t.Fatalf("failed: %d %q does not contain %q", code, stdout, want)
@@ -400,10 +406,42 @@ func TestFreePageDiscardAndRemoveRequireConfirmation(t *testing.T) {
 	}
 }
 
-func TestFreePageDesignNeedsConfirmationAndShowsTheAgreedFee(t *testing.T) {
+func TestFreePageShowLeavesTheNextDesignOutWhereTheServerNamesNoFee(t *testing.T) {
+	version := strings.Replace(strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"}`, `"design_fee":null`, 1),
+		`"state":"live","shows":"free_page"`, `"state":"ready","shows":"with_version"`, 1)
+	older := strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"},`, ``, 1)
+	payload := version
+	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, _ *http.Request, _ map[string]any) {
+		_, _ = io.WriteString(w, payload)
+	})
+
+	stdout, _, code := runCLI(t, []string{"free-pages", "show", "home", "--version", "4", "--json"}, "", env, nil)
+	if code != 0 {
+		t.Fatalf("version: %d %s", code, stdout)
+	}
+	assertGuestListJSON(t, stdout, version)
+
+	// A server that doesn't name the fee yet reads like one that says null
+	payload = older
+	stdout, _, code = runCLI(t, []string{"free-pages", "show", "home", "--json"}, "", env, nil)
+	if code != 0 {
+		t.Fatalf("older server: %d %s", code, stdout)
+	}
+	assertGuestListJSON(t, stdout, strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"}`, `"design_fee":null`, 1))
+
+	for _, current := range []string{version, older} {
+		payload = current
+		stdout, _, code = runCLI(t, []string{"--styled", "free-pages", "show", "home"}, "", env, nil)
+		if code != 0 || strings.Contains(stdout, "AI price") {
+			t.Fatalf("styled output names a price: %d %q", code, stdout)
+		}
+	}
+}
+
+func TestFreePageDesignShowsThePriceBeforeAskingAndTheAgreedFeeAfter(t *testing.T) {
 	var requests []string
 	var body map[string]any
-	fee := "3.00"
+	page := freePageJSON
 	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, r *http.Request, received map[string]any) {
 		requests = append(requests, r.Method+" "+r.URL.Path)
 		if r.Method == http.MethodPost {
@@ -412,21 +450,25 @@ func TestFreePageDesignNeedsConfirmationAndShowsTheAgreedFee(t *testing.T) {
 			w.WriteHeader(http.StatusAccepted)
 			return
 		}
-		_, _ = io.WriteString(w, designingFreePageJSON(fee))
+		_, _ = io.WriteString(w, page)
 	})
 
 	stdout, stderr, code := runCLI(t, []string{"--styled", "free-pages", "design", "home", "--prompt", "Dark and classy"}, "", env, nil)
-	for _, want := range []string{
-		"requires explicit confirmation",
-		"The shop's first page from Usetix's AI is free.",
-		"Each further page costs Usetix's fee plus VAT from Usetix Credit, taken once the page passed its check",
-		"--yes",
-	} {
-		if code != 1 || len(requests) != 0 || !strings.Contains(stdout+stderr, want) {
-			t.Fatalf("unconfirmed design: %d %v %q %q does not contain %q", code, requests, stdout, stderr, want)
-		}
+	price := "Usetix's AI designs the page for 3.00 EUR plus VAT from Usetix Credit, taken once the page passed its check; a page that doesn't pass costs nothing. Re-run with --yes."
+	if code != 1 || !reflect.DeepEqual(requests, []string{"GET /admin/website/free_pages/home.json"}) ||
+		!strings.Contains(stdout+stderr, "requires explicit confirmation") || !strings.Contains(stdout+stderr, price) {
+		t.Fatalf("price before asking: %d %v %q %q", code, requests, stdout, stderr)
 	}
 
+	requests = nil
+	stdout, _, code = runCLI(t, []string{"free-pages", "design", "--event", "summer-night", "--change", "--prompt", "Larger dates", "--json"}, "", env, nil)
+	if code != 1 || !reflect.DeepEqual(requests, []string{"GET /admin/events/summer-night/page/free_page.json"}) ||
+		!strings.Contains(stdout, `"code": "usage"`) || !strings.Contains(stdout, "3.00 EUR plus VAT from Usetix Credit") {
+		t.Fatalf("event price before asking: %d %v %s", code, requests, stdout)
+	}
+
+	page = designingFreePageJSON("3.00")
+	requests = nil
 	stdout, stderr, code = runCLI(t, []string{"free-pages", "design", "home", "--prompt", "Dark and classy", "--yes", "--json"}, "", env, nil)
 	if code != 0 || stderr != "" || !reflect.DeepEqual(requests, []string{"POST /admin/website/free_pages/home/design.json", "GET /admin/website/free_pages/home.json"}) {
 		t.Fatalf("design: %d %v %s %s", code, requests, stdout, stderr)
@@ -446,22 +488,97 @@ func TestFreePageDesignNeedsConfirmationAndShowsTheAgreedFee(t *testing.T) {
 		t.Fatalf("design change: %d %v %#v", code, requests, body)
 	}
 	if !strings.Contains(stdout, "Asked Usetix's AI for the page") ||
-		!strings.Contains(stdout, "AI        pending · asked 2026-11-19T10:12:00Z · fee EUR 3.00 plus VAT from Usetix Credit once the page passed its check") {
+		!strings.Contains(stdout, "AI        pending · asked 2026-11-19T10:12:00Z · fee 3.00 EUR plus VAT from Usetix Credit once the page passed its check") ||
+		strings.Contains(stdout, "AI price") {
 		t.Fatalf("styled design: %q", stdout)
 	}
 
-	fee = "0.00"
-	stdout, _, code = runCLI(t, []string{"--styled", "free-pages", "design", "home", "--prompt", "Dark and classy", "--yes"}, "", env, nil)
-	if code != 0 || !strings.Contains(stdout, "AI        pending · asked 2026-11-19T10:12:00Z · no fee: the shop's first page is free") {
-		t.Fatalf("first page: %d %q", code, stdout)
-	}
-
-	for _, args := range [][]string{{"home", "--yes"}, {"home", "--prompt", " ", "--yes"}} {
+	for _, args := range [][]string{{"home", "--yes"}, {"home", "--prompt", " ", "--yes"}, {"home", "--prompt", " "}} {
 		requests = nil
 		stdout, _, code = runCLI(t, append([]string{"free-pages", "design", "--json"}, args...), "", env, nil)
 		if code != 1 || len(requests) != 0 || !strings.Contains(stdout, "prompt") {
 			t.Fatalf("%v: %d %v %s", args, code, requests, stdout)
 		}
+	}
+}
+
+func TestFreePageDesignSaysTheShopsFirstPageIsFree(t *testing.T) {
+	var requests []string
+	page := strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"}`, `"design_fee":{"amount":"0.00","currency":"EUR"}`, 1)
+	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, r *http.Request, _ map[string]any) {
+		requests = append(requests, r.Method+" "+r.URL.Path)
+		if r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+		_, _ = io.WriteString(w, page)
+	})
+
+	stdout, stderr, code := runCLI(t, []string{"--styled", "free-pages", "design", "home", "--prompt", "Dark and classy"}, "", env, nil)
+	if code != 1 || !reflect.DeepEqual(requests, []string{"GET /admin/website/free_pages/home.json"}) ||
+		!strings.Contains(stdout+stderr, "Usetix's AI designs the page for free: your shop's first page. Re-run with --yes.") ||
+		strings.Contains(stdout+stderr, "plus VAT") || strings.Contains(stdout+stderr, "costs nothing") {
+		t.Fatalf("free before asking: %d %v %q %q", code, requests, stdout, stderr)
+	}
+
+	page = designingFreePageJSON("0.00")
+	stdout, _, code = runCLI(t, []string{"--styled", "free-pages", "design", "home", "--prompt", "Dark and classy", "--yes"}, "", env, nil)
+	if code != 0 || !strings.Contains(stdout, "AI        pending · asked 2026-11-19T10:12:00Z · no fee: the shop's first page is free") {
+		t.Fatalf("first page: %d %q", code, stdout)
+	}
+}
+
+func TestFreePageDesignStatesTheTermsWhereTheServerNamesNoFee(t *testing.T) {
+	var requests []string
+	page := ""
+	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, r *http.Request, _ map[string]any) {
+		requests = append(requests, r.Method+" "+r.URL.Path)
+		_, _ = io.WriteString(w, page)
+	})
+
+	for name, current := range map[string]string{
+		"null":    strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"}`, `"design_fee":null`, 1),
+		"missing": strings.Replace(freePageJSON, `"design_fee":{"amount":"3.00","currency":"EUR"},`, ``, 1),
+	} {
+		page, requests = current, nil
+		stdout, stderr, code := runCLI(t, []string{"--styled", "free-pages", "design", "home", "--prompt", "Dark and classy"}, "", env, nil)
+		for _, want := range []string{
+			"requires explicit confirmation",
+			"The shop's first page from Usetix's AI is free.",
+			"Each further page costs Usetix's fee plus VAT from Usetix Credit, taken once the page passed its check",
+			"Re-run with --yes.",
+		} {
+			if code != 1 || !reflect.DeepEqual(requests, []string{"GET /admin/website/free_pages/home.json"}) || !strings.Contains(stdout+stderr, want) {
+				t.Fatalf("%s: %d %v %q %q does not contain %q", name, code, requests, stdout, stderr, want)
+			}
+		}
+	}
+}
+
+func TestFreePageDesignReportsAFailedReadBeforeAsking(t *testing.T) {
+	var requests []string
+	status := http.StatusNotFound
+	_, env := ticketUpgradeServer(t, func(w http.ResponseWriter, r *http.Request, _ map[string]any) {
+		requests = append(requests, r.Method+" "+r.URL.Path)
+		w.WriteHeader(status)
+	})
+
+	for _, check := range []struct {
+		status int
+		code   string
+	}{{http.StatusNotFound, "not_found"}, {http.StatusUnauthorized, "auth_required"}, {http.StatusBadGateway, "api_error"}} {
+		status, requests = check.status, nil
+		stdout, _, code := runCLI(t, []string{"free-pages", "design", "no-such-page", "--prompt", "Dark", "--json"}, "", env, nil)
+		if code == 0 || !reflect.DeepEqual(requests, []string{"GET /admin/website/free_pages/no-such-page.json"}) ||
+			!strings.Contains(stdout, `"code": "`+check.code+`"`) || strings.Contains(stdout, "requires explicit confirmation") {
+			t.Fatalf("%d: %d %v %s", check.status, code, requests, stdout)
+		}
+	}
+
+	requests = nil
+	stdout, _, code := runCLI(t, []string{"free-pages", "design", "home", "--prompt", "Dark", "--json"}, "", map[string]string{"USETIX_API_URL": env["USETIX_API_URL"]}, nil)
+	if code == 0 || len(requests) != 0 || strings.Contains(stdout, "requires explicit confirmation") {
+		t.Fatalf("without a token: %d %v %s", code, requests, stdout)
 	}
 }
 

@@ -349,8 +349,8 @@ func newFreePagesRemove(runtime *appctx.Runtime) *cobra.Command {
 	return command
 }
 
-// freePageDesignTerms says what asking Usetix's AI agrees to. The API names
-// the fee only on the request it was agreed with, so no amount is read before.
+// freePageDesignTerms says what asking Usetix's AI agrees to where the server
+// doesn't name the next page's fee (design_fee) yet.
 const freePageDesignTerms = "The shop's first page from Usetix's AI is free. Each further page costs Usetix's fee plus VAT from Usetix Credit, " +
 	"taken once the page passed its check; a page that doesn't pass costs nothing. " +
 	"The fee is agreed when you ask and reads on the page from then on (\"show\", design.fee)."
@@ -369,15 +369,16 @@ the dashboard, then take it live with "publish". It works for a few minutes;
 
 The shop's first page from Usetix's AI is free. Each further page costs
 Usetix's fee plus VAT from Usetix Credit, taken once the page passed its check;
-a page that doesn't pass costs nothing. The API names the fee only on the
-request it was agreed with: without --yes the command states these terms and
-asks nothing, with --yes it prints the fee that was agreed.
+a page that doesn't pass costs nothing. Without --yes the command reads the
+page, shows what this design costs and asks nothing; with --yes it asks and
+prints the fee that was agreed.
 
 The server turns the request down where the credit doesn't cover the fee,
 where the AI is already designing another page of the shop, or where --change
 has no page to start from. Personal co-organizer tokens can't ask, since the
 design is paid from the shop's credit.`,
-		Example: `  usetix free-pages design home --prompt "Dark and classy, the next dates on top, the flyer large" --yes
+		Example: `  usetix free-pages design home --prompt "Dark and classy, the next dates on top, the flyer large"   # shows the price; no change
+  usetix free-pages design home --prompt "Dark and classy, the next dates on top, the flyer large" --yes
   usetix free-pages design --event summer-festival --prompt "Like its flyer" --yes
   usetix free-pages design home --change --prompt "Make the dates larger" --yes`,
 		Args: selector.args(0),
@@ -389,12 +390,16 @@ design is paid from the shop's credit.`,
 			if strings.TrimSpace(prompt) == "" {
 				return output.ErrUsage("--prompt can't be blank")
 			}
-			if !yes {
-				return output.ErrUsageHint("asking Usetix's AI for a page requires explicit confirmation", freePageDesignTerms+" Re-run with --yes.")
-			}
 			client, _, err := runtime.APIClient()
 			if err != nil {
 				return err
+			}
+			if !yes {
+				freePage, err := client.GetFreePage(command.Context(), target)
+				if err != nil {
+					return NormalizeError(err)
+				}
+				return output.ErrUsageHint("asking Usetix's AI for a page requires explicit confirmation", freePageDesignNotice(freePage)+" Re-run with --yes.")
 			}
 			location, err := client.DesignFreePage(command.Context(), target, prompt, change)
 			if err != nil {
@@ -417,6 +422,19 @@ design is paid from the shop's credit.`,
 	command.Flags().BoolVar(&yes, "yes", false, "confirm asking and the fee from Usetix Credit once the page passed its check")
 	_ = command.MarkFlagRequired("prompt")
 	return command
+}
+
+// freePageDesignNotice states what this design costs before it is asked for,
+// or the general terms where the server doesn't name the fee.
+func freePageDesignNotice(freePage api.FreePage) string {
+	if freePage.DesignFee == nil {
+		return freePageDesignTerms
+	}
+	notice := "Usetix's AI designs the page for " + freePageDesignPrice(*freePage.DesignFee)
+	if !freePageFeeIsZero(*freePage.DesignFee) {
+		notice += "; a page that doesn't pass costs nothing"
+	}
+	return notice + "."
 }
 
 // freePageDesignAsked reports a failed read after the design was accepted, so
@@ -522,6 +540,9 @@ func freePageLines(target api.FreePageTarget, freePage api.FreePage) []string {
 	if freePage.Check != nil {
 		lines = append(lines, freePageCheckLines(*freePage.Check)...)
 	}
+	if freePage.DesignFee != nil && !freePageDesigning(freePage) {
+		lines = append(lines, "  AI price  next design "+freePageDesignPrice(*freePage.DesignFee))
+	}
 	if freePage.Design != nil {
 		lines = append(lines, "  AI        "+freePageDesign(*freePage.Design))
 	}
@@ -555,14 +576,31 @@ func freePageDesign(design api.FreePageDesign) string {
 	return fmt.Sprintf("%s · asked %s · %s", state, terminal.SanitizeLine(design.RequestedAt), freePageDesignFee(design.Fee))
 }
 
+// freePageDesigning reports whether Usetix's AI is at work on the page, when
+// the fee is already agreed and no further design can be asked for.
+func freePageDesigning(freePage api.FreePage) bool {
+	return freePage.Design != nil && (freePage.Design.State == "pending" || freePage.Design.State == "working")
+}
+
 // freePageDesignFee words the fee agreed with a design. A fee of zero is the
 // shop's first page, which is free.
 func freePageDesignFee(fee api.Money) string {
-	if strings.Trim(fee.Amount, "0.") == "" {
+	if freePageFeeIsZero(fee) {
 		return "no fee: the shop's first page is free"
 	}
-	return fmt.Sprintf("fee %s %s plus VAT from Usetix Credit once the page passed its check",
-		terminal.SanitizeLine(fee.Currency), terminal.SanitizeLine(fee.Amount))
+	return "fee " + formatMoney(fee) + " plus VAT from Usetix Credit once the page passed its check"
+}
+
+// freePageDesignPrice words what the next page by Usetix's AI costs.
+func freePageDesignPrice(fee api.Money) string {
+	if freePageFeeIsZero(fee) {
+		return "free: your shop's first page"
+	}
+	return formatMoney(fee) + " plus VAT from Usetix Credit, taken once the page passed its check"
+}
+
+func freePageFeeIsZero(fee api.Money) bool {
+	return fee.Amount != "" && strings.Trim(fee.Amount, "0.") == ""
 }
 
 func freePageKind(kind string) string {

@@ -512,7 +512,7 @@ usetix free-pages blocks unhide home 77b0c2d4e6f8
 usetix free-pages blocks reword home 3f9a1c0b7d2e --text a81c4e02f6b9="Termine"
 usetix free-pages blocks move home 77b0c2d4e6f8 --position 1
 
-usetix free-pages design home --prompt "Dark and classy, the next dates on top"        # shows the terms; no change
+usetix free-pages design home --prompt "Dark and classy, the next dates on top"        # shows the price; no change
 usetix free-pages design home --prompt "Dark and classy, the next dates on top" --yes
 ```
 
@@ -526,11 +526,11 @@ API response unchanged, template and stylesheet included.
 `design` has Usetix's AI write the whole page and hold it back for you. The
 shop's first page is free; each further page costs Usetix's fee (3.00 in the
 shop's currency plus VAT) from Usetix Credit, taken once the page passed its
-check. The API names the fee only on the request it was agreed with, so the
-command can't show the amount beforehand: without `--yes` it states these terms
-and asks nothing, and with `--yes` it prints the fee that was agreed
-(`design.fee`). Personal co-organizer tokens work on their assigned events'
-free pages but can't ask for a design.
+check, and a page that doesn't pass costs nothing. Without `--yes` the command
+reads the page, shows what this design costs (`design_fee`) and asks nothing;
+with `--yes` it asks and prints the fee that was agreed (`design.fee`). `show`
+names the price of the next design too. Personal co-organizer tokens work on
+their assigned events' free pages but can't ask for a design.
 
 Pictures, videos and fonts go through `usetix api` as signed direct-upload IDs
 (`{"files": ["SIGNED_ID"]}`, `{"remove_files": ["poster.jpg"]}`). See the

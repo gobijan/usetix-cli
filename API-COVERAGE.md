@@ -113,9 +113,10 @@ One naming reaches every address: `home`, `events` or a page's address for
 `design` there). `set` uses `PATCH` everywhere, which also sets an event's
 first free page.
 `design` requires `--yes`: Usetix's AI costs a fee from Usetix Credit once the
-page passed, the shop's first page free. No endpoint tells the fee before the
-request, so the command states the terms without `--yes` and prints the agreed
-`design.fee` after asking. `discard`, `remove`, `design-versions delete` and
+page passed, the shop's first page free. Without `--yes` it reads the free page
+and shows the price of this design from `design_fee` (free, or the fee plus
+VAT) without asking; where a server doesn't name `design_fee`, it states the
+general terms. With `--yes` it prints the agreed `design.fee`. `discard`, `remove`, `design-versions delete` and
 `design-versions publish` require `--yes` too; `design-versions publish`
 without it reads the version and shows the look and designs that would go live.
 Direct: files as signed direct-upload IDs or removals (`files`,

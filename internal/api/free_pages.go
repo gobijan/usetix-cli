@@ -35,7 +35,9 @@ func (target FreePageTarget) partPath(key string) string {
 // checking, live, held or failed (a design version's own reads ready once it
 // passed); Shows says what visitors get right now. Template and Stylesheet
 // are nil without a free page, Check before the first check, and Design where
-// Usetix's AI was never asked.
+// Usetix's AI was never asked. DesignFee is what the next page by Usetix's AI
+// costs before VAT, zero while the shop's first page is free; it is nil for a
+// design version that isn't live and on a server that doesn't name it yet.
 type FreePage struct {
 	Kind        string          `json:"kind"`
 	Title       string          `json:"title"`
@@ -48,6 +50,7 @@ type FreePage struct {
 	Files       []FreePageFile  `json:"files"`
 	Parts       []FreePagePart  `json:"parts"`
 	Check       *FreePageCheck  `json:"check"`
+	DesignFee   *Money          `json:"design_fee"`
 	Design      *FreePageDesign `json:"design"`
 	URL         string          `json:"url"`
 	UpdatedAt   *string         `json:"updated_at"`
