@@ -166,6 +166,11 @@ func (client *Client) patch(ctx context.Context, path string, body, destination 
 	return err
 }
 
+func (client *Client) put(ctx context.Context, path string, body, destination any) error {
+	_, err := client.do(ctx, http.MethodPut, path, body, destination)
+	return err
+}
+
 func (client *Client) delete(ctx context.Context, path string, destination any) error {
 	_, err := client.do(ctx, http.MethodDelete, path, nil, destination)
 	return err

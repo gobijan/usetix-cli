@@ -144,7 +144,7 @@ timeline but does not mark the customer as contacted.
 empty value clears a field. The email address stays as it is: it signs the
 customer in to the shop and ties their orders together.
 
-Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, and ticket-upgrade removal always require `--yes`.
+Refunds, cancellations, deletions, archiving, analytics-link revocation, voucher balance changes, voucher block-state changes, voucher-delivery retries, voucher-product image removal, applied voucher imports, ticket-upgrade activation and deactivation, ticket-upgrade removal, free-page removal, discarding a waiting free page, pages designed by Usetix's AI, and deleting a design version or taking one live always require `--yes`.
 Profiles keep environment URLs and credentials separate. `--profile` takes
 precedence over `USETIX_PROFILE` and the default profile.
 
@@ -488,3 +488,72 @@ upgrade's state (live, paused, or why it is off for now) and its results;
 `compact`, `spotlight` and `compare`. Pausing keeps an upgrade and its results;
 removing deletes both. See the
 [ticket upgrades API reference](https://www.usetix.io/docs/api/ticket-upgrades/).
+
+### Free pages and design versions
+
+A free page is a whole page in your own design: a Liquid template and a
+stylesheet in place of the shop's header, hero and blocks. Every command names
+its page the same way: `home`, `events` (every event's page without one of its
+own), a page of the website by its address, or `--event SLUG` for one event.
+
+```sh
+usetix free-pages show home
+usetix free-pages set home --template home.liquid --stylesheet home.css --hold
+usetix free-pages show home             # state, what visitors get, the check's findings
+usetix free-pages publish home          # take the version that passed and waits live
+usetix free-pages discard home --yes    # drop the version that waits
+usetix free-pages set --event summer-festival --template summer.liquid
+usetix free-pages check events
+usetix free-pages remove about-us --yes
+
+usetix free-pages blocks list home
+usetix free-pages blocks hide home 77b0c2d4e6f8
+usetix free-pages blocks unhide home 77b0c2d4e6f8
+usetix free-pages blocks reword home 3f9a1c0b7d2e --text a81c4e02f6b9="Termine"
+usetix free-pages blocks move home 77b0c2d4e6f8 --position 1
+
+usetix free-pages design home --prompt "Dark and classy, the next dates on top"        # shows the terms; no change
+usetix free-pages design home --prompt "Dark and classy, the next dates on top" --yes
+```
+
+Usetix checks every version in a real browser, usually within a minute;
+visitors keep the page they had until the new version passed. `set` sends only
+the files you pass. With `--hold` the page waits once it passed until you
+`publish` it; without it, it shows as soon as it passed. A change to a block is
+the page's next version and is checked the same way. `show --json` returns the
+API response unchanged, template and stylesheet included.
+
+`design` has Usetix's AI write the whole page and hold it back for you. The
+shop's first page is free; each further page costs Usetix's fee (3.00 in the
+shop's currency plus VAT) from Usetix Credit, taken once the page passed its
+check. The API names the fee only on the request it was agreed with, so the
+command can't show the amount beforehand: without `--yes` it states these terms
+and asks nothing, and with `--yes` it prints the fee that was agreed
+(`design.fee`). Personal co-organizer tokens work on their assigned events'
+free pages but can't ask for a design.
+
+Pictures, videos and fonts go through `usetix api` as signed direct-upload IDs
+(`{"files": ["SIGNED_ID"]}`, `{"remove_files": ["poster.jpg"]}`). See the
+[free pages API reference](https://www.usetix.io/docs/api/free-pages/).
+
+A shop keeps several versions of its design, one live: the look plus its own
+designs for the home page and for all events' pages.
+
+```sh
+usetix design-versions list
+usetix design-versions create --name "Winter"            # a copy of the live version
+usetix design-versions create --name "Winter, darker" --from 4
+usetix design-versions rename 4 "Winter 2027"
+usetix free-pages set home --version 4 --template winter.liquid
+usetix free-pages show home --version 4
+usetix design-versions publish 4        # shows what goes live; no change
+usetix design-versions publish 4 --yes
+usetix design-versions delete 4 --yes
+```
+
+`--version ID` works on a version's own `home` or `events` design with `show`,
+`set`, `check`, `remove` and `blocks`; it reads `ready` once it passed and goes
+live with its version. `publish --yes` changes the live shop at once: it wears
+the version's look and shows its designs, and the version that was live is kept
+to go back to. The live version can't be deleted. A version's look is changed
+with `usetix api PATCH /admin/website/versions/4/look`.
