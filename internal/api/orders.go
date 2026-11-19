@@ -8,26 +8,36 @@ import (
 )
 
 type Order struct {
-	PublicID        string         `json:"public_id"`
-	ShopURL         string         `json:"shop_url,omitempty"`
-	OrderCode       string         `json:"order_code"`
-	DisplayNumber   string         `json:"display_number"`
-	Status          string         `json:"status"`
-	Origin          string         `json:"origin"`
-	CustomerName    string         `json:"customer_name"`
-	CustomerEmail   *string        `json:"customer_email"`
-	DeliveryEmail   *string        `json:"delivery_email"`
-	StaffNote       *string        `json:"staff_note"`
-	Total           Money          `json:"total"`
-	Fees            OrderFees      `json:"fees"`
-	PaymentProvider string         `json:"payment_provider"`
-	Archived        bool           `json:"archived"`
-	PaidAt          *string        `json:"paid_at"`
-	CreatedAt       string         `json:"created_at"`
-	ItemCount       int            `json:"item_count"`
-	LineCount       int            `json:"line_count"`
-	ProductQuantity int            `json:"product_quantity"`
-	Attribution     map[string]any `json:"attribution"`
+	PublicID        string               `json:"public_id"`
+	ShopURL         string               `json:"shop_url,omitempty"`
+	OrderCode       string               `json:"order_code"`
+	DisplayNumber   string               `json:"display_number"`
+	Status          string               `json:"status"`
+	Origin          string               `json:"origin"`
+	CustomerName    string               `json:"customer_name"`
+	CustomerEmail   *string              `json:"customer_email"`
+	DeliveryEmail   *string              `json:"delivery_email"`
+	StaffNote       *string              `json:"staff_note"`
+	Total           Money                `json:"total"`
+	Fees            OrderFees            `json:"fees"`
+	PaymentProvider string               `json:"payment_provider"`
+	OutsidePayment  *OrderOutsidePayment `json:"outside_payment"`
+	SalesPoint      *SalesPointReference `json:"sales_point"`
+	Archived        bool                 `json:"archived"`
+	PaidAt          *string              `json:"paid_at"`
+	CreatedAt       string               `json:"created_at"`
+	ItemCount       int                  `json:"item_count"`
+	LineCount       int                  `json:"line_count"`
+	ProductQuantity int                  `json:"product_quantity"`
+	Attribution     map[string]any       `json:"attribution"`
+}
+
+// OrderOutsidePayment says how a box_office order was paid outside Usetix:
+// till, bank_transfer, invoice, sales_point or other, with the optional
+// reference given when it was booked.
+type OrderOutsidePayment struct {
+	Method    string  `json:"method"`
+	Reference *string `json:"reference"`
 }
 
 type OrderFees struct {

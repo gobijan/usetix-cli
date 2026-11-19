@@ -311,7 +311,7 @@ func ticketUpgradeState(upgrade api.TicketUpgrade) string {
 	case "not_upgradeable":
 		return "off for now: a ticket no longer fits"
 	case "to_ticket_not_public":
-		return "off for now: " + ticket + " is hidden"
+		return "off for now: " + ticket + " is hidden or internal"
 	case "not_dearer":
 		return "off for now: " + ticket + " doesn't cost more"
 	case "not_on_sale":

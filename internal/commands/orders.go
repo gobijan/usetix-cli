@@ -343,6 +343,12 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 			"  Total     " + order.Total.Amount + " " + order.Total.Currency,
 			"  Provider  " + order.PaymentProvider,
 		}
+		if order.OutsidePayment != nil {
+			lines = append(lines, "  Paid      "+outsidePayment(*order.OutsidePayment))
+		}
+		if order.SalesPoint != nil {
+			lines = append(lines, "  Sold at   "+terminal.SanitizeLine(order.SalesPoint.Name)+" (sales point)")
+		}
 		if order.ShopURL != "" {
 			lines = append(lines, "  Order link  "+terminal.SanitizeLine(order.ShopURL))
 		}
@@ -448,6 +454,26 @@ func renderOrderDetail(order api.OrderDetail) output.StyledRenderer {
 		_, err := fmt.Fprintln(destination, view.String())
 		return err
 	}
+}
+
+// outsidePayment says where a box_office order was paid; Usetix records only
+// that, never the money itself.
+func outsidePayment(payment api.OrderOutsidePayment) string {
+	method := map[string]string{
+		"till":          "at your till",
+		"bank_transfer": "by bank transfer",
+		"invoice":       "on invoice",
+		"sales_point":   "at the sales point",
+		"other":         "otherwise",
+	}[payment.Method]
+	if method == "" {
+		method = terminal.SanitizeLine(payment.Method)
+	}
+	paid := "outside Usetix, " + method
+	if payment.Reference != nil && *payment.Reference != "" {
+		paid += " · " + terminal.SanitizeLine(*payment.Reference)
+	}
+	return paid
 }
 
 func orderProductCount(order api.Order) int {

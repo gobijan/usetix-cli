@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"sort"
@@ -145,6 +146,65 @@ func (client *Client) Download(ctx context.Context, method, path string, destina
 		return APIResponse{}, 0, readAPIError(response)
 	}
 
+	written, err := io.Copy(destination, response.Body)
+	if err != nil {
+		return APIResponse{}, written, fmt.Errorf("download response body: %w", err)
+	}
+	return apiResponseFrom(response), written, nil
+}
+
+// UnexpectedContentError reports an export that answered with something
+// other than the requested media type, such as a sign-in page after a
+// redirect. RedirectedTo is the path the request ended at, if it moved.
+type UnexpectedContentError struct {
+	Want         string
+	Got          string
+	RedirectedTo string
+}
+
+func (err *UnexpectedContentError) Error() string {
+	got := err.Got
+	if got == "" {
+		got = "no content type"
+	}
+	message := fmt.Sprintf("Usetix answered with %s instead of %s", got, err.Want)
+	if err.RedirectedTo != "" {
+		message += " after redirecting to " + err.RedirectedTo
+	}
+	return message
+}
+
+// Export streams a non-JSON export such as CSV to the writer open returns. It
+// asks for mediaType and refuses any other answer before open is called, so
+// a page the server turned the request away to never ends up in the file.
+func (client *Client) Export(ctx context.Context, path, mediaType string, open func() (io.Writer, error)) (APIResponse, int64, error) {
+	request, err := client.newRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return APIResponse{}, 0, err
+	}
+	request.Header.Set("Accept", mediaType)
+
+	response, err := client.httpClient.Do(request)
+	if err != nil {
+		return APIResponse{}, 0, fmt.Errorf("request Usetix API: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return APIResponse{}, 0, readAPIError(response)
+	}
+	if got, _, _ := mime.ParseMediaType(response.Header.Get("Content-Type")); got != mediaType {
+		unexpected := &UnexpectedContentError{Want: mediaType, Got: got}
+		if final := response.Request; final != nil && final.URL.Path != request.URL.Path {
+			unexpected.RedirectedTo = final.URL.Path
+		}
+		return APIResponse{}, 0, unexpected
+	}
+
+	destination, err := open()
+	if err != nil {
+		return APIResponse{}, 0, err
+	}
 	written, err := io.Copy(destination, response.Body)
 	if err != nil {
 		return APIResponse{}, written, fmt.Errorf("download response body: %w", err)

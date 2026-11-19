@@ -100,7 +100,7 @@ func TestTicketUpgradeStatesInWords(t *testing.T) {
 		{`false`, `null`, "paused"},
 		{`true`, `"credit_insufficient"`, "off for now: Usetix Credit too low"},
 		{`true`, `"not_upgradeable"`, "off for now: a ticket no longer fits"},
-		{`true`, `"to_ticket_not_public"`, "off for now: Fastlane is hidden"},
+		{`true`, `"to_ticket_not_public"`, "off for now: Fastlane is hidden or internal"},
 		{`true`, `"not_dearer"`, "off for now: Fastlane doesn't cost more"},
 		{`true`, `"not_on_sale"`, "off for now: Fastlane is not on sale"},
 		{`true`, `"sold_out"`, "off for now: Fastlane is sold out"},
