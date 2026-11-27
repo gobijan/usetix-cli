@@ -21,8 +21,12 @@ func NewDesignVersions(runtime *appctx.Runtime) *cobra.Command {
 		Long: `A shop keeps several versions of its design, one of them live. A version is
 the look (theme, colors, fonts, style) plus its own designs for the home page
 and for all events' pages; events, tickets, pages, blog and menu are the same
-in all. A new version starts as a copy of another and changes nothing in the
-shop until it is taken live.
+in all. A new version starts as a copy of another or as one of Usetix's themes
+("usetix themes list") and changes nothing in the shop until it is taken live.
+
+A version that started as a theme is a copy of it and never changes with it.
+When the theme has a newer release, the version says so; set the theme up
+again as another version to get it.
 
 Work on a version's own designs with "usetix free-pages ... --version ID".`,
 	}
@@ -85,17 +89,22 @@ func newDesignVersionsShow(runtime *appctx.Runtime) *cobra.Command {
 }
 
 func newDesignVersionsCreate(runtime *appctx.Runtime) *cobra.Command {
-	var name string
+	var name, theme string
 	var from int64
 	command := &cobra.Command{
 		Use:   "create",
-		Short: "Start a new version as a copy of another",
+		Short: "Start a new version as a copy of another, or as one of Usetix's themes",
 		Long: `The copy takes the look and the own designs of --from, which are checked again
 for it. Without --from it copies the live version; the server also copies the
 live version where --from names none of the shop's versions. Without --name
-the server names the copy.`,
+the server names the copy.
+
+With --theme the version starts as one of Usetix's themes instead: its look,
+its designs for the home page and for all events' pages, and the pages of the
+website it brings along, made as drafts. The version is yours from then on.`,
 		Example: `  usetix design-versions create --name "Winter"
-  usetix design-versions create --name "Winter, darker" --from 4`,
+  usetix design-versions create --name "Winter, darker" --from 4
+  usetix design-versions create --theme limelight --name "Spring programme"`,
 		Args: cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
 			attributes := map[string]any{}
@@ -107,6 +116,15 @@ the server names the copy.`,
 					return output.ErrUsage("--from must be a positive design version ID")
 				}
 				attributes["source_id"] = from
+			}
+			if command.Flags().Changed("theme") {
+				if command.Flags().Changed("from") {
+					return output.ErrUsage("--theme and --from can't be combined: a version starts as a theme or as a copy")
+				}
+				if strings.TrimSpace(theme) == "" {
+					return output.ErrUsage("--theme needs a theme's key, as \"usetix themes list\" shows it")
+				}
+				attributes["shop_theme"] = strings.TrimSpace(theme)
 			}
 			client, _, err := runtime.APIClient()
 			if err != nil {
@@ -125,6 +143,7 @@ the server names the copy.`,
 	}
 	command.Flags().StringVar(&name, "name", "", "name of the new version, up to 60 characters")
 	command.Flags().Int64Var(&from, "from", 0, "ID of the version to copy; the live one by default")
+	command.Flags().StringVar(&theme, "theme", "", "key of one of Usetix's themes to start as, in place of a copy")
 	return command
 }
 
@@ -262,6 +281,9 @@ func renderDesignVersions(action string, versions []api.DesignVersion) output.St
 				"   Look     " + designVersionLook(version.Look),
 				"   Designs  " + designVersionDesigns(version.FreePages),
 			}
+			if theme := designVersionTheme(version); theme != "" {
+				lines = append(lines, "   Theme    "+theme)
+			}
 			for _, line := range lines {
 				if _, err := fmt.Fprintln(w, line); err != nil {
 					return err
@@ -270,6 +292,19 @@ func renderDesignVersions(action string, versions []api.DesignVersion) output.St
 		}
 		return nil
 	}
+}
+
+// designVersionTheme names the theme a version started as, and that the theme
+// has a newer release since: the version is a copy and stays as it is.
+func designVersionTheme(version api.DesignVersion) string {
+	if version.ShopTheme == nil || *version.ShopTheme == "" {
+		return ""
+	}
+	key := terminal.SanitizeLine(*version.ShopTheme)
+	if version.ShopThemeRenewed {
+		return fmt.Sprintf("%s, which has a newer release: design-versions create --theme %s adds it as another version", key, key)
+	}
+	return key
 }
 
 func designVersionState(version api.DesignVersion) string {

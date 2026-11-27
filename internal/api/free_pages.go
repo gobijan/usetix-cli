@@ -183,17 +183,21 @@ func (client *Client) MoveFreePagePart(ctx context.Context, target FreePageTarge
 }
 
 // DesignVersion is one version of the shop's design: a look plus its own
-// designs for the home page and for all events' pages. One is live.
+// designs for the home page and for all events' pages. One is live. A version
+// that started as a theme is a copy of it and never changes with it;
+// ShopThemeRenewed says the theme has a newer release since.
 type DesignVersion struct {
-	ID          int64                   `json:"id"`
-	Name        string                  `json:"name"`
-	Live        bool                    `json:"live"`
-	PublishedAt *string                 `json:"published_at"`
-	Look        DesignVersionLook       `json:"look"`
-	FreePages   []DesignVersionFreePage `json:"free_pages"`
-	URL         string                  `json:"url"`
-	CreatedAt   string                  `json:"created_at"`
-	UpdatedAt   string                  `json:"updated_at"`
+	ID               int64                   `json:"id"`
+	Name             string                  `json:"name"`
+	Live             bool                    `json:"live"`
+	ShopTheme        *string                 `json:"shop_theme"`
+	ShopThemeRenewed bool                    `json:"shop_theme_renewed"`
+	PublishedAt      *string                 `json:"published_at"`
+	Look             DesignVersionLook       `json:"look"`
+	FreePages        []DesignVersionFreePage `json:"free_pages"`
+	URL              string                  `json:"url"`
+	CreatedAt        string                  `json:"created_at"`
+	UpdatedAt        string                  `json:"updated_at"`
 }
 
 type DesignVersionLook struct {
