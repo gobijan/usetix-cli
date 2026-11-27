@@ -140,6 +140,9 @@ CMD usetix team invitations revoke
 CMD usetix team invite
 CMD usetix team list
 CMD usetix team reactivate
+CMD usetix themes
+CMD usetix themes list
+CMD usetix themes show
 CMD usetix ticket-upgrades
 CMD usetix ticket-upgrades activate
 CMD usetix ticket-upgrades deactivate
@@ -386,6 +389,7 @@ FLAG usetix design-versions create --name type=string
 FLAG usetix design-versions create --profile type=string
 FLAG usetix design-versions create --quiet type=bool
 FLAG usetix design-versions create --styled type=bool
+FLAG usetix design-versions create --theme type=string
 FLAG usetix design-versions delete --agent type=bool
 FLAG usetix design-versions delete --api-url type=string
 FLAG usetix design-versions delete --count type=bool
@@ -1576,6 +1580,31 @@ FLAG usetix team reactivate --json type=bool
 FLAG usetix team reactivate --profile type=string
 FLAG usetix team reactivate --quiet type=bool
 FLAG usetix team reactivate --styled type=bool
+FLAG usetix themes --agent type=bool
+FLAG usetix themes --api-url type=string
+FLAG usetix themes --count type=bool
+FLAG usetix themes --ids-only type=bool
+FLAG usetix themes --json type=bool
+FLAG usetix themes --profile type=string
+FLAG usetix themes --quiet type=bool
+FLAG usetix themes --styled type=bool
+FLAG usetix themes list --agent type=bool
+FLAG usetix themes list --api-url type=string
+FLAG usetix themes list --category type=string
+FLAG usetix themes list --count type=bool
+FLAG usetix themes list --ids-only type=bool
+FLAG usetix themes list --json type=bool
+FLAG usetix themes list --profile type=string
+FLAG usetix themes list --quiet type=bool
+FLAG usetix themes list --styled type=bool
+FLAG usetix themes show --agent type=bool
+FLAG usetix themes show --api-url type=string
+FLAG usetix themes show --count type=bool
+FLAG usetix themes show --ids-only type=bool
+FLAG usetix themes show --json type=bool
+FLAG usetix themes show --profile type=string
+FLAG usetix themes show --quiet type=bool
+FLAG usetix themes show --styled type=bool
 FLAG usetix ticket-upgrades --agent type=bool
 FLAG usetix ticket-upgrades --api-url type=string
 FLAG usetix ticket-upgrades --count type=bool
@@ -1936,6 +1965,9 @@ SUB usetix team invitations revoke
 SUB usetix team invite
 SUB usetix team list
 SUB usetix team reactivate
+SUB usetix themes
+SUB usetix themes list
+SUB usetix themes show
 SUB usetix ticket-upgrades
 SUB usetix ticket-upgrades activate
 SUB usetix ticket-upgrades deactivate

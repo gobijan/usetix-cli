@@ -26,7 +26,8 @@ Typed coverage will grow where it materially improves daily use.
 | Tickets | — | `api ... /admin/events/:slug/...tickets...` | Direct |
 | Ticket upgrades | `events upgrades list/offer/update/pause/resume/remove`, `ticket-upgrades status/activate/deactivate` | `api ... /admin/events/:slug/ticket_upgrades...`, `/admin/account_settings/ticket_upgrade_activation` | Typed; see [Ticket upgrades](#ticket-upgrades) |
 | Free pages | `free-pages show/set/check/publish/discard/remove/design`, `free-pages blocks list/hide/unhide/reword/move` | `api ... /admin/events/:slug/page/free_page...`, `/admin/website/free_pages/:key...` (`home`, `events` or a page's address) | Typed; see [Free pages and design versions](#free-pages-and-design-versions). Files (pictures, videos, fonts) and the check's pictures are direct |
-| Design versions | `design-versions list/show/create/rename/delete/publish`, `free-pages ... --version ID` | `api ... /admin/website/versions...` | Typed, with a version's own home and events designs; a version's look is direct |
+| Design versions | `design-versions list/show/create/rename/delete/publish`, `free-pages ... --version ID` | `api ... /admin/website/versions...` | Typed, with a version's own home and events designs and the theme it started as (`create --theme KEY`); a version's look is direct |
+| Themes | `themes list/show` | `api GET /admin/website/themes...` | Typed; a theme is set up with `design-versions create --theme KEY` |
 | Event FAQs | — | `api ... /admin/events/:slug/faq_items...` | Direct |
 | Custom checkout fields | — | `api ... /admin/events/:slug/custom_fields...` | Direct |
 | Promo codes | `promo-codes list/show/create/update/deactivate/reactivate` | `api ... /admin/promo_codes...` | Typed codes, zero discounts, share links, limits and promoter assignments; deletion remains direct |

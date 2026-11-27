@@ -696,3 +696,23 @@ live with its version. `publish --yes` changes the live shop at once: it wears
 the version's look and shows its designs, and the version that was live is kept
 to go back to. The live version can't be deleted. A version's look is changed
 with `usetix api PATCH /admin/website/versions/4/look`.
+
+Themes are Usetix's ready-made designs for a whole shop: a look, the designs for
+the home page and for all events' pages, and with some a few pages of the
+website.
+
+```sh
+usetix themes list
+usetix themes list --category theater
+usetix themes show limelight
+usetix design-versions create --theme limelight --name "Spring programme"
+usetix free-pages blocks list home --version 7
+usetix design-versions publish 7 --yes
+```
+
+`create --theme KEY` sets a theme up as a version that isn't live. From then on
+it is yours: a copy that never changes with the theme. `design-versions list`
+and `show` name the theme a version started as and say when the theme has a
+newer release; `create --theme` again adds that release as another version, and
+the one you have stays as it is. The pages a theme brings along are made as
+drafts and open once its version is live.

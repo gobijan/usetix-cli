@@ -9,7 +9,7 @@ import (
 )
 
 const liveDesignVersionJSON = `{
-  "id":1,"name":"Live","live":true,"published_at":"2026-11-01T09:00:00Z",
+  "id":1,"name":"Live","live":true,"shop_theme":null,"shop_theme_renewed":false,"published_at":"2026-11-01T09:00:00Z",
   "look":{"theme":"light","accent_color":"#111111","shop_heading_font":"geist","shop_body_font":"geist","shop_palette":null,"shop_style":{}},
   "free_pages":[
     {"kind":"home","state":"live","url":"https://app.usetix.io/admin/website/free_pages/home.json"},
@@ -19,7 +19,7 @@ const liveDesignVersionJSON = `{
 }`
 
 const designVersionJSON = `{
-  "id":4,"name":"Sommer 2027","live":false,"published_at":null,
+  "id":4,"name":"Sommer 2027","live":false,"shop_theme":null,"shop_theme_renewed":false,"published_at":null,
   "look":{"theme":"custom","accent_color":null,"shop_heading_font":"syne","shop_body_font":"geist",
     "shop_palette":{"page":"#101014","card":"#1a1a22","text":"#f5f5f5"},"shop_style":{"corners":"sharp"}},
   "free_pages":[
@@ -190,7 +190,8 @@ func TestDesignVersionsDeleteRequiresConfirmationAndNeverTheLiveOne(t *testing.T
 }
 
 func TestDesignVersionsPublishShowsWhatGoesLiveBeforePosting(t *testing.T) {
-	published := strings.Replace(designVersionJSON, `"live":false,"published_at":null`, `"live":true,"published_at":"2026-11-20T08:00:00Z"`, 1)
+	published := strings.Replace(designVersionJSON, `"live":false,"shop_theme":null,"shop_theme_renewed":false,"published_at":null`,
+		`"live":true,"shop_theme":null,"shop_theme_renewed":false,"published_at":"2026-11-20T08:00:00Z"`, 1)
 	published = strings.Replace(published, `"state":"ready"`, `"state":"live"`, 1)
 	current := designVersionJSON
 	var requests []string
